@@ -10,24 +10,18 @@ import AuthPage from "@/pages/auth-page";
 import ParentPortal from "@/pages/parent-portal";
 import { AuthProvider } from "./hooks/use-auth";
 
-function Router() {
-  return (
-    <Switch>
-      <ProtectedRoute path="/" component={HomePage} />
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/parent-portal" component={ParentPortal} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <Switch>
+            <ProtectedRoute path="/" component={HomePage} />
+            <Route path="/auth" component={AuthPage} />
+            <Route path="/parent-portal" component={ParentPortal} />
+            <Route component={NotFound} />
+          </Switch>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
