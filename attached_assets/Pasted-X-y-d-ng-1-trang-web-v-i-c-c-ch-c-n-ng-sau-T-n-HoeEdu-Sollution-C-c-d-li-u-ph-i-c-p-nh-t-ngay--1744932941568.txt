@@ -1,0 +1,26 @@
+Xây dựng 1 trang web với các chức năng sau
+Tên: HoeEdu Sollution
+- Các dữ liệu phải cập nhật ngay sau khi nhập, mọi dữ liệu đều thể hiện với mã UTF-8
+- Có trang dăng nhập với user là dongphubte và mật khẩu là @Bentre2013. Các thông tin này mã hóa và không thể hiện ở trang đăng nhập. Loại bỏ chức năng đăng ký người dung mới. Có chức năng quên mật khẩu cho admin, link reset mật khẩu sẽ gửi qua email dongphubte@gmail.com
+- Tab “Lớp học” 
++ thể hiện “Tên lớp” như “Lớp 1, Lớp 2, Lớp 3, Lớp 4, Lớp 5, Lớp 6, Lớp 7, lớp 8, Lớp 9, Lớp 10, Lớp 11, Lớp 12, Luyện thi và Giao tiếp”. Trong mỗi lớp bao gồm: “Giá tiền” (tính theo VND và có dấu phân cách hang ghìn), “Thời gian học” với các lựa chọn “Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6, Thứ 7 và Chủ nhật”, “Địa điểm học”. Mỗi “Tên lớp” sẽ chứa số lượng và danh sách học sinh dựa vào tab “Học sinh”. 
++ Nút chức năng thêm Lớp với các dữ liệu như “Tên lớp”, “Giá tiền” (tính theo VND và có dấu phân cách hang ghìn), “Thời gian học” với các lựa chọn “Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6, Thứ 7 và Chủ nhật”, “Đại điểm học”. Tab “Lớp học” có chức năng sửa hoặc xóa danh sách các Lớp học đã có. Trước khi xóa nếu Lớp học không có học sinh nào thì hiện hộp thoại xác nhận, nếu Lớp học đã có học sinh thì hiện thông báo cần xóa hoặc di chuyển số học sinh đó qua lớp khác. Tab “Lớp học” có chức năng xóa hoặc di chuyển một hoặc nhiều học sinh qua Lớp khác.
+- Tab “Học sinh” 
++ Chức năng Thêm học sinh mới với các dữ liệu sau: “Họ và tên”, “Mã“ theo định dạng <ngày dăng ký theo kiểu dd/mm/yy><3 số ngẫu nhiên>, “Số điện thoại”, “Lớp” với các lựa chọn Danh sách lớp từ tab “Lớp học”, “Giá tiền” tự động lấy dữ liệu từ “Giá tiền” của  tab “Lớp học”, Thời gian học” tự động lấy dữ liệu từ “Thời gian học” của tab “Lớp học”. “Chu kỳ thanh toán” gồm các lựa chọn “1 tháng, 8 buổi, 10 buổi”, “Từng buổi”, “Thanh toán” gồm các lựa chọn “Chưa thanh toán”, “Đã thanh toán”
++ Chức năng sửa hoặc xóa các trường dữ liệu của 1 sinh bất kỳ.
++ Thể hiện các thông tin “Tên học sinh”, “Mã”, “Số điện thoại”, “Lớp học”, “Ngày dăng ký”, “Giá tiền”, “Thời gian học”, “Chu kỳ thanh toán”, “Tình trạng” mặc định là “Dang học”, khi có học sinh nghỉ học thì click vào tên học sinh sẽ xuất hiện thêm “Tình trạng: là “Đang học” hoặc nghỉ học”, “Tình trạng thanh toán” lấy dữ liệu từ “Thanh toán” của tab “Lớp học”, nếu học sinh chưa thanh toán hoặc bị quá hạn sẽ có nút “Thanh toán”, khi click vào đó sẽ cập nhật sang trạng thái đã thanh toán. Muốn biết học sinh bị quá hạn hay không dựa vào “Chu kỳ thanh toán”, nếu chọn 1 tháng thì ngày hiện tại trừ ngày dăng ký phải lớn hơn 30, nếu chọn 8 buổi thì số ngày có mặt cộng vắng mặt phải lớn hơn 8, nếu chọn 10 buổi thì số ngày có mặt cộng vắng mặt phải lớn hơn 10; trường hợp chọn theo từng buổi thì không có quá hạn. Tình trạng thanh toán định dạng như sau “Đã thanh toán” thì đậm, màu xanh dương; “Chưa thanh toán” thì chữ đậm, màu cam; “Qúa hạn” thì chữ đậm, màu đỏ, tô sáng bằng nền xanh lá nhạt. “Kỳ thanh toán tiếp theo” là ngày thanh toán tiếp theo dành cho học sinh có “Tình trạng thanh toán” là “Đã thanh toán”
++ Chức năng xuất file hình ảnh “Biên nhận” theo mẫu sau:
+HoEdu Solution
+0985970322
+BIÊN NHẬN (CHỮ IN HOA, ĐẬM, CANH GIỮA)
+Ngày …… tháng …….năm……..<ngày học sinh trả tiền>
+“Đã nhận số tiền:” <Giá tiền> (<đọc số tiền theo tiếng Việt>) của “Học sinh:” <Họ và tên học sinh> “Lớp” <Lớp>
+Học phí tính từ ngày <Ngày dăng ký> đến ngày <nếu học sinh đăng ký theo 1 tháng thì tính đủ 30 ngày, nếu đăng ký theo 8 buổi thì dựa vào điểm danh có mặt + vắng mặt trừ đi  số ngày giáo viên nghỉ  lấy ngày thứ 8, nếu đăng ký theo 10 buổi thì dựa vào điểm danh có mặt + vắng mặt trừ đi số ngày gv nghỉ  lấy ngày thứ 10>
+Phụ huynh vui lòng kiểm tra kỹ số tiền và ngày học của con.
+Chân thành cảm ơn
+Trần Đông Phú (chữ in dậm)
+-Tab “Điểm danh”
++ Thực hiện điểm danh học sinh, lấy dữ liệu từ tab “Học sinh”. Dựa vào “Thời gian học” của mỗi học sinh và ngày của hệ thống chỉ hiện danh sách các học sinh có học trong ngày hôm đó, khi click vào tên học sinh sẽ xuất hiện các nút như “Có mặt”, “Vắng mặt”, “GV nghỉ”
+- Có trang cho phụ huynh kiểm tra Tình trạng thanh toán và Lịch sử thanh toán, phụ huynh không được xem các trang khác, phụ huynh muốn tra cứu thì nhập mã của học sinh sẽ xuất hiện các thông tin như
+Họ và tên học sinh , Lớp, Chu kỳ thanh toán,  Tình trạng thanh toán
+Điểm danh
