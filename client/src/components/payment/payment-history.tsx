@@ -210,7 +210,7 @@ export default function PaymentHistory({
   // Handle view receipt
   const handleViewReceipt = (payment: any) => {
     // First, get the student for this payment
-    const student = students?.find(s => s.id === payment.studentId);
+    const student = students.find((s: any) => s.id === payment.studentId);
     if (student) {
       setPaymentToView({
         ...student,
@@ -228,7 +228,7 @@ export default function PaymentHistory({
 
   // Function to get student name from ID
   const getStudentName = (studentId: number) => {
-    const student = students?.find(s => s.id === studentId);
+    const student = students.find((s: any) => s.id === studentId);
     return student ? student.name : `Học sinh #${studentId}`;
   };
 
