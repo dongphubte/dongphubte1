@@ -135,17 +135,46 @@ export default function ClassList() {
             // Tìm thông tin học sinh trong lớp này
             const classStudentInfo = studentsPerClass.find((c: any) => c.name === classItem.name) || { count: 0 };
             
-            // Sử dụng thông tin tài chính thực tế từ API
-            const financesData = reportData?.finances || { paidAmount: 0, pendingAmount: 0, overdueAmount: 0 };
+            // Lấy thông tin học sinh trong lớp này
+            const classId = classItem.id;
+            const { data: students } = useQuery<any[]>({
+              queryKey: ["/api/students"],
+              enabled: classStudentInfo.count > 0,
+            });
+
+            const { data: payments } = useQuery<any[]>({
+              queryKey: ["/api/payments"],
+              enabled: classStudentInfo.count > 0,
+            });
             
-            // Chỉ tính tỷ lệ cho các lớp có học sinh
+            // Chỉ tính cho các lớp có học sinh
             const hasStudents = classStudentInfo.count > 0;
             
-            // Tính toán dựa trên số lượng học sinh trong lớp
+            // Tìm học sinh thuộc lớp này
+            const studentsInClass = students?.filter(s => s.classId === classId) || [];
+            
+            // Tính toán học phí cho lớp này dựa trên học sinh thực tế
+            const classPayment = studentsInClass.reduce((acc, student) => {
+              let pendingAmount = 0;
+              
+              // Nếu học sinh chưa có bản ghi thanh toán, tính họ chưa đóng tiền
+              const studentPayments = payments?.filter(p => p.studentId === student.id) || [];
+              if (studentPayments.length === 0) {
+                pendingAmount = classItem.fee; // Học sinh chưa đóng tiền
+              }
+              
+              return {
+                paid: acc.paid + 0, // Chưa có thanh toán nào được ghi nhận
+                pending: acc.pending + pendingAmount,
+                overdue: acc.overdue + 0 // Chưa có thanh toán nào quá hạn
+              };
+            }, { paid: 0, pending: 0, overdue: 0 });
+            
+            // Sử dụng dữ liệu tính toán
             const paymentStats = {
-              paid: hasStudents ? financesData.paidAmount / reportData.studentsPerClass.length : 0,
-              pending: hasStudents ? financesData.pendingAmount / reportData.studentsPerClass.length : 0,
-              overdue: hasStudents ? financesData.overdueAmount / reportData.studentsPerClass.length : 0
+              paid: classPayment.paid,
+              pending: classPayment.pending,
+              overdue: classPayment.overdue
             };
             
             // Tính tổng số tiền
