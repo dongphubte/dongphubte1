@@ -26,6 +26,9 @@ import {
   extendedInsertStudentSchema, 
   Class
 } from "@shared/schema";
+
+// Custom type for paymentCycle
+type PaymentCycle = "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/utils/format";
 import { format } from "date-fns";
@@ -89,7 +92,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
         code: studentToEdit.code,
         phone: studentToEdit.phone,
         classId: studentToEdit.classId,
-        paymentCycle: studentToEdit.paymentCycle as "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay",
+        paymentCycle: studentToEdit.paymentCycle as PaymentCycle,
         status: studentToEdit.status as "active" | "inactive",
       });
       setSelectedClassId(studentToEdit.classId);
@@ -187,7 +190,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
       // Cập nhật chu kỳ từ lớp học, chấp nhận tất cả các chu kỳ hợp lệ bao gồm cả "theo-ngay"
       const validCycles = ["1-thang", "8-buoi", "10-buoi", "theo-ngay"];
       if (validCycles.includes(selectedClass.paymentCycle)) {
-        form.setValue("paymentCycle", selectedClass.paymentCycle as "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay");
+        form.setValue("paymentCycle", selectedClass.paymentCycle as PaymentCycle);
       }
     }
   }, [selectedClass, form]);
@@ -290,7 +293,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
             <div className="space-y-2">
               <Label htmlFor="paymentCycle">Chu kỳ thanh toán</Label>
               <Select 
-                onValueChange={(value: any) => form.setValue("paymentCycle", value)}
+                onValueChange={(value: PaymentCycle) => form.setValue("paymentCycle", value)}
                 defaultValue={studentToEdit ? studentToEdit.paymentCycle : "1-thang"}
                 value={form.watch("paymentCycle")}
               >

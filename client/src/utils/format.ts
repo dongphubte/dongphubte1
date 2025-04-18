@@ -47,6 +47,8 @@ export function formatPaymentCycle(cycle: string): string {
       return '8 buổi';
     case '10-buoi':
       return '10 buổi';
+    case 'theo-ngay':
+      return 'Theo ngày';
     default:
       return cycle;
   }
@@ -107,7 +109,7 @@ export function formatPaymentStatus(status: string): string {
 /**
  * Tính toán học phí dựa trên chu kỳ thanh toán
  * @param baseFee - Học phí cơ bản
- * @param paymentCycle - Chu kỳ thanh toán (1-thang, 8-buoi, 10-buoi)
+ * @param paymentCycle - Chu kỳ thanh toán (1-thang, 8-buoi, 10-buoi, theo-ngay)
  * @returns Học phí đã tính dựa trên chu kỳ
  */
 export function calculateFeeByPaymentCycle(baseFee: number, paymentCycle: string): number {
@@ -121,6 +123,9 @@ export function calculateFeeByPaymentCycle(baseFee: number, paymentCycle: string
   } else if (paymentCycle === '10-buoi') {
     // Nếu 10 buổi: học phí = phí 1 buổi * 10
     return fee * 10;
+  } else if (paymentCycle === 'theo-ngay') {
+    // Nếu là theo ngày: cứ tạm tính 1 ngày
+    return fee;
   } else {
     // Nếu là 1 tháng hoặc chu kỳ khác: giữ nguyên
     return fee;
