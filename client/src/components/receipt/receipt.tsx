@@ -104,23 +104,133 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
         return;
       }
       
+      // Lấy tất cả CSS hiện tại của trang để áp dụng vào bản in
+      const stylesheets = Array.from(document.styleSheets);
+      let cssText = '';
+      
+      // Lấy CSS từ các stylesheet external 
+      stylesheets.forEach(sheet => {
+        if (sheet.href) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = sheet.href;
+          printWindow.document.head.appendChild(link);
+        } else {
+          try {
+            // Lấy CSS nội bộ
+            Array.from(sheet.cssRules || []).forEach(rule => {
+              cssText += rule.cssText + '\n';
+            });
+          } catch (e) {
+            console.warn('Không thể truy cập cssRules của stylesheet:', e);
+          }
+        }
+      });
+
       printWindow.document.write(`
         <html>
           <head>
-            <title>Receipt-${student?.name}-${formatDate(paymentDate)}</title>
+            <title>Biên nhận - ${student?.name} - ${formatDate(paymentDate)}</title>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              .receipt { border: 1px solid #ddd; padding: 20px; max-width: 600px; margin: 0 auto; }
-              .receipt-header { text-align: center; margin-bottom: 20px; }
-              .receipt-title { font-size: 18px; font-weight: bold; margin-top: 10px; }
-              .receipt-item { margin-bottom: 8px; }
-              .receipt-label { font-weight: bold; }
-              .receipt-footer { text-align: right; margin-top: 20px; }
+              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+              
+              body { 
+                font-family: 'Inter', sans-serif;
+                padding: 20px;
+                margin: 0;
+                background-color: white;
+              }
+              
+              * {
+                box-sizing: border-box;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              
+              /* Các style cụ thể cho phần biên nhận */
+              .border-4 { border-width: 4px; }
+              .border-double { border-style: double; }
+              .border-gray-300 { border-color: #d1d5db; }
+              .rounded-lg { border-radius: 0.5rem; }
+              .p-6 { padding: 1.5rem; }
+              .bg-white { background-color: white; }
+              
+              /* Header */
+              .text-center { text-align: center; }
+              .mb-4 { margin-bottom: 1rem; }
+              .pb-2 { padding-bottom: 0.5rem; }
+              .border-b-2 { border-bottom-width: 2px; }
+              .border-gray-200 { border-color: #e5e7eb; }
+              
+              /* Gradient backgrounds */
+              .bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
+              .from-blue-500 { --tw-gradient-from: #3b82f6; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(59, 130, 246, 0)); }
+              .to-purple-500 { --tw-gradient-to: #8b5cf6; }
+              .from-purple-500 { --tw-gradient-from: #8b5cf6; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(139, 92, 246, 0)); }
+              .to-blue-500 { --tw-gradient-to: #3b82f6; }
+              
+              /* Text styles */
+              .text-transparent { color: transparent; }
+              .bg-clip-text { -webkit-background-clip: text; background-clip: text; }
+              .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+              .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+              .font-bold { font-weight: 700; }
+              .uppercase { text-transform: uppercase; }
+              .tracking-wide { letter-spacing: 0.025em; }
+              
+              /* Content sections */
+              .space-y-2 > * + * { margin-top: 0.5rem; }
+              .mb-3 { margin-bottom: 0.75rem; }
+              .text-right { text-align: right; }
+              .italic { font-style: italic; }
+              
+              /* Grid */
+              .grid { display: grid; }
+              .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+              .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+              .gap-1 { gap: 0.25rem; }
+              .gap-2 { gap: 0.5rem; }
+              
+              /* Colors */
+              .bg-gray-50 { background-color: #f9fafb; }
+              .bg-blue-50 { background-color: #eff6ff; }
+              .bg-green-100 { background-color: #d1fae5; }
+              .bg-red-100 { background-color: #fee2e2; }
+              .bg-yellow-100 { background-color: #fef3c7; }
+              .bg-blue-100 { background-color: #dbeafe; }
+              .bg-purple-100 { background-color: #ede9fe; }
+              
+              .text-green-600, .text-green-700 { color: #059669; }
+              .text-red-600, .text-red-700 { color: #dc2626; }
+              .text-yellow-600, .text-yellow-700 { color: #d97706; }
+              .text-blue-600, .text-blue-700 { color: #2563eb; }
+              .text-purple-600, .text-purple-700 { color: #7c3aed; }
+              
+              /* Additional styles */
+              .flex { display: flex; }
+              .justify-center { justify-content: center; }
+              .justify-between { justify-content: space-between; }
+              .items-center { align-items: center; }
+              .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+              .rounded { border-radius: 0.25rem; }
+              .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+              .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+              
+              /* Typography */
+              .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+              .text-xs { font-size: 0.75rem; line-height: 1rem; }
+              .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+              .font-medium { font-weight: 500; }
+              .font-semibold { font-weight: 600; }
+              
+              ${cssText}
             </style>
           </head>
           <body>
             <div class="receipt">
-              ${printContent.innerHTML}
+              ${printContent.outerHTML}
             </div>
             <script>
               window.onload = function() { window.print(); window.close(); }
@@ -241,13 +351,37 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     
     setIsProcessing(true);
     try {
-      const canvas = await html2canvas(receiptRef.current, {
-        scale: 2, // Higher scale for better quality
+      // Đảm bảo tất cả phần tử trong receiptRef đều hiển thị
+      const receiptElement = receiptRef.current;
+      
+      // Tạo canvas với cài đặt nâng cao
+      const canvas = await html2canvas(receiptElement, {
+        scale: 3, // Tăng scale để có chất lượng hình ảnh cao hơn
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        useCORS: true, // Cho phép tải tài nguyên từ các domain khác
+        allowTaint: true, // Cho phép vẽ các tài nguyên có thể bị "tainted"
+        width: receiptElement.offsetWidth,
+        height: receiptElement.offsetHeight,
+        
+        // Đảm bảo tất cả pseudo-elements (như ::before, ::after) được render
+        onclone: (documentClone, element) => {
+          // Đảm bảo gradient và các hiệu ứng khác được render
+          const styles = document.createElement('style');
+          Array.from(document.styleSheets).forEach(stylesheet => {
+            try {
+              Array.from(stylesheet.cssRules || []).forEach(rule => {
+                styles.innerHTML += rule.cssText;
+              });
+            } catch (e) {
+              console.warn('Không thể truy cập cssRules:', e);
+            }
+          });
+          documentClone.head.appendChild(styles);
+        }
       });
       
-      const image = canvas.toDataURL('image/png');
+      const image = canvas.toDataURL('image/png', 1.0); // Chất lượng tối đa
       const link = document.createElement('a');
       link.href = image;
       link.download = `HoeEdu-Receipt-${student?.name}-${formatDate(paymentDate)}.png`;
@@ -255,7 +389,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
       
       toast({
         title: "Xuất biên nhận thành công",
-        description: "Biên nhận đã được lưu dưới dạng hình ảnh",
+        description: "Biên nhận đã được lưu dưới dạng hình ảnh với chất lượng cao",
       });
     } catch (error) {
       console.error("Error generating receipt image:", error);
