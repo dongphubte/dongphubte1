@@ -735,22 +735,30 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                             </div>
                           </div>
                           
-                          {/* Chi tiết điểm danh gần đây */}
+                          {/* Chi tiết điểm danh */}
                           <div className="mt-2 border-t border-gray-200 pt-2">
-                            <p className="text-sm font-medium mb-1">Chi tiết điểm danh gần đây:</p>
-                            <div className="grid grid-cols-2 gap-1">
-                              {attendance.slice(0, 6).map((a: any, index: number) => (
-                                <p key={index} className="flex justify-between bg-white px-3 py-2 rounded border border-gray-100">
-                                  <span>{formatDate(new Date(a.date))}:</span>
-                                  <span className={
-                                    a.status === 'present' ? 'text-green-600 font-medium' : 
-                                    a.status === 'absent' ? 'text-red-600 font-medium' : 
-                                    a.status === 'makeup' ? 'text-blue-600 font-medium' : 'text-yellow-600 font-medium'
-                                  }>
-                                    {formatAttendanceStatus(a.status)}
-                                  </span>
-                                </p>
-                              ))}
+                            <p className="text-sm font-medium mb-1">Chi tiết điểm danh:</p>
+                            <div className="grid grid-cols-3 gap-2">
+                              {attendance.slice(0, 9).map((a: any, index: number) => {
+                                const statusClass = 
+                                  a.status === 'present' ? 'bg-green-100 text-green-700' : 
+                                  a.status === 'absent' ? 'bg-red-100 text-red-700' : 
+                                  a.status === 'makeup' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700';
+                                
+                                return (
+                                  <div 
+                                    key={index} 
+                                    className={`${statusClass} rounded p-2 text-center border-t-2 border-${
+                                      a.status === 'present' ? 'green' : 
+                                      a.status === 'absent' ? 'red' : 
+                                      a.status === 'makeup' ? 'blue' : 'yellow'
+                                    }-400`}
+                                  >
+                                    <p className="text-xs font-medium mb-1">{formatDate(new Date(a.date))}</p>
+                                    <p className="text-sm font-bold">{formatAttendanceStatus(a.status)}</p>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </>
