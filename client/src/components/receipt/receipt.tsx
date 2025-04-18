@@ -49,8 +49,15 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
   });
 
   const handlePrint = useReactToPrint({
-    content: () => receiptRef.current,
     documentTitle: `Receipt-${student?.name}-${formatDate(paymentDate)}`,
+    onBeforeGetContent: () => {
+      return new Promise<void>((resolve) => {
+        resolve();
+      });
+    },
+    onPrintError: (error) => console.error('Print failed:', error),
+    // @ts-ignore
+    content: () => receiptRef.current,
   });
   
   // Mutation for saving payment
@@ -87,6 +94,8 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     // Calculate validTo based on payment cycle
     if (student.paymentCycle === "1-thang") {
       validTo.setMonth(validTo.getMonth() + 1);
+    } else if (student.paymentCycle === "theo-ngay") {
+      // Nếu theo ngày: không thay đổi, validTo = validFrom
     } else {
       // Assuming 8-buoi or 10-buoi corresponds to roughly a month
       validTo.setDate(validTo.getDate() + 30);
@@ -156,6 +165,9 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
       const validUntil = new Date(today);
       validUntil.setDate(validUntil.getDate() + 30);
       return formatDate(validUntil);
+    } else if (paymentCycle === "theo-ngay") {
+      // Theo ngày: chỉ tính cho ngày hôm nay
+      return formatDate(today);
     }
     
     return "";
@@ -249,7 +261,8 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
           <p className="text-sm mb-1">
             <span className="font-medium">Chu kỳ thanh toán:</span> {student?.paymentCycle === '1-thang' ? 'Theo tháng' : 
               student?.paymentCycle === '8-buoi' ? '8 buổi' : 
-              student?.paymentCycle === '10-buoi' ? '10 buổi' : 'Chưa xác định'}
+              student?.paymentCycle === '10-buoi' ? '10 buổi' :
+              student?.paymentCycle === 'theo-ngay' ? 'Theo ngày' : 'Chưa xác định'}
           </p>
           <p className="text-sm mb-1">
             <span className="font-medium">Học phí tính từ ngày:</span> {formatDate(paymentDate)} đến ngày {getValidUntilDate()}
