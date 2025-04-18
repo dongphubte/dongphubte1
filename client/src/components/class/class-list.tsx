@@ -47,6 +47,14 @@ export default function ClassList() {
     queryKey: ["/api/reports/dashboard"],
   });
   
+  const { data: students } = useQuery<any[]>({
+    queryKey: ["/api/students"],
+  });
+
+  const { data: payments } = useQuery<any[]>({
+    queryKey: ["/api/payments"],
+  });
+  
   // Lấy số học sinh trong mỗi lớp từ dashboard report
   const studentsPerClass = reportData?.studentsPerClass || [];
 
@@ -137,15 +145,6 @@ export default function ClassList() {
             
             // Lấy thông tin học sinh trong lớp này
             const classId = classItem.id;
-            const { data: students } = useQuery<any[]>({
-              queryKey: ["/api/students"],
-              enabled: classStudentInfo.count > 0,
-            });
-
-            const { data: payments } = useQuery<any[]>({
-              queryKey: ["/api/payments"],
-              enabled: classStudentInfo.count > 0,
-            });
             
             // Chỉ tính cho các lớp có học sinh
             const hasStudents = classStudentInfo.count > 0;
@@ -245,16 +244,18 @@ export default function ClassList() {
                     </div>
                     <div className="flex items-center">
                       <CreditCard className="h-4 w-4 text-purple-500 mr-2" />
-                      <div className="text-xs text-gray-600 flex gap-2">
-                        <div className="flex gap-1">
-                          <Badge variant="outline" className="px-2 py-0 h-5 text-xs whitespace-nowrap border-purple-200 bg-purple-50 text-purple-700">1 tháng</Badge>
-                        </div>
-                        <div className="flex gap-1">
-                          <Badge variant="outline" className="px-2 py-0 h-5 text-xs whitespace-nowrap border-blue-200 bg-blue-50 text-blue-700">8 buổi</Badge>
-                        </div>
-                        <div className="flex gap-1">
-                          <Badge variant="outline" className="px-2 py-0 h-5 text-xs whitespace-nowrap border-indigo-200 bg-indigo-50 text-indigo-700">10 buổi</Badge>
-                        </div>
+                      <div className="text-xs text-gray-600">
+                        {studentsInClass.length > 0 ? (
+                          // Hiển thị chu kỳ thanh toán của học sinh đầu tiên trong lớp
+                          <Badge variant="outline" className="px-2 py-0 h-5 text-xs whitespace-nowrap border-purple-200 bg-purple-50 text-purple-700">
+                            {formatPaymentCycle(studentsInClass[0]?.paymentCycle || "1-thang")}
+                          </Badge>
+                        ) : (
+                          // Hiển thị mặc định nếu không có học sinh
+                          <Badge variant="outline" className="px-2 py-0 h-5 text-xs whitespace-nowrap border-purple-200 bg-purple-50 text-purple-700">
+                            1 tháng
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>

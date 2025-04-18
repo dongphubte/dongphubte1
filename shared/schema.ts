@@ -25,6 +25,7 @@ export const classes = pgTable("classes", {
   fee: integer("fee").notNull(), // stored in VND
   schedule: text("schedule").notNull(), // store as comma separated values
   location: text("location").notNull(),
+  paymentCycle: text("payment_cycle"), // 1-thang, 8-buoi, 10-buoi, theo-ngay
 });
 
 export const insertClassSchema = createInsertSchema(classes).pick({

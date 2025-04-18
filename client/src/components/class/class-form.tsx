@@ -11,7 +11,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Class, extendedInsertClassSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency, formatPaymentCycle } from "@/utils/format";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ClassFormProps {
   isOpen: boolean;
@@ -24,7 +25,9 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
   const queryClient = useQueryClient();
   const [isScheduleValid, setIsScheduleValid] = useState(true);
 
-  const formSchema = extendedInsertClassSchema;
+  const formSchema = extendedInsertClassSchema.extend({
+    paymentCycle: z.string().optional(),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -33,6 +36,7 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
       fee: 0,
       schedule: "",
       location: "",
+      paymentCycle: "1-thang", // Mặc định là 1 tháng
     },
   });
 
@@ -43,6 +47,7 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
         fee: classToEdit.fee,
         schedule: classToEdit.schedule,
         location: classToEdit.location,
+        paymentCycle: classToEdit.paymentCycle || "1-thang",
       });
     } else {
       form.reset({
@@ -50,6 +55,7 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
         fee: 0,
         schedule: "",
         location: "",
+        paymentCycle: "1-thang",
       });
     }
   }, [classToEdit, form, isOpen]);
@@ -215,6 +221,24 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
             {form.formState.errors.location && (
               <p className="text-sm text-red-500">{form.formState.errors.location.message}</p>
             )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="paymentCycle">Chu kỳ thanh toán</Label>
+            <Select
+              defaultValue={form.getValues("paymentCycle") || "1-thang"}
+              onValueChange={(value) => form.setValue("paymentCycle", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn chu kỳ thanh toán" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1-thang">1 tháng</SelectItem>
+                <SelectItem value="8-buoi">8 buổi</SelectItem>
+                <SelectItem value="10-buoi">10 buổi</SelectItem>
+                <SelectItem value="theo-ngay">Theo ngày</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <DialogFooter className="sm:justify-end">
