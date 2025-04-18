@@ -162,10 +162,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/students", ensureAuthenticated, async (req, res) => {
     try {
+      console.log("Received student data:", req.body);
       const validatedData = extendedInsertStudentSchema.parse(req.body);
+      console.log("Validated student data:", validatedData);
       const newStudent = await storage.createStudent(validatedData);
       res.status(201).json(newStudent);
     } catch (error) {
+      console.error("Error creating student:", error);
       if (error instanceof ZodError) {
         return res.status(400).json({ errors: formatZodError(error) });
       }
