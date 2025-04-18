@@ -22,25 +22,7 @@ export default function HomePage() {
       {activeTab === "hoc-sinh" && <StudentList />}
       {activeTab === "diem-danh" && (
         <div className="space-y-6">
-          <Tabs defaultValue="by-class" className="w-full">
-            <TabsList className="flex h-10 items-center justify-between rounded-lg bg-muted mb-4 w-full max-w-md">
-              <TabsTrigger value="by-class" className="flex items-center gap-1">
-                <BarChart className="h-4 w-4" />
-                Thống kê lớp
-              </TabsTrigger>
-              <TabsTrigger value="today" className="flex items-center gap-1">
-                <CalendarCheck className="h-4 w-4" />
-                Điểm danh hôm nay
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="by-class" className="mt-0">
-              <AttendanceByClass />
-            </TabsContent>
-            <TabsContent value="today" className="mt-0">
-              <AttendanceForm />
-            </TabsContent>
-          </Tabs>
+          <AttendanceByClass />
         </div>
       )}
       {activeTab === "thanh-toan" && <PaymentHistory />}
