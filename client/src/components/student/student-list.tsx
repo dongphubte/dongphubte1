@@ -118,11 +118,23 @@ export default function StudentList() {
       (a: any, b: any) => new Date(b.validTo).getTime() - new Date(a.validTo).getTime()
     )[0];
     
-    if (new Date(latestPayment.validTo) < new Date()) {
-      return "overdue";
+    // Nếu thanh toán gần nhất vẫn còn hiệu lực, trả về trạng thái từ thanh toán đó
+    if (new Date(latestPayment.validTo) >= new Date()) {
+      return latestPayment.status;
     }
     
-    return latestPayment.status;
+    // Tìm học sinh để kiểm tra chu kỳ thanh toán
+    const student = filteredStudents.find(s => s.id === studentId);
+    
+    // Nếu học sinh thanh toán theo ngày hoặc theo buổi, không đánh dấu là quá hạn
+    // vì các chu kỳ này không có khoảng thời gian cố định phải thanh toán
+    if (student && (student.paymentCycle === "theo-ngay")) {
+      // Chỉ trả về trạng thái theo ngày từ thanh toán gần nhất, không đánh dấu là quá hạn
+      return latestPayment.status === "paid" ? "paid" : "pending";
+    }
+    
+    // Đối với các chu kỳ khác (1-thang, 8-buoi, 10-buoi), kiểm tra nếu đã quá hạn
+    return "overdue";
   };
 
   const showReceipt = (student: Student, forPayment: boolean = false) => {

@@ -317,10 +317,12 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
       // Trừ đi 1 ngày để lấy chính xác 1 tháng (vd: 15/4 -> 14/5)
       validTo.setDate(validTo.getDate() - 1);
     } else if (student.paymentCycle === "theo-ngay") {
-      // Nếu theo ngày: không thay đổi, validTo = validFrom
+      // Nếu theo ngày: Thiết lập ngày hết hạn là 30 ngày sau ngày bắt đầu
+      // Đây là để tránh hiển thị "Quá hạn thanh toán" ngay sau khi thanh toán
+      validTo.setDate(validTo.getDate() + 30);
+      
       if (customSessions > 1) {
-        // Nếu đóng nhiều ngày, mỗi ngày thêm 1 ngày vào validTo
-        validTo.setDate(validTo.getDate() + (customSessions - 1));
+        // Nếu đóng nhiều ngày, ghi lại số buổi trong ghi chú
         notes += ` (${customSessions} buổi)`;
       }
     } else if (student.paymentCycle === "8-buoi" || student.paymentCycle === "10-buoi") {
