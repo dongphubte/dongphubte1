@@ -105,8 +105,18 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
   // Mutation for saving payment
   const paymentMutation = useMutation({
     mutationFn: async (paymentData: any) => {
-      const res = await apiRequest("POST", "/api/payments", paymentData);
-      return res.json();
+      try {
+        const res = await apiRequest("POST", "/api/payments", paymentData);
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.error("Payment API error:", errorData);
+          throw new Error(errorData.message || "Lỗi khi tạo thanh toán");
+        }
+        return res.json();
+      } catch (error) {
+        console.error("Payment mutation error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/payments"] });

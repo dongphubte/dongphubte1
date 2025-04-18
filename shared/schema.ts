@@ -140,6 +140,18 @@ export const extendedInsertStudentSchema = insertStudentSchema.extend({
 
 export const extendedInsertPaymentSchema = insertPaymentSchema.extend({
   amount: z.coerce.number().positive(),
+  paymentDate: z.union([
+    z.date(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform(str => new Date(str)),
+  ]).optional(),
+  validFrom: z.union([
+    z.date(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform(str => new Date(str)),
+  ]),
+  validTo: z.union([
+    z.date(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform(str => new Date(str)),
+  ]),
 });
 
 export const extendedInsertAttendanceSchema = insertAttendanceSchema.extend({
