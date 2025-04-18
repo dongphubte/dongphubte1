@@ -159,4 +159,31 @@ export function setupAuth(app: Express) {
     
     res.json({ message: "Mật khẩu đã được đặt lại thành công" });
   });
+
+  app.post("/api/change-password", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Bạn cần đăng nhập để thực hiện thao tác này");
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const userId = (req.user as Express.User).id;
+    
+    // Lấy thông tin người dùng
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(404).send("Không tìm thấy người dùng");
+    }
+    
+    // Kiểm tra mật khẩu hiện tại
+    const isPasswordValid = await comparePasswords(currentPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).send("Mật khẩu hiện tại không đúng");
+    }
+    
+    // Cập nhật mật khẩu mới
+    const hashedPassword = await hashPassword(newPassword);
+    await storage.updateUserPassword(userId, hashedPassword);
+    
+    res.json({ message: "Mật khẩu đã được thay đổi thành công" });
+  });
 }

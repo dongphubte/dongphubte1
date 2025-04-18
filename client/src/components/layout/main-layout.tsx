@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   BarChart4,
   Home,
+  Settings,
 } from "lucide-react";
 
 interface MainLayoutProps {
@@ -47,6 +48,11 @@ export default function MainLayout({
       id: "bao-cao",
       name: "Báo cáo",
       icon: <BarChart4 className="h-5 w-5 mr-2" />,
+    },
+    {
+      id: "cai-dat",
+      name: "Cài đặt",
+      icon: <Settings className="h-5 w-5 mr-2" />,
     },
   ];
 
