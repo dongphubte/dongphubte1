@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency, formatPaymentCycle } from "@/utils/format";
 import { 
   Card,
   CardContent,
@@ -212,7 +212,21 @@ export default function ClassList() {
                   <div className="mb-2">
                     <div className="flex justify-between items-center mb-1">
                       <div className="text-sm font-medium">Học phí</div>
-                      <div className="text-sm font-semibold">{formatCurrency(classItem.fee)}/tháng</div>
+                      <div className="text-sm font-semibold">{formatCurrency(classItem.fee)}</div>
+                    </div>
+                    <div className="flex items-center">
+                      <CreditCard className="h-4 w-4 text-purple-500 mr-2" />
+                      <div className="text-xs text-gray-600 flex gap-2">
+                        <div className="flex gap-1">
+                          <Badge variant="outline" className="px-2 py-0 h-5 text-xs whitespace-nowrap border-purple-200 bg-purple-50 text-purple-700">1 tháng</Badge>
+                        </div>
+                        <div className="flex gap-1">
+                          <Badge variant="outline" className="px-2 py-0 h-5 text-xs whitespace-nowrap border-blue-200 bg-blue-50 text-blue-700">8 buổi</Badge>
+                        </div>
+                        <div className="flex gap-1">
+                          <Badge variant="outline" className="px-2 py-0 h-5 text-xs whitespace-nowrap border-indigo-200 bg-indigo-50 text-indigo-700">10 buổi</Badge>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
