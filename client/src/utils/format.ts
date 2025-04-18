@@ -83,6 +83,8 @@ export function formatAttendanceStatus(status: string): string {
       return 'Vắng mặt';
     case 'teacher_absent':
       return 'GV nghỉ';
+    case 'makeup':
+      return 'Học bù';
     default:
       return status;
   }
@@ -130,4 +132,56 @@ export function calculateFeeByPaymentCycle(baseFee: number, paymentCycle: string
     // Nếu là 1 tháng hoặc chu kỳ khác: giữ nguyên
     return fee;
   }
+}
+
+/**
+ * Viết hoa chữ cái đầu tiên của chuỗi
+ * @param text - Chuỗi cần viết hoa
+ * @returns Chuỗi đã viết hoa chữ cái đầu
+ */
+export function capitalizeFirstLetter(text: string): string {
+  if (!text) return '';
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * Tính tổng số lượng mỗi loại trạng thái điểm danh
+ * @param attendanceData - Dữ liệu điểm danh
+ * @returns Object chứa số lượng mỗi loại trạng thái
+ */
+export function summarizeAttendance(attendanceData: any[]): { 
+  present: number, 
+  absent: number, 
+  teacherAbsent: number, 
+  makeup: number,
+  total: number 
+} {
+  if (!attendanceData || !Array.isArray(attendanceData)) {
+    return { present: 0, absent: 0, teacherAbsent: 0, makeup: 0, total: 0 };
+  }
+  
+  const summary = {
+    present: 0,
+    absent: 0,
+    teacherAbsent: 0,
+    makeup: 0,
+    get total() { return this.present + this.absent + this.teacherAbsent + this.makeup; }
+  };
+  
+  // Đếm số lượng mỗi loại
+  attendanceData.forEach(record => {
+    if (record.status === 'present') summary.present++;
+    else if (record.status === 'absent') summary.absent++;
+    else if (record.status === 'teacher_absent') summary.teacherAbsent++;
+    else if (record.status === 'makeup') summary.makeup++;
+  });
+  
+  // Đảm bảo trả về đúng định dạng với tổng đã tính
+  return {
+    present: summary.present,
+    absent: summary.absent,
+    teacherAbsent: summary.teacherAbsent,
+    makeup: summary.makeup,
+    total: summary.total
+  };
 }

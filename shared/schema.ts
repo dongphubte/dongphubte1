@@ -94,7 +94,7 @@ export const attendance = pgTable("attendance", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").notNull(),
   date: timestamp("date").notNull().defaultNow(),
-  status: text("status").notNull(), // present, absent, teacher_absent
+  status: text("status").notNull(), // present, absent, teacher_absent, makeup
 });
 
 export const insertAttendanceSchema = createInsertSchema(attendance).pick({
@@ -174,7 +174,7 @@ export const extendedInsertAttendanceSchema = insertAttendanceSchema.extend({
       }
     })
   ]),
-  status: z.enum(["present", "absent", "teacher_absent"], {
+  status: z.enum(["present", "absent", "teacher_absent", "makeup"], {
     errorMap: () => ({ message: "Trạng thái điểm danh không hợp lệ" }),
   }),
 });
