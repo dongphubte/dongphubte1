@@ -74,13 +74,26 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
   const generateReceiptNumber = () => {
     const currentYear = new Date().getFullYear();
     
-    // Lấy số lớp từ tên lớp (ví dụ: Lớp 8CT -> 8CT)
+    // Lấy số lớp từ tên lớp (ví dụ: Lớp 8CT -> 08CT, Lớp 12G -> 12G)
     let classNumber = "00";
     if (classData?.name) {
       // Loại bỏ từ "Lớp" (nếu có) và chỉ lấy số/chữ còn lại
       const match = classData.name.match(/Lớp\s+(\w+)/i);
       if (match && match[1]) {
-        classNumber = match[1];
+        // Kiểm tra nếu số lớp là số nguyên < 10 thì thêm số 0 phía trước
+        const classValue = match[1];
+        // Nếu chuỗi bắt đầu bằng một số từ 1-9
+        if (/^[1-9]/.test(classValue)) {
+          const numberPart = parseInt(classValue.match(/^\d+/)[0], 10);
+          if (numberPart < 10) {
+            // Thay thế số lớp bằng phiên bản có thêm số 0 ở đầu
+            classNumber = classValue.replace(/^\d+/, "0" + numberPart);
+          } else {
+            classNumber = classValue;
+          }
+        } else {
+          classNumber = classValue;
+        }
       } else {
         // Nếu không có từ "Lớp", sử dụng toàn bộ tên lớp
         classNumber = classData.name;
@@ -264,8 +277,10 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               
               /* Typography */
               .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+              .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
               .font-medium { font-weight: 500; }
               .font-semibold { font-weight: 600; }
+              .mt-3 { margin-top: 0.75rem; }
               
               /* Borders */
               .border-gray-100 { border-color: #f3f4f6; }
@@ -657,18 +672,13 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
             <div ref={receiptRef} className="border border-gray-300 p-6 rounded-lg bg-white">
               {/* Header mới theo mẫu */}
               <div className="text-center mb-4">
-                <div className="flex justify-between items-start">
-                  <div className="text-left">
-                    <p className="text-sm font-medium">No. <span className="font-bold">{generateReceiptNumber()}</span></p>
-                  </div>
-                  <div className="flex-1"></div>
-                </div>
                 <p className="font-bold text-xl text-indigo-600">HoeEdu Solution</p>
                 <p className="text-sm text-gray-500 mb-2">0985970322</p>
                 <h3 className="text-2xl font-bold uppercase relative inline-block pb-1">
                   BIÊN NHẬN
                   <span className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500"></span>
                 </h3>
+                <p className="text-lg font-medium mt-3">No. <span className="font-bold receipt-number">{generateReceiptNumber()}</span></p>
               </div>
               
               {/* Ngày tháng */}
