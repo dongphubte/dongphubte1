@@ -135,12 +135,17 @@ export default function ClassList() {
             // Tìm thông tin học sinh trong lớp này
             const classStudentInfo = studentsPerClass.find((c: any) => c.name === classItem.name) || { count: 0 };
             
-            // Tính toán các thống kê giả định về thanh toán (vì API không trả về dữ liệu này theo lớp)
-            // Trong thực tế, bạn sẽ cần API trả về dữ liệu này
+            // Sử dụng thông tin tài chính thực tế từ API
+            const financesData = reportData?.finances || { paidAmount: 0, pendingAmount: 0, overdueAmount: 0 };
+            
+            // Chỉ tính tỷ lệ cho các lớp có học sinh
+            const hasStudents = classStudentInfo.count > 0;
+            
+            // Tính toán dựa trên số lượng học sinh trong lớp
             const paymentStats = {
-              paid: Math.floor(Math.random() * 500000) + 500000,
-              pending: Math.floor(Math.random() * 300000) + 200000,
-              overdue: Math.floor(Math.random() * 200000)
+              paid: hasStudents ? financesData.paidAmount / reportData.studentsPerClass.length : 0,
+              pending: hasStudents ? financesData.pendingAmount / reportData.studentsPerClass.length : 0,
+              overdue: hasStudents ? financesData.overdueAmount / reportData.studentsPerClass.length : 0
             };
             
             // Tính tổng số tiền
@@ -211,42 +216,48 @@ export default function ClassList() {
                     </div>
                   </div>
                   
-                  <div className="space-y-2 mt-4">
-                    <div className="flex justify-between mb-1">
-                      <div className="text-sm font-medium">Thanh toán</div>
-                      <div className="text-sm font-medium">{formatCurrency(totalFees)}</div>
-                    </div>
-                    
-                    <div className="h-3 relative w-full overflow-hidden rounded-full bg-gray-100">
-                      <div
-                        className="h-full bg-green-500 transition-all absolute left-0 top-0"
-                        style={{ width: `${paidPercent}%` }}
-                      />
-                      <div
-                        className="h-full bg-yellow-500 transition-all absolute top-0"
-                        style={{ left: `${paidPercent}%`, width: `${pendingPercent}%` }}
-                      />
-                      <div
-                        className="h-full bg-red-500 transition-all absolute top-0"
-                        style={{ left: `${paidPercent + pendingPercent}%`, width: `${overduePercent}%` }}
-                      />
-                    </div>
-                    
-                    <div className="flex justify-between text-xs mt-2">
-                      <div className="flex items-center">
-                        <div className="h-2 w-2 bg-green-500 rounded-full mr-1"></div>
-                        <span className="text-gray-600">Đã đóng: {formatCurrency(paymentStats.paid)}</span>
+                  {classStudentInfo.count > 0 ? (
+                    <div className="space-y-2 mt-4">
+                      <div className="flex justify-between mb-1">
+                        <div className="text-sm font-medium">Thanh toán</div>
+                        <div className="text-sm font-medium">{formatCurrency(totalFees)}</div>
                       </div>
-                      <div className="flex items-center">
-                        <div className="h-2 w-2 bg-yellow-500 rounded-full mr-1"></div>
-                        <span className="text-gray-600">Chưa đóng: {formatCurrency(paymentStats.pending)}</span>
+                      
+                      <div className="h-3 relative w-full overflow-hidden rounded-full bg-gray-100">
+                        <div
+                          className="h-full bg-green-500 transition-all absolute left-0 top-0"
+                          style={{ width: `${paidPercent}%` }}
+                        />
+                        <div
+                          className="h-full bg-yellow-500 transition-all absolute top-0"
+                          style={{ left: `${paidPercent}%`, width: `${pendingPercent}%` }}
+                        />
+                        <div
+                          className="h-full bg-red-500 transition-all absolute top-0"
+                          style={{ left: `${paidPercent + pendingPercent}%`, width: `${overduePercent}%` }}
+                        />
                       </div>
-                      <div className="flex items-center">
-                        <div className="h-2 w-2 bg-red-500 rounded-full mr-1"></div>
-                        <span className="text-gray-600">Quá hạn: {formatCurrency(paymentStats.overdue)}</span>
+                      
+                      <div className="flex justify-between text-xs mt-2">
+                        <div className="flex items-center">
+                          <div className="h-2 w-2 bg-green-500 rounded-full mr-1"></div>
+                          <span className="text-gray-600">Đã đóng: {formatCurrency(paymentStats.paid)}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="h-2 w-2 bg-yellow-500 rounded-full mr-1"></div>
+                          <span className="text-gray-600">Chưa đóng: {formatCurrency(paymentStats.pending)}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="h-2 w-2 bg-red-500 rounded-full mr-1"></div>
+                          <span className="text-gray-600">Quá hạn: {formatCurrency(paymentStats.overdue)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex items-center mt-4 justify-center p-3 bg-gray-50 rounded-md">
+                      <span className="text-sm text-gray-500">Lớp chưa có học sinh</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
