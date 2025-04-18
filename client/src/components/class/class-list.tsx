@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import ClassForm from "./class-form";
+import { formatCurrency, formatPaymentCycle } from "@/utils/format";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatCurrency, formatPaymentCycle } from "@/utils/format";
 import { 
   Card,
   CardContent,
@@ -245,8 +245,13 @@ export default function ClassList() {
                     <div className="flex items-center">
                       <CreditCard className="h-4 w-4 text-purple-500 mr-2" />
                       <div className="text-xs text-gray-600">
-                        {studentsInClass.length > 0 ? (
-                          // Hiển thị chu kỳ thanh toán của học sinh đầu tiên trong lớp
+                        {classItem.paymentCycle ? (
+                          // Hiển thị chu kỳ thanh toán của lớp nếu có
+                          <Badge variant="outline" className="px-2 py-0 h-5 text-xs whitespace-nowrap border-purple-200 bg-purple-50 text-purple-700">
+                            {formatPaymentCycle(classItem.paymentCycle)}
+                          </Badge>
+                        ) : studentsInClass.length > 0 ? (
+                          // Hoặc chu kỳ của học sinh đầu tiên trong lớp
                           <Badge variant="outline" className="px-2 py-0 h-5 text-xs whitespace-nowrap border-purple-200 bg-purple-50 text-purple-700">
                             {formatPaymentCycle(studentsInClass[0]?.paymentCycle || "1-thang")}
                           </Badge>

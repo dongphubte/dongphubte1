@@ -33,6 +33,7 @@ export const insertClassSchema = createInsertSchema(classes).pick({
   fee: true,
   schedule: true,
   location: true,
+  paymentCycle: true,
 });
 
 // Schema for students
@@ -109,6 +110,9 @@ export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
 export const extendedInsertClassSchema = insertClassSchema.extend({
   fee: z.coerce.number().positive().min(1000, "Giá tiền phải lớn hơn 1.000 VND"),
   schedule: z.string().min(1, "Phải chọn ít nhất một ngày học"),
+  paymentCycle: z.enum(["1-thang", "8-buoi", "10-buoi", "theo-ngay"], {
+    errorMap: () => ({ message: "Chu kỳ thanh toán không hợp lệ" }),
+  }).optional(),
 });
 
 export const extendedInsertStudentSchema = insertStudentSchema.extend({
