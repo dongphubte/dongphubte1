@@ -130,7 +130,7 @@ export const extendedInsertClassSchema = insertClassSchema.extend({
 
 export const extendedInsertStudentSchema = insertStudentSchema.extend({
   phone: z.string().min(10, "Số điện thoại phải có ít nhất 10 ký tự"),
-  paymentCycle: z.enum(["1-thang", "8-buoi", "10-buoi"], {
+  paymentCycle: z.enum(["1-thang", "8-buoi", "10-buoi", "theo-ngay"], {
     errorMap: () => ({ message: "Chu kỳ thanh toán không hợp lệ" }),
   }),
   status: z.enum(["active", "inactive"], {

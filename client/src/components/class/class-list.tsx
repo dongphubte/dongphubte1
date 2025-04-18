@@ -250,7 +250,11 @@ export default function ClassList() {
                   
                   <div className="flex items-center mb-3">
                     <Calendar className="h-5 w-5 text-indigo-500 mr-2" />
-                    <div className="text-sm text-gray-600">{classItem.schedule}</div>
+                    <div className="text-sm text-gray-600">
+                      {classItem.schedule.split(',')
+                        .map(item => item.split('(')[0].trim())
+                        .join(', ')}
+                    </div>
                   </div>
                   
                   <div className="flex items-center mb-4">
