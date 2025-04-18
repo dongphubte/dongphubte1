@@ -30,7 +30,12 @@ export async function sendPasswordResetEmail(to: string, resetLink: string): Pro
     }
 
     // Thiết lập nội dung email
-    const recipients = [new Recipient(to)];
+    const recipients = [
+      {
+        email: to,
+        name: "Người dùng HoeEdu"
+      }
+    ];
     
     // Thay thế biến trong template
     const htmlContent = `
@@ -101,7 +106,12 @@ export async function sendWelcomeEmail(to: string, username: string): Promise<bo
     }
 
     // Thiết lập nội dung email
-    const recipients = [new Recipient(to)];
+    const recipients = [
+      {
+        email: to,
+        name: "Người dùng HoeEdu"
+      }
+    ];
     
     // Thay thế biến trong template
     const htmlContent = `

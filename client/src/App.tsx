@@ -10,6 +10,7 @@ import AuthPage from "@/pages/auth-page";
 import ParentPortal from "@/pages/parent-portal";
 import MobileView from "@/pages/mobile-view";
 import AttendancePage from "@/pages/attendance-page";
+import ResetPassword from "@/pages/reset-password";
 import { AuthProvider } from "./hooks/use-auth";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
             <ProtectedRoute path="/" component={HomePage} />
             <Route path="/auth" component={AuthPage} />
             <Route path="/parent-portal" component={ParentPortal} />
+            <Route path="/reset-password" component={ResetPassword} />
             <ProtectedRoute path="/mobile" component={MobileView} />
             <ProtectedRoute path="/attendance" component={AttendancePage} />
             <Route component={NotFound} />
