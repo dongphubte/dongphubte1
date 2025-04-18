@@ -25,7 +25,11 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
   const queryClient = useQueryClient();
   const [isScheduleValid, setIsScheduleValid] = useState(true);
 
-  const formSchema = extendedInsertClassSchema.extend({
+  const formSchema = z.object({
+    name: z.string().min(1, "Tên lớp là bắt buộc"),
+    fee: z.coerce.number().min(1000, "Giá tiền phải lớn hơn 1.000 VND"),
+    schedule: z.string().min(1, "Phải chọn ít nhất một ngày học"),
+    location: z.string().min(1, "Địa điểm học là bắt buộc"),
     paymentCycle: z.enum(["1-thang", "8-buoi", "10-buoi", "theo-ngay"]).default("1-thang"),
   });
 
@@ -168,11 +172,20 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
   };
 
   const handleFeeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Remove non-numeric characters
-    const value = e.target.value.replace(/\D/g, "");
+    // Remove non-numeric characters and commas
+    const value = e.target.value.replace(/[^\d]/g, "");
     const numericValue = parseInt(value) || 0;
     console.log("Setting fee to:", numericValue);
-    form.setValue("fee", numericValue);
+    
+    // Directly update the fee value in the form
+    form.setValue("fee", numericValue, { 
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true 
+    });
+    
+    // Re-render to update the value
+    e.target.value = formatCurrency(numericValue).replace(" VND", "");
   };
 
   return (
@@ -200,7 +213,7 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
             <Input 
               id="fee"
               placeholder="Nhập giá tiền"
-              value={formatCurrency(form.getValues("fee") || 0).replace(" VND", "")}
+              defaultValue={formatCurrency(form.getValues("fee") || 0).replace(" VND", "")}
               onChange={handleFeeChange}
             />
             {form.formState.errors.fee && (
@@ -242,8 +255,15 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
           <div className="space-y-2">
             <Label htmlFor="paymentCycle">Chu kỳ thanh toán</Label>
             <Select
-              defaultValue={form.getValues("paymentCycle") || "1-thang"}
-              onValueChange={(value: "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay") => form.setValue("paymentCycle", value)}
+              value={form.getValues("paymentCycle") || "1-thang"}
+              onValueChange={(value: "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay") => {
+                console.log("Setting payment cycle to:", value);
+                form.setValue("paymentCycle", value, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                  shouldTouch: true
+                });
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Chọn chu kỳ thanh toán" />
