@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import ClassForm from "./class-form";
-import { formatCurrency, formatPaymentCycle } from "@/utils/format";
+import { formatCurrency, formatPaymentCycle, calculateFeeByPaymentCycle } from "@/utils/format";
 import { 
   AlertDialog,
   AlertDialogAction,

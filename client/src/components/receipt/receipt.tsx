@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Printer, Download, Check, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency, calculateFeeByPaymentCycle } from "@/utils/format";
 import { formatDate } from "@/utils/date-utils";
 import { useReactToPrint } from "react-to-print";
 import { useToast } from "@/hooks/use-toast";
@@ -203,17 +203,8 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
       baseAmount = parseInt(classData.fee, 10);
     }
     
-    // Tính toán dựa trên chu kỳ thanh toán
-    if (student?.paymentCycle === "8-buoi") {
-      // Nếu là 8 buổi, số tiền là phí 1 buổi * 8
-      return baseAmount * 8;
-    } else if (student?.paymentCycle === "10-buoi") {
-      // Nếu là 10 buổi, số tiền là phí 1 buổi * 10
-      return baseAmount * 10;
-    } else {
-      // Nếu là 1 tháng, giữ nguyên số tiền
-      return baseAmount;
-    }
+    // Sử dụng hàm tiện ích để tính học phí dựa theo chu kỳ thanh toán
+    return calculateFeeByPaymentCycle(baseAmount, student?.paymentCycle || "1-thang");
   };
 
   // Create a formatted amount with Vietnamese words
