@@ -220,9 +220,18 @@ export class MemStorage implements IStorage {
   }
 
   async getStudentsByClassId(classId: number): Promise<Student[]> {
-    return Array.from(this.students.values()).filter(
-      (student) => student.classId === classId,
+    console.log(`[DEBUG] getStudentsByClassId: Finding students in class ${classId}`);
+    console.log(`[DEBUG] All students:`, Array.from(this.students.values()));
+    
+    const students = Array.from(this.students.values()).filter(
+      (student) => {
+        console.log(`[DEBUG] Checking student ${student.name}, classId: ${student.classId}, comparing with ${classId}, equals: ${student.classId === classId}`);
+        return student.classId === classId;
+      }
     );
+    
+    console.log(`[DEBUG] Found ${students.length} students in class ${classId}`);
+    return students;
   }
 
   async createStudent(student: InsertStudent): Promise<Student> {
