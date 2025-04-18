@@ -65,13 +65,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/classes/:id", ensureAuthenticated, async (req, res) => {
     try {
-      const validatedData = extendedInsertClassSchema.parse(req.body);
+      console.log("Received update request for class:", req.params.id, "with data:", req.body);
+      
+      // Ensure fee is a number
+      const dataToValidate = {
+        ...req.body,
+        fee: Number(req.body.fee)
+      };
+      
+      const validatedData = extendedInsertClassSchema.parse(dataToValidate);
+      console.log("Validated data:", validatedData);
+      
       const updatedClass = await storage.updateClass(parseInt(req.params.id), validatedData);
       if (!updatedClass) {
         return res.status(404).json({ message: "Không tìm thấy lớp học" });
       }
+      
+      console.log("Class updated successfully:", updatedClass);
       res.json(updatedClass);
     } catch (error) {
+      console.error("Error updating class:", error);
       if (error instanceof ZodError) {
         return res.status(400).json({ errors: formatZodError(error) });
       }

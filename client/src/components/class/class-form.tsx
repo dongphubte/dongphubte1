@@ -116,10 +116,19 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
       return;
     }
 
+    // Log the data being submitted
+    console.log("Submitting data:", data);
+
     if (classToEdit) {
-      updateMutation.mutate(data);
+      updateMutation.mutate({
+        ...data,
+        fee: Number(data.fee) // Ensure fee is a number
+      });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate({
+        ...data,
+        fee: Number(data.fee) // Ensure fee is a number
+      });
     }
   };
 
@@ -161,7 +170,9 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
   const handleFeeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Remove non-numeric characters
     const value = e.target.value.replace(/\D/g, "");
-    form.setValue("fee", parseInt(value) || 0);
+    const numericValue = parseInt(value) || 0;
+    console.log("Setting fee to:", numericValue);
+    form.setValue("fee", numericValue);
   };
 
   return (
