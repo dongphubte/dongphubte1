@@ -57,9 +57,15 @@ export default function AttendanceForm() {
   const today = new Date();
   const formattedDate = formatDate(today);
   
+  // Interface mở rộng để bao gồm thông tin học sinh trong dữ liệu điểm danh
+  interface AttendanceWithStudentInfo extends AttendanceRecord {
+    studentCode?: string;
+    studentName?: string;
+  }
+
   const { data: attendanceData, isLoading: isLoadingAttendance, refetch: refetchAttendance } = useQuery<{
     studentsForToday: StudentForAttendance[];
-    markedAttendance: AttendanceRecord[];
+    markedAttendance: AttendanceWithStudentInfo[];
   }>({
     queryKey: ["/api/attendance/today"],
   });
@@ -146,7 +152,7 @@ export default function AttendanceForm() {
 
   // Combine data for display
   let studentsForToday: StudentForAttendance[] = [];
-  let markedAttendance: AttendanceRecord[] = [];
+  let markedAttendance: AttendanceWithStudentInfo[] = [];
   
   if (attendanceData) {
     // Students who need to be marked
@@ -262,7 +268,7 @@ export default function AttendanceForm() {
                 {markedAttendance.map((record, index) => (
                   <tr key={record.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{index + 1}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.studentId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.studentCode || `ID: ${record.studentId}`}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         record.status === 'present' 
