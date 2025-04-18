@@ -89,7 +89,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
         code: studentToEdit.code,
         phone: studentToEdit.phone,
         classId: studentToEdit.classId,
-        paymentCycle: studentToEdit.paymentCycle as "1-thang" | "8-buoi" | "10-buoi",
+        paymentCycle: studentToEdit.paymentCycle as "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay",
         status: studentToEdit.status as "active" | "inactive",
       });
       setSelectedClassId(studentToEdit.classId);
@@ -187,7 +187,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
       // Cập nhật chu kỳ từ lớp học, chấp nhận tất cả các chu kỳ hợp lệ bao gồm cả "theo-ngay"
       const validCycles = ["1-thang", "8-buoi", "10-buoi", "theo-ngay"];
       if (validCycles.includes(selectedClass.paymentCycle)) {
-        form.setValue("paymentCycle", selectedClass.paymentCycle);
+        form.setValue("paymentCycle", selectedClass.paymentCycle as "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay");
       }
     }
   }, [selectedClass, form]);
