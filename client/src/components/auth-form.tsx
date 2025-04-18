@@ -74,12 +74,10 @@ export default function AuthForm({ onForgotPassword }: { onForgotPassword: () =>
             </div>
             
             <Button
+              type="button"
               variant="link"
               className="p-0 h-auto text-sm text-primary"
-              onClick={(e) => {
-                e.preventDefault();
-                onForgotPassword();
-              }}
+              onClick={onForgotPassword}
             >
               Quên mật khẩu?
             </Button>
@@ -96,11 +94,11 @@ export default function AuthForm({ onForgotPassword }: { onForgotPassword: () =>
             Đăng nhập
           </Button>
           
-          <div className="text-center text-sm text-gray-500 mt-4">
+          {/* <div className="text-center text-sm text-gray-500 mt-4">
             <p>
               Gợi ý: username = dongphubte, password = @Bentre2013
             </p>
-          </div>
+          </div> */}
         </form>
       </Form>
     </div>

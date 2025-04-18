@@ -191,7 +191,11 @@ export class MemStorage implements IStorage {
     const existingClass = await this.getClass(id);
     if (!existingClass) return undefined;
     
-    const updatedClass: Class = { ...classData, id };
+    const updatedClass: Class = { 
+      ...existingClass,
+      ...classData,
+      id
+    };
     this.classes.set(id, updatedClass);
     
     return updatedClass;
