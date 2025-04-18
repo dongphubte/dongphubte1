@@ -137,12 +137,20 @@ export default function StudentList() {
     setReceiptStudent(null);
   };
 
-  // Filter students based on search term
-  const filteredStudents = students?.filter(student => 
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.phone.includes(searchTerm)
-  );
+  // Filter students based on search term and only show active students by default
+  const filteredStudents = students?.filter(student => {
+    // First filter by status - only show active students in the main list
+    const matchesStatus = student.status === 'active';
+    
+    // Then filter by search term if any
+    const matchesSearch = searchTerm ? (
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.phone.includes(searchTerm)
+    ) : true;
+    
+    return matchesStatus && matchesSearch;
+  });
 
   const isLoading = isLoadingStudents || isLoadingClasses || isLoadingPayments;
 

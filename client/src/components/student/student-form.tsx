@@ -261,7 +261,6 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
                 className="bg-neutral-100"
                 value={selectedClass ? formatCurrency(selectedClass.fee) : ""}
               />
-              <p className="text-xs text-neutral-500">Được lấy từ thông tin lớp học</p>
             </div>
             
             <div className="space-y-2">
@@ -272,7 +271,6 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
                 className="bg-neutral-100"
                 value={selectedClass ? selectedClass.schedule : ""}
               />
-              <p className="text-xs text-neutral-500">Được lấy từ thông tin lớp học</p>
             </div>
             
             <div className="space-y-2">
@@ -300,7 +298,18 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
             <div className="space-y-2">
               <Label htmlFor="status">Tình trạng</Label>
               <Select 
-                onValueChange={(value: any) => form.setValue("status", value as "active" | "inactive")}
+                onValueChange={(value: any) => {
+                  const status = value as "active" | "inactive";
+                  form.setValue("status", status);
+                  
+                  // Show toast notification when changing to inactive
+                  if (status === "inactive" && studentToEdit && studentToEdit.status !== "inactive") {
+                    toast({
+                      title: "Học sinh đã được đánh dấu là nghỉ học",
+                      description: "Học sinh này sẽ không còn xuất hiện trong danh sách lớp và không bị tính phí cho kỳ thanh toán tiếp theo.",
+                    });
+                  }
+                }}
                 defaultValue={studentToEdit ? studentToEdit.status : "active"}
               >
                 <SelectTrigger>

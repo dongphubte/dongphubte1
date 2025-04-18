@@ -152,8 +152,13 @@ export default function ClassList() {
             // Tìm học sinh thuộc lớp này
             const studentsInClass = students?.filter(s => s.classId === classId) || [];
             
-            // Tính toán học phí cho lớp này dựa trên học sinh thực tế
+            // Tính toán học phí cho lớp này dựa trên học sinh thực tế và chỉ tính cho học sinh đang học
             const classPayment = studentsInClass.reduce((acc, student) => {
+              // Nếu học sinh đã nghỉ, không tính phí
+              if (student.status === 'inactive') {
+                return acc;
+              }
+              
               let pendingAmount = 0;
               
               // Nếu học sinh chưa có bản ghi thanh toán, tính họ chưa đóng tiền
