@@ -74,6 +74,11 @@ export default function AttendanceForm() {
     queryKey: ["/api/classes"],
   });
   
+  // Lấy thông tin học sinh
+  const { data: students, isLoading: isLoadingStudents } = useQuery<any[]>({
+    queryKey: ["/api/students"],
+  });
+  
   // Force refetch when the component mounts
   useEffect(() => {
     refetchAttendance();
@@ -148,6 +153,17 @@ export default function AttendanceForm() {
       default:
         return "";
     }
+  };
+  
+  // Lấy tên lớp từ ID học sinh
+  const getClassNameById = (studentId: number): string => {
+    if (!students || !classes) return "";
+    
+    const student = students.find(s => s.id === studentId);
+    if (!student) return "";
+    
+    const classItem = classes.find(c => c.id === student.classId);
+    return classItem ? classItem.name : "";
   };
 
   // Combine data for display
@@ -259,7 +275,8 @@ export default function AttendanceForm() {
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã học sinh</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ và tên</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lớp học</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
                 </tr>
@@ -268,7 +285,10 @@ export default function AttendanceForm() {
                 {markedAttendance.map((record, index) => (
                   <tr key={record.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{index + 1}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.studentCode || `ID: ${record.studentId}`}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.studentName || `ID: ${record.studentId}`}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {getClassNameById(record.studentId)}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         record.status === 'present' 
