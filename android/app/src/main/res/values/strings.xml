@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">HoeEduMobile</string>
-    <string name="title_activity_main">HoeEduMobile</string>
+    <string name="app_name">HoeEdu Solution</string>
+    <string name="title_activity_main">HoeEdu Solution</string>
     <string name="package_name">io.hoeedu.app</string>
     <string name="custom_url_scheme">io.hoeedu.app</string>
+    <string name="app_description">Giải pháp quản lý giáo dục toàn diện</string>
 </resources>
