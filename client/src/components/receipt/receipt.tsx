@@ -194,7 +194,16 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
   // Create a formatted amount with Vietnamese words
   const getAmountInWords = () => {
     if (!classData || !('fee' in classData)) return "";
-    const amount = classData.fee;
+    
+    // Ensure the amount is a number
+    let amount = 0;
+    if (typeof classData.fee === 'number') {
+      amount = classData.fee;
+    } else if (typeof classData.fee === 'string') {
+      amount = parseInt(classData.fee, 10);
+    }
+    
+    if (isNaN(amount)) return "không đồng";
     return numberToWords(amount) + " đồng";
   };
 
@@ -217,7 +226,10 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
           </p>
           
           <p className="text-sm mb-1">
-            <span className="font-medium">Đã nhận số tiền:</span> {classData && 'fee' in classData ? formatCurrency(classData.fee) : ""} ({getAmountInWords()})
+            <span className="font-medium">Đã nhận số tiền:</span> {classData && 'fee' in classData ? formatCurrency(classData.fee) : ""} 
+          </p>
+          <p className="text-sm mb-1">
+            <span className="font-medium">Bằng chữ:</span> <span className="italic">{getAmountInWords()}</span>
           </p>
           <p className="text-sm mb-1">
             <span className="font-medium">Học sinh:</span> {student?.name}
@@ -225,9 +237,29 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
           <p className="text-sm mb-1">
             <span className="font-medium">Lớp:</span> {student?.className}
           </p>
-          <p className="text-sm mb-4">
+          <p className="text-sm mb-1">
+            <span className="font-medium">Chu kỳ thanh toán:</span> {student?.paymentCycle === '1-thang' ? 'Theo tháng' : 
+              student?.paymentCycle === '8-buoi' ? '8 buổi' : 
+              student?.paymentCycle === '10-buoi' ? '10 buổi' : 'Chưa xác định'}
+          </p>
+          <p className="text-sm mb-1">
             <span className="font-medium">Học phí tính từ ngày:</span> {formatDate(paymentDate)} đến ngày {getValidUntilDate()}
           </p>
+          
+          {/* Hiển thị thông tin điểm danh nếu có */}
+          {attendance && Array.isArray(attendance) && attendance.length > 0 && (
+            <div className="text-sm mb-4 mt-2 border-t pt-2">
+              <p className="font-medium">Điểm danh:</p>
+              <div className="grid grid-cols-2 gap-1 mt-1">
+                {attendance.slice(0, 8).map((a: any, index: number) => (
+                  <p key={index} className="text-xs">
+                    {formatDate(a.date)}: {a.status === 'present' ? 'Có mặt' : 
+                                           a.status === 'absent' ? 'Vắng mặt' : 'Giáo viên nghỉ'}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
           
           <p className="text-sm mb-4">Phụ huynh vui lòng kiểm tra kỹ số tiền và ngày học của con.</p>
           
