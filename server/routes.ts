@@ -274,20 +274,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Ví dụ: "Thứ 2, 4, 6" hoặc "Thứ 2,4,6" hoặc "Thứ 2-4-6" đều có thể được xác định
         let hasClassToday = false;
         
-        // Kiểm tra thứ trong tuần (Thứ 2, Thứ 3, etc.)
+        // Phân tích thứ trong tuần một cách tốt hơn
         if (dayOfWeek === 'Chủ nhật') {
           hasClassToday = classItem.schedule.includes('CN') || classItem.schedule.includes('Chủ nhật');
         } else {
-          // Với các ngày trong tuần, chỉ cần kiểm tra số của thứ (2, 3, 4, etc.)
-          const dayNumber = today.getDay(); // 0 = CN, 1 = T2, etc.
-          if (dayNumber > 0) { // Không phải Chủ nhật
-            hasClassToday = classItem.schedule.includes(` ${dayNumber}`) || 
-                          classItem.schedule.includes(`,${dayNumber}`) || 
-                          classItem.schedule.includes(`-${dayNumber}`) ||
-                          classItem.schedule.includes(`${dayNumber},`) ||
-                          classItem.schedule.includes(`${dayNumber}-`) ||
-                          classItem.schedule.includes(`${dayNumber} `);
-          }
+          // Trích xuất số của thứ từ dayOfWeek (Thứ 2 -> 2, Thứ 6 -> 6)
+          const dayNumberStr = dayOfWeek.replace('Thứ ', '').trim();
+          
+          // Kiểm tra xem lịch học có chứa thứ này không
+          hasClassToday = classItem.schedule.includes(dayOfWeek) || 
+                        classItem.schedule.includes(`Thứ ${dayNumberStr}`) ||
+                        classItem.schedule.includes(`thứ ${dayNumberStr}`) ||
+                        classItem.schedule.includes(` ${dayNumberStr}`) || 
+                        classItem.schedule.includes(`,${dayNumberStr}`) || 
+                        classItem.schedule.includes(`-${dayNumberStr}`) ||
+                        classItem.schedule.includes(`${dayNumberStr},`) ||
+                        classItem.schedule.includes(`${dayNumberStr}-`) ||
+                        classItem.schedule.includes(`${dayNumberStr} `);
+                        
+          console.log(`Checking if ${classItem.name} has class on ${dayOfWeek} (${dayNumberStr}): ${hasClassToday}`);
         }
         
         if (hasClassToday) {
