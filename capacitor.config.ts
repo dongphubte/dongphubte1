@@ -3,8 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'io.hoeedu.app',
   appName: 'HoeEduMobile',
-  webDir: 'client/dist',
-  bundledWebRuntime: false,
+  webDir: 'dist',
   server: {
     androidScheme: 'https',
     cleartext: true,
