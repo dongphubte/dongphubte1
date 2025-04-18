@@ -34,7 +34,11 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
   const { data: classData } = useQuery<any>({
     queryKey: ["/api/classes"],
     enabled: !!student?.classId,
-    select: (data) => data?.find((c: any) => c.id === student?.classId)
+    select: (data) => {
+      const foundClass = data?.find((c: any) => c.id === student?.classId);
+      console.log("Class data found:", foundClass); 
+      return foundClass;
+    }
   });
   
   // Get payment info
@@ -49,7 +53,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     enabled: !!student?.id,
   });
 
-  const handlePrint = React.useCallback(() => {
+  const handlePrint = useCallback(() => {
     if (receiptRef.current) {
       const printContent = receiptRef.current;
       const printWindow = window.open('', '_blank');
@@ -243,7 +247,13 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
 
   // Calculate fee amount based on payment cycle
   const getFeeAmount = () => {
-    if (!classData || !classData.fee) return 0;
+    console.log("getFeeAmount called with classData:", classData);
+    console.log("student:", student);
+    
+    if (!classData || !classData.fee) {
+      console.log("Missing class data or fee");
+      return 0;
+    }
     
     // Ensure the base amount is a number
     let baseAmount = 0;
@@ -253,8 +263,14 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
       baseAmount = parseInt(String(classData.fee), 10);
     }
     
+    console.log("Base amount after parsing:", baseAmount);
+    console.log("Payment cycle:", student?.paymentCycle);
+    
     // Sử dụng hàm tiện ích để tính học phí dựa theo chu kỳ thanh toán
-    return calculateFeeByPaymentCycle(baseAmount, student?.paymentCycle || "1-thang");
+    const calculatedFee = calculateFeeByPaymentCycle(baseAmount, student?.paymentCycle || "1-thang");
+    console.log("Calculated fee:", calculatedFee);
+    
+    return calculatedFee;
   };
 
   // Create a formatted amount with Vietnamese words
