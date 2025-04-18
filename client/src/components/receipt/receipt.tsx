@@ -165,9 +165,8 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                 print-color-adjust: exact !important;
               }
               
-              /* Các style cụ thể cho phần biên nhận */
-              .border-4 { border-width: 4px; }
-              .border-double { border-style: double; }
+              /* Các style cho mẫu biên nhận mới */
+              .border { border-width: 1px; }
               .border-gray-300 { border-color: #d1d5db; }
               .rounded-lg { border-radius: 0.5rem; }
               .p-6 { padding: 1.5rem; }
@@ -176,29 +175,26 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               /* Header */
               .text-center { text-align: center; }
               .mb-4 { margin-bottom: 1rem; }
-              .pb-2 { padding-bottom: 0.5rem; }
-              .border-b-2 { border-bottom-width: 2px; }
-              .border-gray-200 { border-color: #e5e7eb; }
-              
-              /* Gradient backgrounds */
-              .bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
-              .from-blue-500 { --tw-gradient-from: #3b82f6; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(59, 130, 246, 0)); }
-              .to-purple-500 { --tw-gradient-to: #8b5cf6; }
-              .from-purple-500 { --tw-gradient-from: #8b5cf6; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(139, 92, 246, 0)); }
-              .to-blue-500 { --tw-gradient-to: #3b82f6; }
+              .mb-2 { margin-bottom: 0.5rem; }
+              .pb-1 { padding-bottom: 0.25rem; }
+              .relative { position: relative; }
+              .inline-block { display: inline-block; }
+              .absolute { position: absolute; }
+              .bottom-0 { bottom: 0; }
+              .left-0 { left: 0; }
+              .right-0 { right: 0; }
+              .h-1 { height: 0.25rem; }
+              .bg-indigo-500 { background-color: #6366f1; }
               
               /* Text styles */
-              .text-transparent { color: transparent; }
-              .bg-clip-text { -webkit-background-clip: text; background-clip: text; }
               .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
               .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+              .text-indigo-600 { color: #4f46e5; }
+              .text-gray-500 { color: #6b7280; }
               .font-bold { font-weight: 700; }
               .uppercase { text-transform: uppercase; }
-              .tracking-wide { letter-spacing: 0.025em; }
               
               /* Content sections */
-              .space-y-2 > * + * { margin-top: 0.5rem; }
-              .mb-3 { margin-bottom: 0.75rem; }
               .text-right { text-align: right; }
               .italic { font-style: italic; }
               
@@ -206,40 +202,46 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               .grid { display: grid; }
               .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
               .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+              .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
               .gap-1 { gap: 0.25rem; }
-              .gap-2 { gap: 0.5rem; }
+              .gap-4 { gap: 1rem; }
               
               /* Colors */
-              .bg-gray-50 { background-color: #f9fafb; }
+              .bg-green-50 { background-color: #f0fdf4; }
               .bg-blue-50 { background-color: #eff6ff; }
-              .bg-green-100 { background-color: #d1fae5; }
+              .bg-green-100 { background-color: #dcfce7; }
               .bg-red-100 { background-color: #fee2e2; }
-              .bg-yellow-100 { background-color: #fef3c7; }
+              .bg-yellow-100 { background-color: #fef9c3; }
               .bg-blue-100 { background-color: #dbeafe; }
-              .bg-purple-100 { background-color: #ede9fe; }
+              .bg-purple-100 { background-color: #f3e8ff; }
               
-              .text-green-600, .text-green-700 { color: #059669; }
+              .text-green-600, .text-green-700 { color: #16a34a; }
               .text-red-600, .text-red-700 { color: #dc2626; }
-              .text-yellow-600, .text-yellow-700 { color: #d97706; }
+              .text-yellow-600, .text-yellow-700 { color: #ca8a04; }
               .text-blue-600, .text-blue-700 { color: #2563eb; }
-              .text-purple-600, .text-purple-700 { color: #7c3aed; }
+              .text-purple-600, .text-purple-700 { color: #9333ea; }
               
               /* Additional styles */
               .flex { display: flex; }
               .justify-center { justify-content: center; }
               .justify-between { justify-content: space-between; }
               .items-center { align-items: center; }
-              .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
               .rounded { border-radius: 0.25rem; }
-              .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
-              .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+              .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+              .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+              .p-4 { padding: 1rem; }
+              .mt-6 { margin-top: 1.5rem; }
+              .mt-2 { margin-top: 0.5rem; }
+              .mt-1 { margin-top: 0.25rem; }
+              .mb-1 { margin-bottom: 0.25rem; }
               
               /* Typography */
               .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-              .text-xs { font-size: 0.75rem; line-height: 1rem; }
-              .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
               .font-medium { font-weight: 500; }
               .font-semibold { font-weight: 600; }
+              
+              /* Borders */
+              .border-gray-100 { border-color: #f3f4f6; }
               
               ${cssText}
             </style>
@@ -380,10 +382,45 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
         width: receiptElement.offsetWidth,
         height: receiptElement.offsetHeight,
         
-        // Đảm bảo tất cả pseudo-elements (như ::before, ::after) được render
+        // Cải thiện chất lượng render cho thiết kế mới
         onclone: (documentClone, element) => {
-          // Đảm bảo gradient và các hiệu ứng khác được render
+          // Đảm bảo tất cả CSS được áp dụng đúng cách
           const styles = document.createElement('style');
+          
+          // Thêm CSS cần thiết cho thiết kế mới
+          styles.innerHTML = `
+            .text-indigo-600 { color: #4f46e5 !important; }
+            .bg-indigo-500 { background-color: #6366f1 !important; }
+            .bg-green-50 { background-color: #f0fdf4 !important; }
+            .bg-blue-50 { background-color: #eff6ff !important; }
+            .bg-green-100 { background-color: #dcfce7 !important; }
+            .bg-red-100 { background-color: #fee2e2 !important; }
+            .bg-yellow-100 { background-color: #fef9c3 !important; }
+            .bg-blue-100 { background-color: #dbeafe !important; }
+            .bg-purple-100 { background-color: #f3e8ff !important; }
+            
+            .text-green-600, .text-green-700 { color: #16a34a !important; }
+            .text-red-600, .text-red-700 { color: #dc2626 !important; }
+            .text-yellow-600, .text-yellow-700 { color: #ca8a04 !important; }
+            .text-blue-600, .text-blue-700 { color: #2563eb !important; }
+            .text-purple-600, .text-purple-700 { color: #9333ea !important; }
+            
+            .border { border-width: 1px; border-style: solid; }
+            .border-gray-300 { border-color: #d1d5db; }
+            .border-gray-100 { border-color: #f3f4f6; }
+            
+            .rounded-lg { border-radius: 0.5rem; }
+            .rounded { border-radius: 0.25rem; }
+            
+            /* Đảm bảo vị trí absolute hoạt động đúng */
+            .relative { position: relative; }
+            .absolute { position: absolute; }
+            .bottom-0 { bottom: 0; }
+            .left-0 { left: 0; }
+            .right-0 { right: 0; }
+          `;
+          
+          // Thêm tất cả CSS từ stylesheet hiện tại
           Array.from(document.styleSheets).forEach(stylesheet => {
             try {
               Array.from(stylesheet.cssRules || []).forEach(rule => {
@@ -393,7 +430,19 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               console.warn('Không thể truy cập cssRules:', e);
             }
           });
+          
           documentClone.head.appendChild(styles);
+          
+          // Đảm bảo tất cả phần tử hiển thị đúng
+          const allElements = element.querySelectorAll('*');
+          allElements.forEach(el => {
+            if (el instanceof HTMLElement) {
+              // Đảm bảo tất cả phần tử đều hiển thị
+              if (window.getComputedStyle(el).display === 'none') {
+                el.style.display = 'block';
+              }
+            }
+          });
         }
       });
       
@@ -405,7 +454,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
       
       toast({
         title: "Xuất biên nhận thành công",
-        description: "Biên nhận đã được lưu dưới dạng hình ảnh với chất lượng cao",
+        description: "Biên nhận đã được lưu dưới dạng hình ảnh với định dạng mới",
       });
     } catch (error) {
       console.error("Error generating receipt image:", error);
@@ -568,76 +617,68 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
           
           {/* Tab biên nhận */}
           <TabsContent value="receipt">
-            <div ref={receiptRef} className="border-4 border-double border-gray-300 p-6 rounded-lg bg-white">
-              {/* Header có hoa văn trang trí */}
-              <div className="text-center mb-4 pb-2 border-b-2 border-gray-200">
-                <div className="flex justify-center mb-1">
-                  <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mb-1"></div>
+            <div ref={receiptRef} className="border border-gray-300 p-6 rounded-lg bg-white">
+              {/* Header mới theo mẫu */}
+              <div className="text-center mb-4">
+                <p className="font-bold text-xl text-indigo-600">HoeEdu Solution</p>
+                <p className="text-sm text-gray-500 mb-2">0985970322</p>
+                <h3 className="text-2xl font-bold uppercase relative inline-block pb-1">
+                  BIÊN NHẬN
+                  <span className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500"></span>
+                </h3>
+              </div>
+              
+              {/* Ngày tháng */}
+              <div className="text-right mb-4">
+                <p className="text-sm">
+                  Ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}
+                </p>
+              </div>
+              
+              {/* Thông tin số tiền */}
+              <div className="bg-green-50 p-4 rounded-lg mb-4">
+                <p className="font-medium mb-1">
+                  Đã nhận số tiền: <span className="font-bold">{formatCurrency(customAmount > 0 ? customAmount : getFeeAmount())}</span>
+                </p>
+                <p className="mb-1">
+                  Bằng chữ: <span className="italic">{capitalizeFirstLetter(getAmountInWords())}</span>
+                </p>
+              </div>
+              
+              {/* Thông tin học sinh */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p>Học sinh: <span className="font-semibold">{student?.name}</span></p>
                 </div>
-                <p className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">HoeEdu Solution</p>
-                <p className="text-sm text-neutral-500">0985970322</p>
-                <h3 className="text-2xl font-bold mt-2 uppercase tracking-wide">Biên Nhận</h3>
-                <div className="flex justify-center mt-1">
-                  <div className="h-1 w-24 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"></div>
+                <div>
+                  <p>Mã học sinh: <span className="font-semibold">{student?.code}</span></p>
+                </div>
+                <div>
+                  <p>Lớp: <span className="font-semibold">{student?.className}</span></p>
+                </div>
+                <div>
+                  <p>Chu kỳ thanh toán: <span className="font-semibold">{formatPaymentCycle(student?.paymentCycle || "1-thang")}</span></p>
                 </div>
               </div>
               
-              {/* Nội dung biên nhận */}
-              <div className="space-y-2 mb-4">
-                <p className="text-sm text-right italic mb-3">
-                  Ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}
+              {/* Thời hạn học phí */}
+              <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                <p>
+                  Học phí tính từ ngày: <span className="font-semibold">{formatDate(paymentDate)}</span> đến ngày <span className="font-semibold">{getValidUntilDate()}</span>
                 </p>
-                
-                <div className="bg-gray-50 p-3 rounded-lg mb-3 shadow-sm">
-                  <p className="text-sm mb-1">
-                    <span className="font-medium">Đã nhận số tiền:</span> <span className="font-bold text-lg">{formatCurrency(customAmount > 0 ? customAmount : getFeeAmount())}</span>
+                {customSessions > 0 && (
+                  <p className="mt-1">
+                    Số buổi: <span className="font-semibold">{customSessions} buổi</span>
                   </p>
-                  <p className="text-sm mb-1">
-                    <span className="font-medium">Bằng chữ:</span> <span className="italic">{capitalizeFirstLetter(getAmountInWords())}</span>
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <div className="col-span-2 sm:col-span-1">
-                    <p className="text-sm mb-1">
-                      <span className="font-medium">Học sinh:</span> <span className="font-semibold">{student?.name}</span>
-                    </p>
-                  </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <p className="text-sm mb-1">
-                      <span className="font-medium">Mã học sinh:</span> <span className="font-semibold">{student?.code}</span>
-                    </p>
-                  </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <p className="text-sm mb-1">
-                      <span className="font-medium">Lớp:</span> <span>{student?.className}</span>
-                    </p>
-                  </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <p className="text-sm mb-1">
-                      <span className="font-medium">Chu kỳ thanh toán:</span> <span>{formatPaymentCycle(student?.paymentCycle || "1-thang")}</span>
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="border border-gray-200 rounded-lg p-2 bg-blue-50">
-                  <p className="text-sm mb-1">
-                    <span className="font-medium">Học phí tính từ ngày:</span> <span className="font-semibold">{formatDate(paymentDate)}</span> đến ngày <span className="font-semibold">{getValidUntilDate()}</span>
-                  </p>
-                  {customSessions > 0 && (
-                    <p className="text-sm mb-1">
-                      <span className="font-medium">Số buổi:</span> <span className="font-semibold">{customSessions} buổi</span>
-                    </p>
-                  )}
-                </div>
+                )}
               </div>
               
               {/* Thống kê điểm danh */}
               {!isLoadingAttendance && attendance && Array.isArray(attendance) && attendance.length > 0 ? (
-                <div className="border border-gray-200 rounded-lg bg-gray-50 p-3 space-y-2 mb-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-sm">Thống kê điểm danh</h4>
-                    <span className="text-xs text-gray-500">(Chu kỳ hiện tại)</span>
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold">Thống kê điểm danh</h4>
+                    <span className="text-sm text-gray-500">(Chu kỳ hiện tại)</span>
                   </div>
                   
                   {/* Hiển thị thống kê tổng hợp */}
@@ -645,25 +686,25 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                     const stats = summarizeAttendance(attendance);
                     return (
                       <div className="grid grid-cols-5 gap-1 text-center">
-                        <div className="bg-green-100 rounded p-1">
-                          <p className="text-xs font-medium text-green-700">Có mặt</p>
-                          <p className="text-sm font-bold">{stats.present}</p>
+                        <div className="bg-green-100 rounded p-2">
+                          <p className="text-sm font-medium text-green-700">Có mặt</p>
+                          <p className="font-bold">{stats.present}</p>
                         </div>
-                        <div className="bg-red-100 rounded p-1">
-                          <p className="text-xs font-medium text-red-700">Vắng mặt</p>
-                          <p className="text-sm font-bold">{stats.absent}</p>
+                        <div className="bg-red-100 rounded p-2">
+                          <p className="text-sm font-medium text-red-700">Vắng mặt</p>
+                          <p className="font-bold">{stats.absent}</p>
                         </div>
-                        <div className="bg-yellow-100 rounded p-1">
-                          <p className="text-xs font-medium text-yellow-700">GV nghỉ</p>
-                          <p className="text-sm font-bold">{stats.teacherAbsent}</p>
+                        <div className="bg-yellow-100 rounded p-2">
+                          <p className="text-sm font-medium text-yellow-700">GV nghỉ</p>
+                          <p className="font-bold">{stats.teacherAbsent}</p>
                         </div>
-                        <div className="bg-blue-100 rounded p-1">
-                          <p className="text-xs font-medium text-blue-700">Học bù</p>
-                          <p className="text-sm font-bold">{stats.makeup}</p>
+                        <div className="bg-blue-100 rounded p-2">
+                          <p className="text-sm font-medium text-blue-700">Học bù</p>
+                          <p className="font-bold">{stats.makeup}</p>
                         </div>
-                        <div className="bg-purple-100 rounded p-1">
-                          <p className="text-xs font-medium text-purple-700">Tổng</p>
-                          <p className="text-sm font-bold">{stats.total}</p>
+                        <div className="bg-purple-100 rounded p-2">
+                          <p className="text-sm font-medium text-purple-700">Tổng</p>
+                          <p className="font-bold">{stats.total}</p>
                         </div>
                       </div>
                     );
@@ -671,15 +712,15 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                   
                   {/* Chi tiết điểm danh gần đây */}
                   <div className="mt-2">
-                    <p className="text-xs font-medium mb-1">Chi tiết điểm danh gần đây:</p>
-                    <div className="grid grid-cols-2 gap-1 mt-1">
+                    <p className="text-sm font-medium mb-1">Chi tiết điểm danh gần đây:</p>
+                    <div className="grid grid-cols-2 gap-1">
                       {attendance.slice(0, 6).map((a: any, index: number) => (
-                        <p key={index} className="text-xs flex justify-between bg-white px-2 py-1 rounded">
+                        <p key={index} className="flex justify-between bg-white px-3 py-2 rounded border border-gray-100">
                           <span>{formatDate(new Date(a.date))}:</span>
                           <span className={
-                            a.status === 'present' ? 'text-green-600' : 
-                            a.status === 'absent' ? 'text-red-600' : 
-                            a.status === 'makeup' ? 'text-blue-600' : 'text-yellow-600'
+                            a.status === 'present' ? 'text-green-600 font-medium' : 
+                            a.status === 'absent' ? 'text-red-600 font-medium' : 
+                            a.status === 'makeup' ? 'text-blue-600 font-medium' : 'text-yellow-600 font-medium'
                           }>
                             {formatAttendanceStatus(a.status)}
                           </span>
@@ -697,11 +738,11 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               
               {/* Lịch sử thanh toán */}
               {!isLoadingPayments && payments && Array.isArray(payments) && payments.length > 0 ? (
-                <div className="border border-gray-200 rounded-lg bg-gray-50 p-3 space-y-2 mb-4">
-                  <h4 className="font-semibold text-sm">Lịch sử thanh toán</h4>
-                  <div className="grid grid-cols-1 gap-1 mt-1">
+                <div className="mb-4">
+                  <h4 className="font-semibold mb-2">Lịch sử thanh toán</h4>
+                  <div className="grid grid-cols-1 gap-1">
                     {payments.slice(0, 3).map((p: any, index: number) => (
-                      <div key={index} className="text-xs flex justify-between bg-white px-2 py-1 rounded">
+                      <div key={index} className="flex justify-between bg-white px-3 py-2 rounded border border-gray-100">
                         <span>{formatDate(new Date(p.paymentDate))}:</span>
                         <span className="font-medium">{formatCurrency(p.amount)}</span>
                       </div>
@@ -716,16 +757,12 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               ) : null}
               
               {/* Footer */}
-              <div className="border-t border-gray-200 pt-3 mt-4">
-                <p className="text-sm mb-2 text-center italic">Phụ huynh vui lòng kiểm tra kỹ số tiền và ngày học của con</p>
+              <div className="mt-6">
+                <p className="text-center italic mb-4">Phụ huynh vui lòng kiểm tra kỹ số tiền và ngày học của con</p>
                 
                 <div className="text-right">
-                  <p className="text-sm mb-1">Chân thành cảm ơn</p>
+                  <p className="mb-1">Chân thành cảm ơn</p>
                   <p className="font-medium">Trần Đông Phú</p>
-                </div>
-                
-                <div className="flex justify-center mt-3">
-                  <div className="h-1 w-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
                 </div>
               </div>
             </div>
