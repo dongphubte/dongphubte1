@@ -94,7 +94,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     
     const paymentData = {
       studentId: student.id,
-      amount: classData.fee,
+      amount: getFeeAmount(), // Sử dụng số tiền đã tính dựa trên chu kỳ
       paymentDate: validFrom.toISOString().split('T')[0], // Format as YYYY-MM-DD
       validFrom: validFrom.toISOString().split('T')[0],
       validTo: validTo.toISOString().split('T')[0],
@@ -191,19 +191,37 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
            (num % 1000000 !== 0 ? ' ' + numberToWords(num % 1000000) : '');
   };
 
-  // Create a formatted amount with Vietnamese words
-  const getAmountInWords = () => {
-    if (!classData || !('fee' in classData)) return "";
+  // Calculate fee amount based on payment cycle
+  const getFeeAmount = () => {
+    if (!classData || !('fee' in classData)) return 0;
     
-    // Ensure the amount is a number
-    let amount = 0;
+    // Ensure the base amount is a number
+    let baseAmount = 0;
     if (typeof classData.fee === 'number') {
-      amount = classData.fee;
+      baseAmount = classData.fee;
     } else if (typeof classData.fee === 'string') {
-      amount = parseInt(classData.fee, 10);
+      baseAmount = parseInt(classData.fee, 10);
     }
     
-    if (isNaN(amount)) return "không đồng";
+    // Tính toán dựa trên chu kỳ thanh toán
+    if (student?.paymentCycle === "8-buoi") {
+      // Nếu là 8 buổi, số tiền là phí 1 buổi * 8
+      return baseAmount * 8;
+    } else if (student?.paymentCycle === "10-buoi") {
+      // Nếu là 10 buổi, số tiền là phí 1 buổi * 10
+      return baseAmount * 10;
+    } else {
+      // Nếu là 1 tháng, giữ nguyên số tiền
+      return baseAmount;
+    }
+  };
+
+  // Create a formatted amount with Vietnamese words
+  const getAmountInWords = () => {
+    // Get the calculated amount
+    const amount = getFeeAmount();
+    
+    if (isNaN(amount) || amount === 0) return "không đồng";
     return numberToWords(amount) + " đồng";
   };
 
@@ -226,7 +244,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
           </p>
           
           <p className="text-sm mb-1">
-            <span className="font-medium">Đã nhận số tiền:</span> {classData && 'fee' in classData ? formatCurrency(classData.fee) : ""} 
+            <span className="font-medium">Đã nhận số tiền:</span> {formatCurrency(getFeeAmount())} 
           </p>
           <p className="text-sm mb-1">
             <span className="font-medium">Bằng chữ:</span> <span className="italic">{getAmountInWords()}</span>
