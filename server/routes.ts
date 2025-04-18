@@ -224,6 +224,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = extendedInsertPaymentSchema.parse(req.body);
       const newPayment = await storage.createPayment(validatedData);
+      
+      // Cập nhật trạng thái thanh toán cho học sinh
+      if (validatedData.status === "paid") {
+        try {
+          // Lấy thông tin học sinh hiện tại
+          const student = await storage.getStudent(validatedData.studentId);
+          if (student) {
+            // Cập nhật paymentStatus thành "paid"
+            await storage.updateStudent(student.id, {
+              ...student,
+              paymentStatus: "paid"
+            });
+          }
+        } catch (updateError) {
+          console.error("Lỗi khi cập nhật trạng thái thanh toán cho học sinh:", updateError);
+          // Không trả về lỗi này cho client vì thanh toán đã thành công
+        }
+      }
+      
       res.status(201).json(newPayment);
     } catch (error) {
       if (error instanceof ZodError) {
