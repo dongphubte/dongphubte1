@@ -53,7 +53,7 @@ export interface IStorage {
   deleteAttendance(id: number): Promise<boolean>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 }
 
 export class MemStorage implements IStorage {
@@ -63,7 +63,7 @@ export class MemStorage implements IStorage {
   private payments: Map<number, Payment>;
   private attendance: Map<number, Attendance>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: any;
   
   private currentUserId: number;
   private currentClassId: number;
@@ -128,7 +128,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      resetToken: null,
+      resetTokenExpiry: null
+    };
     this.users.set(id, user);
     return user;
   }
@@ -164,8 +169,8 @@ export class MemStorage implements IStorage {
     const user = await this.getUser(id);
     if (!user) return false;
     
-    user.resetToken = undefined;
-    user.resetTokenExpiry = undefined;
+    user.resetToken = null;
+    user.resetTokenExpiry = null;
     this.users.set(id, user);
     
     return true;
@@ -182,7 +187,11 @@ export class MemStorage implements IStorage {
 
   async createClass(classData: InsertClass): Promise<Class> {
     const id = this.currentClassId++;
-    const newClass: Class = { ...classData, id };
+    const newClass: Class = { 
+      ...classData, 
+      id,
+      paymentCycle: classData.paymentCycle || null 
+    };
     this.classes.set(id, newClass);
     return newClass;
   }
@@ -243,6 +252,7 @@ export class MemStorage implements IStorage {
     const newStudent: Student = { 
       ...student, 
       id,
+      status: student.status || "active",
       registrationDate: new Date() 
     };
     this.students.set(id, newStudent);

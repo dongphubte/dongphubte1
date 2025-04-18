@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Class, extendedInsertClassSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency, formatPaymentCycle } from "@/utils/format";
+import { formatCurrency } from "@/utils/format";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ClassFormProps {
