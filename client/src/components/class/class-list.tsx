@@ -177,7 +177,10 @@ export default function ClassList() {
               // Nếu học sinh chưa có bản ghi thanh toán, tính họ chưa đóng tiền
               const studentPayments = payments?.filter(p => p.studentId === student.id) || [];
               if (studentPayments.length === 0) {
-                pendingAmount = classItem.fee; // Học sinh chưa đóng tiền
+                // Tính toán học phí dựa vào chu kỳ thanh toán của học sinh
+                const paymentCycle = student.paymentCycle || classItem.paymentCycle || "1-thang";
+                // Import hàm calculateFeeByPaymentCycle từ utils/format.ts
+                pendingAmount = calculateFeeByPaymentCycle(classItem.fee, paymentCycle);
               }
               
               return {
@@ -258,7 +261,15 @@ export default function ClassList() {
                   <div className="mb-2">
                     <div className="flex justify-between items-center mb-1">
                       <div className="text-sm font-medium">Học phí</div>
-                      <div className="text-sm font-semibold">{formatCurrency(classItem.fee)}</div>
+                      <div className="text-sm font-semibold">
+                        {classItem.paymentCycle === '8-buoi' || classItem.paymentCycle === '10-buoi' ? (
+                          // Nếu là chu kỳ theo buổi, hiển thị phí 1 buổi
+                          <>{formatCurrency(classItem.fee)} / buổi</>
+                        ) : (
+                          // Nếu là chu kỳ theo tháng, hiển thị phí 1 tháng
+                          formatCurrency(classItem.fee)
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center">
                       <CreditCard className="h-4 w-4 text-purple-500 mr-2" />
