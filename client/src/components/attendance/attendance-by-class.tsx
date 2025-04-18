@@ -113,6 +113,52 @@ export default function AttendanceByClass() {
       });
     },
   });
+  
+  // Mutation để cập nhật điểm danh
+  const updateAttendanceMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/attendance/${id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
+      toast({
+        title: "Thành công",
+        description: "Đã cập nhật điểm danh thành công",
+      });
+      setShowEditDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lỗi",
+        description: `Không thể cập nhật điểm danh: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation để xóa điểm danh
+  const deleteAttendanceMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/attendance/${id}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
+      toast({
+        title: "Thành công",
+        description: "Đã xóa điểm danh thành công",
+      });
+      setShowDetailsDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lỗi",
+        description: `Không thể xóa điểm danh: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Tạo thống kê điểm danh theo lớp
   const classAttendanceSummary = React.useMemo(() => {
@@ -237,6 +283,49 @@ export default function AttendanceByClass() {
     setSelectedClass(classData);
     setShowDetailsDialog(true);
   };
+  
+  // Hiển thị dialog sửa điểm danh
+  const handleEditAttendance = (attendance: AttendanceDetail) => {
+    setSelectedAttendance(attendance);
+    setEditAttendanceStatus(attendance.status);
+    setShowEditDialog(true);
+  };
+  
+  // Xử lý cập nhật điểm danh
+  const handleUpdateAttendance = async () => {
+    if (!selectedAttendance) return;
+    
+    try {
+      await updateAttendanceMutation.mutateAsync({
+        id: selectedAttendance.id,
+        data: {
+          status: editAttendanceStatus,
+          date: selectedAttendance.date.split('T')[0], // Chỉ lấy phần ngày yyyy-MM-dd
+          studentId: selectedAttendance.studentId
+        }
+      });
+    } catch (error) {
+      console.error("Lỗi khi cập nhật điểm danh:", error);
+    }
+  };
+  
+  // Hiển thị xác nhận xóa điểm danh
+  const handleDeleteConfirm = (attendance: AttendanceDetail) => {
+    setSelectedAttendance(attendance);
+    setShowDeleteConfirm(true);
+  };
+  
+  // Xử lý xóa điểm danh
+  const handleDeleteAttendance = async () => {
+    if (!selectedAttendance) return;
+    
+    try {
+      await deleteAttendanceMutation.mutateAsync(selectedAttendance.id);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error("Lỗi khi xóa điểm danh:", error);
+    }
+  };
 
   // Hiển thị dialog điểm danh cho lớp học
   const showAttendance = (classData: ClassAttendanceSummary) => {
@@ -322,6 +411,12 @@ export default function AttendanceByClass() {
   // State để lưu trữ thông tin dialog học bù
   const [showMakeupDialog, setShowMakeupDialog] = useState(false);
   const [selectedMakeupClass, setSelectedMakeupClass] = useState<ClassAttendanceSummary | null>(null);
+  
+  // States cho việc sửa điểm danh
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedAttendance, setSelectedAttendance] = useState<AttendanceDetail | null>(null);
+  const [editAttendanceStatus, setEditAttendanceStatus] = useState<string>("present");
   
   // Hiển thị dialog chọn lớp cho học bù
   const showMakeupAttendance = () => {
@@ -523,6 +618,7 @@ export default function AttendanceByClass() {
                     <TableHead>Học sinh</TableHead>
                     <TableHead>Mã học sinh</TableHead>
                     <TableHead>Trạng thái</TableHead>
+                    <TableHead>Thao tác</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -534,6 +630,28 @@ export default function AttendanceByClass() {
                         <TableCell>{record.studentCode}</TableCell>
                         <TableCell>
                           <StatusBadge status={record.status} />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEditAttendance(record)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <span className="sr-only">Sửa</span>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleDeleteConfirm(record)}
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
+                            >
+                              <span className="sr-only">Xóa</span>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
