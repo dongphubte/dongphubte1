@@ -164,6 +164,13 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
 
   // Get the selected class details
   const selectedClass = classes?.find(c => c.id === selectedClassId);
+  
+  // Set payment cycle from class if available
+  useEffect(() => {
+    if (selectedClass && selectedClass.paymentCycle && !studentToEdit) {
+      form.setValue("paymentCycle", selectedClass.paymentCycle);
+    }
+  }, [selectedClass, form, studentToEdit]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
