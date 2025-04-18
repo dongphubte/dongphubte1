@@ -266,6 +266,7 @@ export class MemStorage implements IStorage {
     const updatedStudent: Student = { 
       ...student, 
       id,
+      status: student.status || existingStudent.status,
       registrationDate: existingStudent.registrationDate
     };
     this.students.set(id, updatedStudent);
@@ -300,6 +301,7 @@ export class MemStorage implements IStorage {
     const newPayment: Payment = { 
       ...payment, 
       id,
+      status: payment.status || "paid",
       paymentDate: new Date() 
     };
     this.payments.set(id, newPayment);
@@ -313,6 +315,7 @@ export class MemStorage implements IStorage {
     const updatedPayment: Payment = { 
       ...payment, 
       id,
+      status: payment.status || existingPayment.status,
       paymentDate: existingPayment.paymentDate
     };
     this.payments.set(id, updatedPayment);
