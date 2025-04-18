@@ -132,13 +132,49 @@ export function setupAuth(app: Express) {
     
     await storage.updateUserResetToken(user.id, token, expiry);
     
-    // In a real app, send an email with the reset link
-    // For now, we'll just return the token as a response
-    res.json({
-      message: "Link đặt lại mật khẩu đã được gửi đến email",
-      // In production, remove this
-      resetLink: `/reset-password?token=${token}`,
-    });
+    try {
+      // Import sendPasswordResetEmail from email-service
+      const { sendPasswordResetEmail } = require("./email-service");
+      
+      // Tạo link đặt lại mật khẩu (thay thế bằng domain thực tế khi triển khai)
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://hoedu.vn' 
+        : 'http://localhost:5000';
+      
+      const resetLink = `${baseUrl}/reset-password?token=${token}`;
+      
+      // Gửi email đặt lại mật khẩu
+      const emailSent = await sendPasswordResetEmail(email, resetLink);
+      
+      if (emailSent) {
+        return res.json({
+          message: "Link đặt lại mật khẩu đã được gửi đến email của bạn"
+        });
+      } else {
+        console.error("Không thể gửi email đặt lại mật khẩu");
+        // Vẫn trả về token trong môi trường phát triển để dễ kiểm tra
+        if (process.env.NODE_ENV !== 'production') {
+          return res.json({
+            message: "Link đặt lại mật khẩu đã được gửi đến email (giả lập)",
+            resetLink: `/reset-password?token=${token}`, // Chỉ hiển thị trong môi trường phát triển
+          });
+        } else {
+          return res.status(500).send("Không thể gửi email đặt lại mật khẩu");
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi khi xử lý email đặt lại mật khẩu:", error);
+      
+      // Trong môi trường phát triển, vẫn trả về token để kiểm tra
+      if (process.env.NODE_ENV !== 'production') {
+        return res.json({
+          message: "Link đặt lại mật khẩu đã được gửi đến email (giả lập)",
+          resetLink: `/reset-password?token=${token}`, // Chỉ hiển thị trong môi trường phát triển
+        });
+      } else {
+        return res.status(500).send("Lỗi hệ thống khi xử lý yêu cầu đặt lại mật khẩu");
+      }
+    }
   });
 
   app.post("/api/reset-password", async (req, res) => {
