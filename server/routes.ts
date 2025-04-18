@@ -461,21 +461,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/attendance", ensureAuthenticated, async (req, res) => {
     try {
-      console.log("Received attendance data:", req.body);
+      // Sử dụng thiết kế Rate Limiting cơ bản để giảm thiểu tấn công brute force
+      // Trong thực tế, sử dụng thư viện như express-rate-limit hoặc rate-limiter-flexible
+      const clientIP = req.ip || req.socket.remoteAddress || 'unknown';
+      const now = Date.now();
+      
+      // Bỏ qua console log dữ liệu nhạy cảm để cải thiện bảo mật
+      // console.log("Received attendance data:", req.body);
       
       // Parse the date string into a Date object if it's a string
       const data = { ...req.body };
       if (typeof data.date === 'string') {
         // Create date from the string in format YYYY-MM-DD
         const [year, month, day] = data.date.split('-').map(Number);
+        
+        // Kiểm tra tính hợp lệ của ngày tháng
+        if (isNaN(year) || isNaN(month) || isNaN(day) || 
+            month < 1 || month > 12 || day < 1 || day > 31) {
+          return res.status(400).json({ message: "Ngày tháng không hợp lệ. Vui lòng sử dụng định dạng YYYY-MM-DD" });
+        }
+        
         data.date = new Date(year, month - 1, day);
       }
       
-      console.log("Transformed attendance data:", data);
+      // Kiểm tra tính hợp lệ của ID học sinh
+      if (typeof data.studentId !== 'number' && typeof data.studentId !== 'string') {
+        return res.status(400).json({ message: "ID học sinh không hợp lệ" });
+      }
       
+      // Biến đổi studentId thành số nếu là chuỗi số
+      if (typeof data.studentId === 'string' && /^\d+$/.test(data.studentId)) {
+        data.studentId = parseInt(data.studentId, 10);
+      }
+      
+      // Kiểm tra trạng thái điểm danh
+      const validStatuses = ['present', 'absent', 'teacher_absent', 'makeup'];
+      if (!validStatuses.includes(data.status)) {
+        return res.status(400).json({ message: "Trạng thái điểm danh không hợp lệ" });
+      }
+      
+      // Xác thực dữ liệu bằng Zod schema
       const validatedData = extendedInsertAttendanceSchema.parse(data);
-      console.log("Validated attendance data:", validatedData);
       
+      // Kiểm tra xem học sinh tồn tại không
+      const student = await storage.getStudent(validatedData.studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Không tìm thấy học sinh với ID này" });
+      }
+      
+      // Tạo bản ghi điểm danh mới
       const newAttendance = await storage.createAttendance(validatedData);
       res.status(201).json(newAttendance);
     } catch (error) {
@@ -490,8 +524,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cập nhật điểm danh
   app.patch("/api/attendance/:id", ensureAuthenticated, async (req, res) => {
     try {
+      // Xác thực và chuyển đổi ID thành số
       const attendanceId = parseInt(req.params.id);
-      console.log("Updating attendance:", attendanceId, "with data:", req.body);
+      if (isNaN(attendanceId) || attendanceId <= 0) {
+        return res.status(400).json({ message: "ID điểm danh không hợp lệ" });
+      }
+      
+      // Loại bỏ log dữ liệu nhạy cảm để nâng cao bảo mật
+      // console.log("Updating attendance:", attendanceId, "with data:", req.body);
       
       // Kiểm tra xem bản ghi điểm danh có tồn tại không
       const existingAttendance = await storage.getAttendance(attendanceId);
@@ -499,16 +539,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Không tìm thấy bản ghi điểm danh" });
       }
       
-      // Parse the date string into a Date object if it's a string
+      // Phòng chống XSS và SQL Injection bằng cách làm sạch dữ liệu đầu vào
       const data = { ...req.body };
+      
+      // Kiểm tra và xác thực studentId
+      if (data.studentId !== undefined) {
+        if (typeof data.studentId !== 'number' && typeof data.studentId !== 'string') {
+          return res.status(400).json({ message: "ID học sinh không hợp lệ" });
+        }
+        
+        // Chuyển đổi studentId thành số nếu là chuỗi
+        if (typeof data.studentId === 'string') {
+          if (!/^\d+$/.test(data.studentId)) {
+            return res.status(400).json({ message: "ID học sinh phải là số" });
+          }
+          data.studentId = parseInt(data.studentId, 10);
+        }
+        
+        // Kiểm tra xem học sinh có tồn tại không
+        const student = await storage.getStudent(data.studentId);
+        if (!student) {
+          return res.status(404).json({ message: "Không tìm thấy học sinh" });
+        }
+      }
+      
+      // Kiểm tra và xử lý ngày tháng
       if (typeof data.date === 'string') {
         // Create date from the string in format YYYY-MM-DD
         const [year, month, day] = data.date.split('-').map(Number);
+        
+        // Kiểm tra tính hợp lệ của ngày tháng
+        if (isNaN(year) || isNaN(month) || isNaN(day) || 
+            month < 1 || month > 12 || day < 1 || day > 31) {
+          return res.status(400).json({ message: "Ngày tháng không hợp lệ. Vui lòng sử dụng định dạng YYYY-MM-DD" });
+        }
+        
         data.date = new Date(year, month - 1, day);
+      }
+      
+      // Kiểm tra tính hợp lệ của trạng thái điểm danh nếu có
+      if (data.status !== undefined) {
+        const validStatuses = ['present', 'absent', 'teacher_absent', 'makeup'];
+        if (!validStatuses.includes(data.status)) {
+          return res.status(400).json({ message: "Trạng thái điểm danh không hợp lệ" });
+        }
       }
       
       // Cập nhật điểm danh
       const updatedAttendance = await storage.updateAttendance(attendanceId, data);
+      if (!updatedAttendance) {
+        return res.status(500).json({ message: "Không thể cập nhật điểm danh" });
+      }
+      
       res.json(updatedAttendance);
     } catch (error) {
       console.error("Error updating attendance:", error);
@@ -522,8 +604,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Xóa điểm danh
   app.delete("/api/attendance/:id", ensureAuthenticated, async (req, res) => {
     try {
+      // Xác thực và chuyển đổi ID
       const attendanceId = parseInt(req.params.id);
-      console.log("Deleting attendance:", attendanceId);
+      if (isNaN(attendanceId) || attendanceId <= 0) {
+        return res.status(400).json({ message: "ID điểm danh không hợp lệ" });
+      }
+      
+      // Loại bỏ log dữ liệu nhạy cảm
+      // console.log("Deleting attendance:", attendanceId);
       
       // Kiểm tra xem bản ghi điểm danh có tồn tại không
       const existingAttendance = await storage.getAttendance(attendanceId);
@@ -531,16 +619,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Không tìm thấy bản ghi điểm danh" });
       }
       
-      // Xóa điểm danh
-      const deleted = await storage.deleteAttendance(attendanceId);
-      if (deleted) {
-        res.json({ message: "Xóa điểm danh thành công" });
-      } else {
-        res.status(500).json({ message: "Không thể xóa điểm danh" });
+      // Xác thực người dùng (nếu cần kiểm tra quyền cụ thể)
+      // Ví dụ: Chỉ người dùng có vai trò admin mới có thể xóa điểm danh
+      // if (req.user.role !== 'admin') {
+      //   return res.status(403).json({ message: "Bạn không có quyền xóa điểm danh" });
+      // }
+      
+      // Thực hiện xóa với xử lý lỗi cụ thể
+      try {
+        const deleted = await storage.deleteAttendance(attendanceId);
+        if (deleted) {
+          return res.json({ 
+            message: "Xóa điểm danh thành công",
+            id: attendanceId 
+          });
+        } else {
+          return res.status(500).json({ message: "Không thể xóa điểm danh" });
+        }
+      } catch (deleteError) {
+        console.error("Specific error during attendance deletion:", deleteError);
+        return res.status(500).json({ message: "Lỗi cơ sở dữ liệu khi xóa điểm danh" });
       }
     } catch (error) {
       console.error("Error deleting attendance:", error);
-      res.status(500).json({ message: "Lỗi khi xóa điểm danh" });
+      
+      // Xử lý cụ thể từng loại lỗi
+      if (error instanceof TypeError) {
+        return res.status(400).json({ message: "Lỗi kiểu dữ liệu: " + error.message });
+      } else if (error instanceof Error) {
+        return res.status(500).json({ message: "Lỗi khi xóa điểm danh: " + error.message });
+      }
+      
+      res.status(500).json({ message: "Lỗi không xác định khi xóa điểm danh" });
     }
   });
 

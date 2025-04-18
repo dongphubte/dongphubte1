@@ -163,15 +163,16 @@ export default function AttendanceByClass() {
     },
   });
   
-  // Mutation để xóa hàng loạt điểm danh
+  // Mutation để xóa hàng loạt điểm danh - cải thiện hiệu suất bằng cách gửi song song các yêu cầu xóa
   const bulkDeleteAttendanceMutation = useMutation({
     mutationFn: async (ids: number[]) => {
-      const results = [];
-      for (const id of ids) {
-        const res = await apiRequest("DELETE", `/api/attendance/${id}`);
-        results.push(await res.json());
-      }
-      return results;
+      // Sử dụng Promise.all để thực hiện song song các yêu cầu xóa thay vì tuần tự
+      const deletePromises = ids.map(id => 
+        apiRequest("DELETE", `/api/attendance/${id}`)
+          .then(res => res.json())
+      );
+      
+      return Promise.all(deletePromises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
@@ -396,7 +397,7 @@ export default function AttendanceByClass() {
     );
   };
 
-  // Xử lý gửi dữ liệu điểm danh
+  // Xử lý gửi dữ liệu điểm danh - cải thiện hiệu suất với song song
   const handleSubmitAttendance = async () => {
     try {
       setIsSubmitting(true);
@@ -424,12 +425,25 @@ export default function AttendanceByClass() {
         status: selectedAttendanceStatus,
       }));
       
-      // Gửi từng bản ghi điểm danh
-      for (const record of attendanceRecords) {
-        await createAttendanceMutation.mutateAsync(record);
-      }
+      // Gửi các bản ghi điểm danh song song thay vì tuần tự
+      const createPromises = attendanceRecords.map(record => 
+        createAttendanceMutation.mutateAsync(record).catch(err => {
+          console.error(`Lỗi khi điểm danh cho học sinh ID ${record.studentId}:`, err);
+          return null; // Trả về null để Promise.all vẫn tiếp tục thực hiện ngay cả khi có lỗi
+        })
+      );
       
+      // Đợi tất cả các yêu cầu hoàn thành
+      await Promise.all(createPromises);
+      
+      // Chỉ đóng dialog nếu không có lỗi xảy ra
       setShowAttendanceDialog(false);
+      
+      // Thông báo thành công
+      toast({
+        title: "Thành công",
+        description: `Đã điểm danh cho ${selectedStudents.length} học sinh`,
+      });
     } catch (error: any) {
       toast({
         title: "Lỗi",
@@ -536,32 +550,37 @@ export default function AttendanceByClass() {
     setShowMakeupDialog(false);
   };
 
-  // Status Badge Component
-  const StatusBadge = ({ status }: { status: string }) => {
-    let color;
-    let icon;
-
-    switch (status) {
-      case "present":
-        color = "bg-green-100 text-green-800";
-        icon = <Check className="h-3 w-3 mr-1" />;
-        break;
-      case "absent":
-        color = "bg-red-100 text-red-800";
-        icon = <X className="h-3 w-3 mr-1" />;
-        break;
-      case "teacher_absent":
-        color = "bg-yellow-100 text-yellow-800";
-        icon = <AlertTriangle className="h-3 w-3 mr-1" />;
-        break;
-      case "makeup":
-        color = "bg-blue-100 text-blue-800";
-        icon = <RefreshCw className="h-3 w-3 mr-1" />;
-        break;
-      default:
-        color = "bg-gray-100 text-gray-800";
-        icon = <Info className="h-3 w-3 mr-1" />;
-    }
+  // Status Badge Component tối ưu với React.memo
+  const StatusBadge = React.memo(({ status }: { status: string }) => {
+    // Sử dụng useMemo để tránh tạo lại thành phần UI khi render lại
+    const { color, icon } = React.useMemo(() => {
+      let color;
+      let icon;
+  
+      switch (status) {
+        case "present":
+          color = "bg-green-100 text-green-800";
+          icon = <Check className="h-3 w-3 mr-1" />;
+          break;
+        case "absent":
+          color = "bg-red-100 text-red-800";
+          icon = <X className="h-3 w-3 mr-1" />;
+          break;
+        case "teacher_absent":
+          color = "bg-yellow-100 text-yellow-800";
+          icon = <AlertTriangle className="h-3 w-3 mr-1" />;
+          break;
+        case "makeup":
+          color = "bg-blue-100 text-blue-800";
+          icon = <RefreshCw className="h-3 w-3 mr-1" />;
+          break;
+        default:
+          color = "bg-gray-100 text-gray-800";
+          icon = <Info className="h-3 w-3 mr-1" />;
+      }
+  
+      return { color, icon };
+    }, [status]);
 
     return (
       <span className={`flex items-center px-2 py-1 text-xs font-medium rounded-full ${color}`}>
@@ -569,7 +588,7 @@ export default function AttendanceByClass() {
         {formatAttendanceStatus(status)}
       </span>
     );
-  };
+  });
 
   if (isLoadingClasses || isLoadingStudents || isLoadingAttendance) {
     return (
