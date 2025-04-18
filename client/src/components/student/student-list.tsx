@@ -125,7 +125,7 @@ export default function StudentList() {
     return latestPayment.status;
   };
 
-  const showReceipt = (student: Student) => {
+  const showReceipt = (student: Student, forPayment: boolean = false) => {
     const studentWithClass: StudentWithClass = {
       ...student,
       className: getClassName(student.classId),

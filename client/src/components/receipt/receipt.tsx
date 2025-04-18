@@ -79,7 +79,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
   
   // Handle payment confirmation
   const handlePayment = () => {
-    if (!student || !classData) return;
+    if (!student || !classData || !('fee' in classData)) return;
     
     const validFrom = new Date();
     const validTo = new Date();
@@ -193,7 +193,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
 
   // Create a formatted amount with Vietnamese words
   const getAmountInWords = () => {
-    if (!classData) return "";
+    if (!classData || !('fee' in classData)) return "";
     const amount = classData.fee;
     return numberToWords(amount) + " đồng";
   };
@@ -217,7 +217,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
           </p>
           
           <p className="text-sm mb-1">
-            <span className="font-medium">Đã nhận số tiền:</span> {classData && classData.fee ? formatCurrency(classData.fee) : ""} ({getAmountInWords()})
+            <span className="font-medium">Đã nhận số tiền:</span> {classData && 'fee' in classData ? formatCurrency(classData.fee) : ""} ({getAmountInWords()})
           </p>
           <p className="text-sm mb-1">
             <span className="font-medium">Học sinh:</span> {student?.name}
@@ -241,40 +241,47 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
           <p className="text-sm text-neutral-500">
             Mã học sinh: {student?.code}
           </p>
-          <div className="flex space-x-2">
-            {/* Hiển thị nút thanh toán nếu trạng thái thanh toán là pending hoặc overdue */}
-            {student?.paymentStatus === 'pending' || student?.paymentStatus === 'overdue' ? (
-              <Button 
-                onClick={handlePayment}
-                disabled={paymentMutation.isPending || isPaymentComplete}
-                className={isPaymentComplete ? "bg-success hover:bg-success" : ""}
-              >
-                {paymentMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Đang xử lý...
-                  </>
-                ) : isPaymentComplete ? (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Đã thanh toán
-                  </>
-                ) : (
-                  "Xác nhận thanh toán"
-                )}
-              </Button>
-            ) : null}
+          <div className="flex flex-wrap sm:flex-nowrap space-x-0 sm:space-x-2 space-y-2 sm:space-y-0">
+            {/* Nút thanh toán */}
+            <Button 
+              onClick={handlePayment}
+              disabled={paymentMutation.isPending || isPaymentComplete}
+              className={`w-full sm:w-auto ${isPaymentComplete ? "bg-success hover:bg-success" : ""}`}
+            >
+              {paymentMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : isPaymentComplete ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Đã thanh toán
+                </>
+              ) : (
+                "Xác nhận thanh toán"
+              )}
+            </Button>
             
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
               Đóng
             </Button>
             
-            <Button onClick={() => handlePrint()} type="button">
+            <Button 
+              onClick={() => handlePrint()} 
+              type="button" 
+              className="w-full sm:w-auto"
+            >
               <Printer className="h-4 w-4 mr-2" />
               In biên nhận
             </Button>
             
-            <Button variant="secondary" onClick={captureAndDownloadReceipt} disabled={isProcessing}>
+            <Button 
+              variant="secondary" 
+              onClick={captureAndDownloadReceipt} 
+              disabled={isProcessing}
+              className="w-full sm:w-auto"
+            >
               {isProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
