@@ -17,7 +17,34 @@ import {
 } from "recharts";
 
 export default function Dashboard() {
-  const { data: reportData, isLoading } = useQuery({
+  interface DashboardData {
+    students: {
+      total: number;
+      active: number;
+      inactive: number;
+    };
+    finances: {
+      paidAmount: number;
+      pendingAmount: number;
+      overdueAmount: number;
+      totalAmount: number;
+    };
+    attendance: {
+      present: number;
+      absent: number;
+      teacherAbsent: number;
+    };
+    studentsPerClass: Array<{
+      name: string;
+      count: number;
+    }>;
+    monthlyRevenue: Array<{
+      month: string;
+      amount: number;
+    }>;
+  }
+
+  const { data: reportData, isLoading } = useQuery<DashboardData>({
     queryKey: ["/api/reports/dashboard"],
   });
 

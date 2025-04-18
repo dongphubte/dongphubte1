@@ -56,7 +56,10 @@ export default function AttendanceForm() {
   const today = new Date();
   const formattedDate = formatDate(today);
   
-  const { data: attendanceData, isLoading: isLoadingAttendance } = useQuery({
+  const { data: attendanceData, isLoading: isLoadingAttendance } = useQuery<{
+    studentsForToday: StudentForAttendance[];
+    markedAttendance: AttendanceRecord[];
+  }>({
     queryKey: ["/api/attendance/today"],
   });
   
