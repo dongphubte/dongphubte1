@@ -125,7 +125,7 @@ export const extendedInsertClassSchema = insertClassSchema.extend({
   schedule: z.string().min(1, "Phải chọn ít nhất một ngày học"),
   paymentCycle: z.enum(["1-thang", "8-buoi", "10-buoi", "theo-ngay"], {
     errorMap: () => ({ message: "Chu kỳ thanh toán không hợp lệ" }),
-  }).optional(),
+  }),
 });
 
 export const extendedInsertStudentSchema = insertStudentSchema.extend({

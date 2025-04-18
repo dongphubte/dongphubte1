@@ -25,9 +25,7 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
   const queryClient = useQueryClient();
   const [isScheduleValid, setIsScheduleValid] = useState(true);
 
-  const formSchema = extendedInsertClassSchema.extend({
-    paymentCycle: z.string().optional(),
-  });
+  const formSchema = extendedInsertClassSchema;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

@@ -141,20 +141,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createClass(classData: InsertClass): Promise<Class> {
+    // Ensure payment cycle is set
     const [newClass] = await db
       .insert(classes)
       .values({
         ...classData,
-        paymentCycle: classData.paymentCycle || null
+        paymentCycle: classData.paymentCycle || "1-thang"
       })
       .returning();
     return newClass;
   }
 
   async updateClass(id: number, classData: InsertClass): Promise<Class | undefined> {
+    // Ensure payment cycle is set for updates
     const [updatedClass] = await db
       .update(classes)
-      .set(classData)
+      .set({
+        ...classData,
+        paymentCycle: classData.paymentCycle || "1-thang"
+      })
       .where(eq(classes.id, id))
       .returning();
     return updatedClass;
