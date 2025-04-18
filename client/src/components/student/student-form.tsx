@@ -184,12 +184,10 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
       // Always set payment cycle from class, both for new students and when class is changed
       console.log("Setting payment cycle from class:", selectedClass.paymentCycle);
       
-      // Cast to the expected enum type to satisfy TypeScript
-      const paymentCycle = selectedClass.paymentCycle as "1-thang" | "8-buoi" | "10-buoi";
-      
-      // Only set if it's a valid payment cycle for students
-      if (paymentCycle === "1-thang" || paymentCycle === "8-buoi" || paymentCycle === "10-buoi") {
-        form.setValue("paymentCycle", paymentCycle);
+      // Cập nhật chu kỳ từ lớp học, chấp nhận tất cả các chu kỳ hợp lệ bao gồm cả "theo-ngay"
+      const validCycles = ["1-thang", "8-buoi", "10-buoi", "theo-ngay"];
+      if (validCycles.includes(selectedClass.paymentCycle)) {
+        form.setValue("paymentCycle", selectedClass.paymentCycle);
       }
     }
   }, [selectedClass, form]);
@@ -292,7 +290,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
             <div className="space-y-2">
               <Label htmlFor="paymentCycle">Chu kỳ thanh toán</Label>
               <Select 
-                onValueChange={(value: any) => form.setValue("paymentCycle", value as "1-thang" | "8-buoi" | "10-buoi")}
+                onValueChange={(value: any) => form.setValue("paymentCycle", value)}
                 defaultValue={studentToEdit ? studentToEdit.paymentCycle : "1-thang"}
                 value={form.watch("paymentCycle")}
               >
@@ -303,6 +301,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
                   <SelectItem value="1-thang">1 tháng</SelectItem>
                   <SelectItem value="8-buoi">8 buổi</SelectItem>
                   <SelectItem value="10-buoi">10 buổi</SelectItem>
+                  <SelectItem value="theo-ngay">Theo ngày</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-neutral-500">Mặc định từ chu kỳ thanh toán của lớp</p>
