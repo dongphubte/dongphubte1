@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatDate } from "@/utils/date-utils";
 
-interface StudentWithClass extends Student {
+interface StudentWithClass extends Omit<Student, 'paymentStatus'> {
   className?: string;
   paymentStatus?: string;
 }

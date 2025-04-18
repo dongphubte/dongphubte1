@@ -231,15 +231,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Lấy thông tin học sinh hiện tại
           const student = await storage.getStudent(validatedData.studentId);
           if (student) {
-            // Cập nhật student
-            const updatedStudent = { ...student };
-            
-            // Thêm trường paymentStatus vào object nếu không tồn tại
-            if (updatedStudent) {
-              // @ts-ignore - Bỏ qua kiểm tra kiểu để cập nhật thủ công
-              updatedStudent.paymentStatus = "paid";
-              await storage.updateStudent(student.id, updatedStudent);
-            }
+            // Ghi chú: Tạm thời bỏ qua việc cập nhật paymentStatus
+            // vì cột này chưa tồn tại trong database
+            console.log("Thanh toán đã được tạo, nhưng không cập nhật trạng thái thanh toán của học sinh");
           }
         } catch (updateError) {
           console.error("Lỗi khi cập nhật trạng thái thanh toán cho học sinh:", updateError);

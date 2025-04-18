@@ -59,7 +59,7 @@ export const students = pgTable("students", {
   registrationDate: timestamp("registration_date").notNull().defaultNow(),
   paymentCycle: text("payment_cycle").notNull(),
   status: text("status").notNull().default("active"), // active or inactive
-  paymentStatus: text("payment_status").default("pending"), // paid, pending, overdue
+  // Tạm thời không thêm paymentStatus vào schema vì database chưa có cột này
 });
 
 export const insertStudentSchema = createInsertSchema(students).pick({
@@ -69,7 +69,6 @@ export const insertStudentSchema = createInsertSchema(students).pick({
   classId: true,
   paymentCycle: true,
   status: true,
-  paymentStatus: true,
 });
 
 // Schema for payments
