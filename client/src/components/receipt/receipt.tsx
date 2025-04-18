@@ -57,14 +57,30 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
   });
   
   // Get payment info
-  const { data: payments } = useQuery({
+  const { data: payments, isLoading: isLoadingPayments } = useQuery({
     queryKey: ["/api/payments/student", student?.id],
+    queryFn: async () => {
+      console.log("Fetching payments for student ID:", student?.id);
+      const response = await fetch(`/api/payments/student/${student?.id}`);
+      if (!response.ok) throw new Error("Failed to fetch payment data");
+      const data = await response.json();
+      console.log("Received payment data:", data);
+      return data;
+    },
     enabled: !!student?.id,
   });
   
   // Get attendance info
-  const { data: attendance } = useQuery({
+  const { data: attendance, isLoading: isLoadingAttendance } = useQuery({
     queryKey: ["/api/attendance/student", student?.id],
+    queryFn: async () => {
+      console.log("Fetching attendance for student ID:", student?.id);
+      const response = await fetch(`/api/attendance/student/${student?.id}`);
+      if (!response.ok) throw new Error("Failed to fetch attendance data");
+      const data = await response.json();
+      console.log("Received attendance data:", data);
+      return data;
+    },
     enabled: !!student?.id,
   });
   
@@ -617,7 +633,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               </div>
               
               {/* Thống kê điểm danh */}
-              {attendance && Array.isArray(attendance) && attendance.length > 0 && (
+              {!isLoadingAttendance && attendance && Array.isArray(attendance) && attendance.length > 0 ? (
                 <div className="border border-gray-200 rounded-lg bg-gray-50 p-3 space-y-2 mb-4">
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-sm">Thống kê điểm danh</h4>
@@ -659,7 +675,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                     <div className="grid grid-cols-2 gap-1 mt-1">
                       {attendance.slice(0, 6).map((a: any, index: number) => (
                         <p key={index} className="text-xs flex justify-between bg-white px-2 py-1 rounded">
-                          <span>{formatDate(a.date)}:</span>
+                          <span>{formatDate(new Date(a.date))}:</span>
                           <span className={
                             a.status === 'present' ? 'text-green-600' : 
                             a.status === 'absent' ? 'text-red-600' : 
@@ -672,22 +688,32 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                     </div>
                   </div>
                 </div>
-              )}
+              ) : isLoadingAttendance ? (
+                <div className="flex justify-center items-center p-4">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />
+                  <span className="text-sm text-muted-foreground">Đang tải dữ liệu điểm danh...</span>
+                </div>
+              ) : null}
               
               {/* Lịch sử thanh toán */}
-              {payments && Array.isArray(payments) && payments.length > 0 && (
+              {!isLoadingPayments && payments && Array.isArray(payments) && payments.length > 0 ? (
                 <div className="border border-gray-200 rounded-lg bg-gray-50 p-3 space-y-2 mb-4">
                   <h4 className="font-semibold text-sm">Lịch sử thanh toán</h4>
                   <div className="grid grid-cols-1 gap-1 mt-1">
                     {payments.slice(0, 3).map((p: any, index: number) => (
                       <div key={index} className="text-xs flex justify-between bg-white px-2 py-1 rounded">
-                        <span>{formatDate(p.paymentDate)}</span>
+                        <span>{formatDate(new Date(p.paymentDate))}:</span>
                         <span className="font-medium">{formatCurrency(p.amount)}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
+              ) : isLoadingPayments ? (
+                <div className="flex justify-center items-center p-4">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />
+                  <span className="text-sm text-muted-foreground">Đang tải lịch sử thanh toán...</span>
+                </div>
+              ) : null}
               
               {/* Footer */}
               <div className="border-t border-gray-200 pt-3 mt-4">
@@ -749,7 +775,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               
               <div className="border rounded-lg p-3 space-y-2">
                 <h3 className="font-medium">Lịch sử thanh toán</h3>
-                {payments && Array.isArray(payments) && payments.length > 0 ? (
+                {!isLoadingPayments && payments && Array.isArray(payments) && payments.length > 0 ? (
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -760,12 +786,17 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                     <TableBody>
                       {payments.map((payment: any) => (
                         <TableRow key={payment.id}>
-                          <TableCell>{formatDate(payment.paymentDate)}</TableCell>
+                          <TableCell>{formatDate(new Date(payment.paymentDate))}</TableCell>
                           <TableCell>{formatCurrency(payment.amount)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
+                ) : isLoadingPayments ? (
+                  <div className="flex justify-center items-center p-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />
+                    <span className="text-sm text-muted-foreground">Đang tải lịch sử thanh toán...</span>
+                  </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">Chưa có lịch sử thanh toán</p>
                 )}
@@ -773,7 +804,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               
               <div className="border rounded-lg p-3 space-y-2">
                 <h3 className="font-medium">Điểm danh gần đây</h3>
-                {attendance && Array.isArray(attendance) && attendance.length > 0 ? (
+                {!isLoadingAttendance && attendance && Array.isArray(attendance) && attendance.length > 0 ? (
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -784,15 +815,19 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                     <TableBody>
                       {attendance.slice(0, 5).map((record: any) => (
                         <TableRow key={record.id}>
-                          <TableCell>{formatDate(record.date)}</TableCell>
+                          <TableCell>{formatDate(new Date(record.date))}</TableCell>
                           <TableCell>
-                            {record.status === 'present' ? 'Có mặt' : 
-                             record.status === 'absent' ? 'Vắng mặt' : 'Giáo viên nghỉ'}
+                            {formatAttendanceStatus(record.status)}
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
+                ) : isLoadingAttendance ? (
+                  <div className="flex justify-center items-center p-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />
+                    <span className="text-sm text-muted-foreground">Đang tải dữ liệu điểm danh...</span>
+                  </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">Chưa có dữ liệu điểm danh</p>
                 )}
