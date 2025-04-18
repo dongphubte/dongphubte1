@@ -241,6 +241,21 @@ export default function StudentList() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        {/* Nút thanh toán chỉ hiển thị khi học sinh chưa thanh toán hoặc quá hạn */}
+                        {paymentStatus === 'pending' || paymentStatus === 'overdue' ? (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className={`mr-1 ${
+                              paymentStatus === 'pending' ? 'text-warning border-warning hover:bg-warning/10' : 
+                              'text-error border-error hover:bg-error/10'
+                            }`}
+                            onClick={() => showReceipt(student)}
+                          >
+                            Thanh toán
+                          </Button>
+                        ) : null}
+                        
                         <Button 
                           variant="ghost" 
                           size="sm" 
