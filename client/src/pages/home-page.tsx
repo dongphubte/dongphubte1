@@ -4,10 +4,12 @@ import MainLayout from "@/components/layout/main-layout";
 import ClassList from "@/components/class/class-list";
 import StudentList from "@/components/student/student-list";
 import AttendanceForm from "@/components/attendance/attendance-form";
+import AttendanceByClass from "@/components/attendance/attendance-by-class";
 import Dashboard from "@/components/reports/dashboard";
 import SettingsPage from "@/components/settings/settings-page";
 import PaymentHistory from "@/components/payment/payment-history";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, CalendarCheck } from "lucide-react";
 
 export default function HomePage() {
@@ -20,18 +22,25 @@ export default function HomePage() {
       {activeTab === "hoc-sinh" && <StudentList />}
       {activeTab === "diem-danh" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Điểm danh hôm nay</h2>
-            <Button 
-              onClick={() => navigate("/attendance")}
-              className="flex items-center gap-2"
-              variant="outline"
-            >
-              <BarChart className="h-4 w-4" />
-              Xem thống kê chi tiết
-            </Button>
-          </div>
-          <AttendanceForm />
+          <Tabs defaultValue="by-class" className="w-full">
+            <TabsList className="flex h-10 items-center justify-between rounded-lg bg-muted mb-4 w-full max-w-md">
+              <TabsTrigger value="by-class" className="flex items-center gap-1">
+                <BarChart className="h-4 w-4" />
+                Thống kê lớp
+              </TabsTrigger>
+              <TabsTrigger value="today" className="flex items-center gap-1">
+                <CalendarCheck className="h-4 w-4" />
+                Điểm danh hôm nay
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="by-class" className="mt-0">
+              <AttendanceByClass />
+            </TabsContent>
+            <TabsContent value="today" className="mt-0">
+              <AttendanceForm />
+            </TabsContent>
+          </Tabs>
         </div>
       )}
       {activeTab === "thanh-toan" && <PaymentHistory />}
