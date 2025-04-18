@@ -656,7 +656,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                   <p>Mã học sinh: <span className="font-semibold">{student?.code}</span></p>
                 </div>
                 <div>
-                  <p>Lớp: <span className="font-semibold">{student?.className}</span></p>
+                  <p>Lớp: <span className="font-semibold">{classData?.name || 'Chưa xác định'}</span></p>
                 </div>
                 <div>
                   <p>Chu kỳ thanh toán: <span className="font-semibold">{formatPaymentCycle(student?.paymentCycle || "1-thang")}</span></p>
