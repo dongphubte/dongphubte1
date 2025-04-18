@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Users, DollarSign, Clock, AlertCircle } from "lucide-react";
+import { Loader2, Users, DollarSign, Clock, AlertCircle, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/utils/format";
 import {
   BarChart,

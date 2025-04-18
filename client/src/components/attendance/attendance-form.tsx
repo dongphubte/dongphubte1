@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Loader2, Check, X, AlertTriangle } from "lucide-react";
+import { Loader2, Check, X, AlertTriangle, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDate } from "@/utils/date-utils";
@@ -13,6 +13,22 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import AttendanceHistory from "./attendance-history";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface StudentForAttendance {
   id: number;
@@ -34,6 +50,9 @@ export default function AttendanceForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedClass, setSelectedClass] = useState<string>("all");
+  const [selectedStudent, setSelectedStudent] = useState<StudentForAttendance | null>(null);
+  const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
+  
   const today = new Date();
   const formattedDate = formatDate(today);
   
@@ -56,6 +75,7 @@ export default function AttendanceForm() {
         title: "Thành công",
         description: "Đã cập nhật điểm danh",
       });
+      setShowAttendanceDialog(false);
     },
     onError: (error: Error) => {
       toast({
@@ -74,14 +94,19 @@ export default function AttendanceForm() {
     });
   };
 
+  const openAttendanceDialog = (student: StudentForAttendance) => {
+    setSelectedStudent(student);
+    setShowAttendanceDialog(true);
+  };
+
   const getAttendanceStatusIcon = (status: string) => {
     switch (status) {
       case "present":
-        return <Check className="h-4 w-4 text-success" />;
+        return <Check className="h-5 w-5 text-green-500" />;
       case "absent":
-        return <X className="h-4 w-4 text-error" />;
+        return <X className="h-5 w-5 text-red-500" />;
       case "teacher_absent":
-        return <AlertTriangle className="h-4 w-4 text-warning" />;
+        return <AlertTriangle className="h-5 w-5 text-amber-500" />;
       default:
         return null;
     }
@@ -121,17 +146,18 @@ export default function AttendanceForm() {
 
   return (
     <div>
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-        <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+      <div className="bg-white shadow-md rounded-xl mb-6 overflow-hidden border border-gray-100">
+        <div className="px-6 py-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100">
           <div>
-            <h3 className="text-lg leading-6 font-medium text-neutral-800">
-              Điểm danh ngày: <span className="text-primary">{formattedDate}</span>
+            <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+              <UserCheck className="mr-2 h-5 w-5 text-primary" />
+              Điểm danh ngày: <span className="text-primary ml-2">{formattedDate}</span>
             </h3>
-            <p className="mt-1 max-w-2xl text-sm text-neutral-500">Danh sách học sinh có lịch học hôm nay</p>
+            <p className="mt-1 text-sm text-gray-500">Danh sách học sinh có lịch học hôm nay</p>
           </div>
           <div>
             <Select onValueChange={setSelectedClass} defaultValue="all">
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] border-gray-300">
                 <SelectValue placeholder="Tất cả lớp" />
               </SelectTrigger>
               <SelectContent>
@@ -152,50 +178,29 @@ export default function AttendanceForm() {
           </div>
         ) : filteredStudents.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-neutral-200">
-              <thead className="bg-neutral-100">
+            <table className="min-w-full">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Họ và tên</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Mã</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Lớp học</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Thời gian học</th>
-                  <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Trạng thái</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ và tên</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lớp học</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian học</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-neutral-200">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {filteredStudents.map((student) => (
-                  <tr key={student.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-800">{student.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{student.code}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{student.className}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{student.schedule}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <div className="flex justify-center space-x-2">
-                        <Button
-                          size="sm"
-                          className="bg-success hover:bg-success/90 text-white"
-                          onClick={() => markAttendance(student.id, "present")}
-                          disabled={isLoading}
-                        >
-                          Có mặt
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="bg-error hover:bg-error/90 text-white"
-                          onClick={() => markAttendance(student.id, "absent")}
-                          disabled={isLoading}
-                        >
-                          Vắng mặt
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="bg-warning hover:bg-warning/90 text-white"
-                          onClick={() => markAttendance(student.id, "teacher_absent")}
-                          disabled={isLoading}
-                        >
-                          GV nghỉ
-                        </Button>
-                      </div>
+                  <tr key={student.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => openAttendanceDialog(student)}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-800">{student.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{student.code}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{student.className}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{student.schedule}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        Chưa điểm danh
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -203,41 +208,47 @@ export default function AttendanceForm() {
             </table>
           </div>
         ) : (
-          <div className="py-6 text-center">
-            <p className="text-neutral-500">Không có học sinh nào cần điểm danh cho hôm nay.</p>
+          <div className="py-8 text-center">
+            <p className="text-gray-500">Không có học sinh nào cần điểm danh cho hôm nay.</p>
           </div>
         )}
       </div>
 
       {/* Students who have already been marked for attendance today */}
       {markedAttendance.length > 0 && (
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-          <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-neutral-800">Đã điểm danh hôm nay</h3>
-            <p className="mt-1 max-w-2xl text-sm text-neutral-500">Danh sách học sinh đã được điểm danh</p>
+        <div className="bg-white shadow-md rounded-xl mb-6 overflow-hidden border border-gray-100">
+          <div className="px-6 py-5 border-b border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-800">Đã điểm danh hôm nay</h3>
+            <p className="mt-1 text-sm text-gray-500">Danh sách học sinh đã được điểm danh</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-neutral-200">
-              <thead className="bg-neutral-100">
+            <table className="min-w-full">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">STT</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Mã học sinh</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Trạng thái</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Thời gian</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã học sinh</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-neutral-200">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {markedAttendance.map((record, index) => (
-                  <tr key={record.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{index + 1}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{record.studentId}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="flex items-center">
+                  <tr key={record.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{index + 1}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.studentId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        record.status === 'present' 
+                          ? 'bg-green-100 text-green-800' 
+                          : record.status === 'absent' 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-amber-100 text-amber-800'
+                      }`}>
                         {getAttendanceStatusIcon(record.status)}
-                        <span className="ml-2">{getAttendanceStatusText(record.status)}</span>
+                        <span className="ml-1.5">{getAttendanceStatusText(record.status)}</span>
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{formatDate(record.date, true)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(record.date, true)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -245,6 +256,92 @@ export default function AttendanceForm() {
           </div>
         </div>
       )}
+
+      {/* Attendance Dialog */}
+      <Dialog open={showAttendanceDialog} onOpenChange={setShowAttendanceDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Điểm danh học sinh</DialogTitle>
+            <DialogDescription>
+              Chọn trạng thái điểm danh cho học sinh {selectedStudent?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 gap-4 py-4">
+            <div className="flex flex-col space-y-3">
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                <span className="text-sm font-medium text-gray-500">Học sinh:</span>
+                <span className="text-sm font-semibold">{selectedStudent?.name}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                <span className="text-sm font-medium text-gray-500">Mã học sinh:</span>
+                <span className="text-sm">{selectedStudent?.code}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                <span className="text-sm font-medium text-gray-500">Lớp:</span>
+                <span className="text-sm">{selectedStudent?.className}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                <span className="text-sm font-medium text-gray-500">Ngày điểm danh:</span>
+                <span className="text-sm font-medium text-primary">{formattedDate}</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <Card 
+                className="cursor-pointer hover:border-green-500 transition-colors"
+                onClick={() => selectedStudent && markAttendance(selectedStudent.id, "present")}
+              >
+                <CardHeader className="p-4 pb-2">
+                  <div className="mx-auto bg-green-100 p-2 rounded-full">
+                    <Check className="h-6 w-6 text-green-600" />
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 pt-2 text-center">
+                  <p className="font-medium text-gray-700">Có mặt</p>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className="cursor-pointer hover:border-red-500 transition-colors"
+                onClick={() => selectedStudent && markAttendance(selectedStudent.id, "absent")}
+              >
+                <CardHeader className="p-4 pb-2">
+                  <div className="mx-auto bg-red-100 p-2 rounded-full">
+                    <X className="h-6 w-6 text-red-600" />
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 pt-2 text-center">
+                  <p className="font-medium text-gray-700">Vắng mặt</p>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className="cursor-pointer hover:border-amber-500 transition-colors"
+                onClick={() => selectedStudent && markAttendance(selectedStudent.id, "teacher_absent")}
+              >
+                <CardHeader className="p-4 pb-2">
+                  <div className="mx-auto bg-amber-100 p-2 rounded-full">
+                    <AlertTriangle className="h-6 w-6 text-amber-600" />
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 pt-2 text-center">
+                  <p className="font-medium text-gray-700">GV nghỉ</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+          
+          <DialogFooter className="sm:justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowAttendanceDialog(false)}
+            >
+              Đóng
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Attendance History Component */}
       <AttendanceHistory />
