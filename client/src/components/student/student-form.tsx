@@ -24,7 +24,9 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   Student, 
   extendedInsertStudentSchema, 
-  Class 
+  Class,
+  PaymentCycleEnum,
+  StudentStatusEnum
 } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/utils/format";
@@ -76,8 +78,8 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
         code: studentToEdit.code,
         phone: studentToEdit.phone,
         classId: studentToEdit.classId,
-        paymentCycle: studentToEdit.paymentCycle,
-        status: studentToEdit.status,
+        paymentCycle: studentToEdit.paymentCycle as "1-thang" | "8-buoi" | "10-buoi",
+        status: studentToEdit.status as "active" | "inactive",
       });
       setSelectedClassId(studentToEdit.classId);
     } else {
@@ -167,10 +169,19 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
   
   // Set payment cycle from class if available
   useEffect(() => {
-    if (selectedClass && selectedClass.paymentCycle && !studentToEdit) {
-      form.setValue("paymentCycle", selectedClass.paymentCycle);
+    if (selectedClass && selectedClass.paymentCycle) {
+      // Always set payment cycle from class, both for new students and when class is changed
+      console.log("Setting payment cycle from class:", selectedClass.paymentCycle);
+      
+      // Cast to the expected enum type to satisfy TypeScript
+      const paymentCycle = selectedClass.paymentCycle as "1-thang" | "8-buoi" | "10-buoi";
+      
+      // Only set if it's a valid payment cycle for students
+      if (paymentCycle === "1-thang" || paymentCycle === "8-buoi" || paymentCycle === "10-buoi") {
+        form.setValue("paymentCycle", paymentCycle);
+      }
     }
-  }, [selectedClass, form, studentToEdit]);
+  }, [selectedClass, form]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -269,8 +280,9 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
             <div className="space-y-2">
               <Label htmlFor="paymentCycle">Chu kỳ thanh toán</Label>
               <Select 
-                onValueChange={(value) => form.setValue("paymentCycle", value)}
+                onValueChange={(value: any) => form.setValue("paymentCycle", value as "1-thang" | "8-buoi" | "10-buoi")}
                 defaultValue={studentToEdit ? studentToEdit.paymentCycle : "1-thang"}
+                value={form.watch("paymentCycle")}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn chu kỳ thanh toán" />
@@ -281,6 +293,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
                   <SelectItem value="10-buoi">10 buổi</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-neutral-500">Mặc định từ chu kỳ thanh toán của lớp</p>
               {form.formState.errors.paymentCycle && (
                 <p className="text-sm text-red-500">{form.formState.errors.paymentCycle.message}</p>
               )}
@@ -289,7 +302,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
             <div className="space-y-2">
               <Label htmlFor="status">Tình trạng</Label>
               <Select 
-                onValueChange={(value) => form.setValue("status", value)}
+                onValueChange={(value: any) => form.setValue("status", value as "active" | "inactive")}
                 defaultValue={studentToEdit ? studentToEdit.status : "active"}
               >
                 <SelectTrigger>
