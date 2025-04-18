@@ -321,11 +321,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
             
             if (!alreadyMarked) {
-              console.log(`Adding student ${student.name} to attendance list for today`);
+              // Đảm bảo code học sinh được hiển thị đúng định dạng
+              console.log(`Adding student ${student.name} (${student.code}) to attendance list for today`);
+              
+              // Lấy đầy đủ thông tin học sinh để đảm bảo code được hiển thị đúng
+              const studentDetail = await storage.getStudent(student.id);
+              
               studentsForToday.push({
                 ...student,
                 className: classItem.name,
-                schedule: classItem.schedule
+                schedule: classItem.schedule,
+                // Đảm bảo code học sinh luôn được lấy từ cơ sở dữ liệu
+                code: studentDetail?.code || student.code
               });
             }
           }
@@ -335,8 +342,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Total students for today: ${studentsForToday.length}`);
       console.log(`Already marked attendance: ${attendanceToday.length}`);
       
+      // Lấy thông tin chi tiết của học sinh đã điểm danh
+      const markedStudentsWithDetails = [];
+      for (const attendance of attendanceToday) {
+        const student = await storage.getStudent(attendance.studentId);
+        if (student) {
+          markedStudentsWithDetails.push({
+            ...attendance,
+            studentCode: student.code,
+            studentName: student.name
+          });
+        } else {
+          markedStudentsWithDetails.push(attendance);
+        }
+      }
+      
       res.json({
-        markedAttendance: attendanceToday,
+        markedAttendance: markedStudentsWithDetails,
         studentsForToday
       });
     } catch (error) {

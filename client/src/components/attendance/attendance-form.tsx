@@ -13,6 +13,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import AttendanceHistory from "./attendance-history";
+import MarkAttendanceDialog from "./mark-attendance-dialog";
 import {
   Dialog,
   DialogContent,
