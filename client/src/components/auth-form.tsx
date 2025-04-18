@@ -77,7 +77,10 @@ export default function AuthForm({ onForgotPassword }: { onForgotPassword: () =>
               type="button"
               variant="link"
               className="p-0 h-auto text-sm text-primary"
-              onClick={onForgotPassword}
+              onClick={(e) => {
+                e.preventDefault();
+                onForgotPassword();
+              }}
             >
               Quên mật khẩu?
             </Button>
