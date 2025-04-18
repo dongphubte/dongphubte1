@@ -70,6 +70,30 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     enabled: !!student?.id,
   });
   
+  // Hàm tạo mã biên nhận: <Năm hiện tại><Lớp><Số thứ tự>
+  const generateReceiptNumber = () => {
+    const currentYear = new Date().getFullYear();
+    
+    // Lấy số lớp từ tên lớp (ví dụ: Lớp 8CT -> 8CT)
+    let classNumber = "00";
+    if (classData?.name) {
+      // Loại bỏ từ "Lớp" (nếu có) và chỉ lấy số/chữ còn lại
+      const match = classData.name.match(/Lớp\s+(\w+)/i);
+      if (match && match[1]) {
+        classNumber = match[1];
+      } else {
+        // Nếu không có từ "Lớp", sử dụng toàn bộ tên lớp
+        classNumber = classData.name;
+      }
+    }
+    
+    // Lấy số thứ tự dựa trên số lượng thanh toán hiện có + 1
+    const paymentCount = payments?.length || 0;
+    const sequenceNumber = String(paymentCount + 1).padStart(3, '0'); // Định dạng 001, 002, v.v.
+    
+    return `${currentYear}${classNumber}${sequenceNumber}`;
+  };
+  
   // Get attendance info
   const { data: attendance, isLoading: isLoadingAttendance } = useQuery({
     queryKey: ["/api/attendance/student", student?.id],
@@ -226,6 +250,9 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               .justify-center { justify-content: center; }
               .justify-between { justify-content: space-between; }
               .items-center { align-items: center; }
+              .items-start { align-items: flex-start; }
+              .text-left { text-align: left; }
+              .flex-1 { flex: 1 1 0%; }
               .rounded { border-radius: 0.25rem; }
               .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
               .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
@@ -445,6 +472,14 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               }
             }
           });
+          
+          // Đảm bảo số biên nhận được hiển thị đúng
+          const receiptNumberElements = element.querySelectorAll('.receipt-number');
+          receiptNumberElements.forEach(el => {
+            if (el instanceof HTMLElement && !el.textContent) {
+              el.textContent = generateReceiptNumber();
+            }
+          });
         }
       });
       
@@ -622,6 +657,12 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
             <div ref={receiptRef} className="border border-gray-300 p-6 rounded-lg bg-white">
               {/* Header mới theo mẫu */}
               <div className="text-center mb-4">
+                <div className="flex justify-between items-start">
+                  <div className="text-left">
+                    <p className="text-sm font-medium">No. <span className="font-bold">{generateReceiptNumber()}</span></p>
+                  </div>
+                  <div className="flex-1"></div>
+                </div>
                 <p className="font-bold text-xl text-indigo-600">HoeEdu Solution</p>
                 <p className="text-sm text-gray-500 mb-2">0985970322</p>
                 <h3 className="text-2xl font-bold uppercase relative inline-block pb-1">
