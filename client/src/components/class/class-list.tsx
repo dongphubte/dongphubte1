@@ -193,9 +193,8 @@ export default function ClassList() {
               // Nếu học sinh chưa có thanh toán nào, tính là đang chờ
               let defaultPendingAmount = 0;
               if (studentPayments.length === 0) {
-                // Tính toán học phí dựa vào chu kỳ thanh toán của học sinh
-                const paymentCycle = student.paymentCycle || classItem.paymentCycle || "1-thang";
-                defaultPendingAmount = calculateFeeByPaymentCycle(classItem.fee, paymentCycle);
+                // Đối với chu kỳ 1 tháng, sử dụng giá trị học phí trực tiếp mà không nhân với bất kỳ số nào
+                defaultPendingAmount = classItem.fee;
               }
               
               return {
