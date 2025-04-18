@@ -2,6 +2,19 @@ import { pgTable, text, serial, integer, boolean, timestamp, varchar, uniqueInde
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Define enums for payment cycle and student status
+export const PaymentCycleEnum = {
+  MONTH: "1-thang",
+  EIGHT_SESSIONS: "8-buoi",
+  TEN_SESSIONS: "10-buoi",
+  DAILY: "theo-ngay",
+} as const;
+
+export const StudentStatusEnum = {
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+} as const;
+
 // User schema for authentication
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),

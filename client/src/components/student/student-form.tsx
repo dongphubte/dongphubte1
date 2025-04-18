@@ -24,9 +24,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   Student, 
   extendedInsertStudentSchema, 
-  Class,
-  PaymentCycleEnum,
-  StudentStatusEnum
+  Class
 } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/utils/format";
