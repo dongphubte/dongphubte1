@@ -73,7 +73,8 @@ export default function AttendanceForm() {
   }, [refetchAttendance]);
 
   const createAttendanceMutation = useMutation({
-    mutationFn: async (data: { studentId: number; date: Date; status: string }) => {
+    mutationFn: async (data: { studentId: number; date: string; status: string }) => {
+      // Format the date to yyyy-MM-dd format
       const res = await apiRequest("POST", "/api/attendance", data);
       return res.json();
     },
@@ -86,6 +87,7 @@ export default function AttendanceForm() {
       setShowAttendanceDialog(false);
     },
     onError: (error: Error) => {
+      console.error('Error in attendance mutation:', error);
       toast({
         title: "Lỗi",
         description: error.message || "Không thể cập nhật điểm danh",
@@ -95,9 +97,17 @@ export default function AttendanceForm() {
   });
 
   const markAttendance = (studentId: number, status: string) => {
+    // Định dạng ngày để phù hợp với yêu cầu của API (yyyy-MM-dd)
+    const today = new Date();
+    const formattedDate = today.getFullYear() + '-' + 
+      String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(today.getDate()).padStart(2, '0');
+    
+    console.log('Sending attendance with date:', formattedDate);
+    
     createAttendanceMutation.mutate({
       studentId,
-      date: new Date(),
+      date: formattedDate,
       status,
     });
   };
