@@ -149,12 +149,40 @@ export default function AttendanceByClass() {
         title: "Thành công",
         description: "Đã xóa điểm danh thành công",
       });
-      setShowDetailsDialog(false);
     },
     onError: (error: any) => {
       toast({
         title: "Lỗi",
         description: `Không thể xóa điểm danh: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation để xóa hàng loạt điểm danh
+  const bulkDeleteAttendanceMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      const results = [];
+      for (const id of ids) {
+        const res = await apiRequest("DELETE", `/api/attendance/${id}`);
+        results.push(await res.json());
+      }
+      return results;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
+      toast({
+        title: "Thành công",
+        description: `Đã xóa ${selectedAttendances.length} bản ghi điểm danh thành công`,
+      });
+      setShowBulkDeleteConfirm(false);
+      setBulkDeleteMode(false);
+      setSelectedAttendances([]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lỗi",
+        description: `Không thể xóa điểm danh hàng loạt: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -322,6 +350,7 @@ export default function AttendanceByClass() {
     try {
       await deleteAttendanceMutation.mutateAsync(selectedAttendance.id);
       setShowDeleteConfirm(false);
+      // Không đóng dialog chi tiết, chỉ đóng dialog xác nhận xóa
     } catch (error) {
       console.error("Lỗi khi xóa điểm danh:", error);
     }
@@ -418,9 +447,68 @@ export default function AttendanceByClass() {
   const [selectedAttendance, setSelectedAttendance] = useState<AttendanceDetail | null>(null);
   const [editAttendanceStatus, setEditAttendanceStatus] = useState<string>("present");
   
+  // States cho việc xóa hàng loạt
+  const [selectedAttendances, setSelectedAttendances] = useState<AttendanceDetail[]>([]);
+  const [bulkDeleteMode, setBulkDeleteMode] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  
   // Hiển thị dialog chọn lớp cho học bù
   const showMakeupAttendance = () => {
     setShowMakeupDialog(true);
+  };
+  
+  // Xử lý bật/tắt chế độ xóa hàng loạt
+  const toggleBulkDeleteMode = () => {
+    setBulkDeleteMode(!bulkDeleteMode);
+    if (bulkDeleteMode) {
+      // Nếu đang tắt chế độ xóa hàng loạt, xóa tất cả các bản ghi đã chọn
+      setSelectedAttendances([]);
+    }
+  };
+  
+  // Xử lý chọn/bỏ chọn một bản ghi điểm danh trong chế độ xóa hàng loạt
+  const toggleAttendanceSelection = (record: AttendanceDetail) => {
+    if (selectedAttendances.some(a => a.id === record.id)) {
+      // Nếu đã chọn, bỏ chọn
+      setSelectedAttendances(selectedAttendances.filter(a => a.id !== record.id));
+    } else {
+      // Nếu chưa chọn, thêm vào danh sách đã chọn
+      setSelectedAttendances([...selectedAttendances, record]);
+    }
+  };
+  
+  // Xử lý chọn tất cả bản ghi điểm danh trong một lớp
+  const selectAllAttendances = (classId: number) => {
+    const allRecords = getClassAttendanceDetails(classId);
+    setSelectedAttendances(allRecords);
+  };
+  
+  // Xử lý hủy chọn tất cả bản ghi điểm danh
+  const deselectAllAttendances = () => {
+    setSelectedAttendances([]);
+  };
+  
+  // Xử lý xóa hàng loạt các bản ghi điểm danh đã chọn
+  const handleBulkDelete = async () => {
+    if (selectedAttendances.length === 0) {
+      toast({
+        title: "Chưa chọn bản ghi nào",
+        description: "Vui lòng chọn ít nhất một bản ghi để xóa",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setShowBulkDeleteConfirm(true);
+  };
+  
+  // Xử lý xác nhận xóa hàng loạt
+  const confirmBulkDelete = async () => {
+    try {
+      await bulkDeleteAttendanceMutation.mutateAsync(selectedAttendances.map(a => a.id));
+    } catch (error) {
+      console.error("Lỗi khi xóa điểm danh hàng loạt:", error);
+    }
   };
   
   // Xử lý khi chọn lớp để điểm danh học bù
@@ -609,11 +697,76 @@ export default function AttendanceByClass() {
               </DialogDescription>
             </DialogHeader>
             
+            {/* Thanh công cụ cho chế độ xóa hàng loạt */}
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant={bulkDeleteMode ? "secondary" : "outline"} 
+                  size="sm" 
+                  onClick={toggleBulkDeleteMode}
+                  className="flex items-center"
+                >
+                  {bulkDeleteMode ? (
+                    <>
+                      <X className="h-4 w-4 mr-1" />
+                      Hủy xóa hàng loạt
+                    </>
+                  ) : (
+                    <>
+                      <Trash className="h-4 w-4 mr-1" />
+                      Xóa hàng loạt
+                    </>
+                  )}
+                </Button>
+                
+                {bulkDeleteMode && (
+                  <>
+                    <Badge variant="secondary">
+                      Đã chọn {selectedAttendances.length} bản ghi
+                    </Badge>
+                    
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => selectAllAttendances(selectedClass.classId)}
+                      className="flex items-center"
+                    >
+                      <CheckSquare className="h-3.5 w-3.5 mr-1" />
+                      Chọn tất cả
+                    </Button>
+                    
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={deselectAllAttendances}
+                      className="flex items-center"
+                      disabled={selectedAttendances.length === 0}
+                    >
+                      <Square className="h-3.5 w-3.5 mr-1" />
+                      Bỏ chọn tất cả
+                    </Button>
+                    
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={handleBulkDelete}
+                      className="flex items-center"
+                      disabled={selectedAttendances.length === 0}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Xóa đã chọn
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+            
             {/* Chi tiết điểm danh */}
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {bulkDeleteMode && <TableHead className="w-[40px]"></TableHead>}
                     <TableHead>Ngày</TableHead>
                     <TableHead>Học sinh</TableHead>
                     <TableHead>Mã học sinh</TableHead>
@@ -624,7 +777,20 @@ export default function AttendanceByClass() {
                 <TableBody>
                   {getClassAttendanceDetails(selectedClass.classId).length > 0 ? (
                     getClassAttendanceDetails(selectedClass.classId).map((record) => (
-                      <TableRow key={record.id}>
+                      <TableRow 
+                        key={record.id}
+                        className={bulkDeleteMode && selectedAttendances.some(a => a.id === record.id) 
+                          ? "bg-muted/40" 
+                          : ""}
+                      >
+                        {bulkDeleteMode && (
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedAttendances.some(a => a.id === record.id)}
+                              onCheckedChange={() => toggleAttendanceSelection(record)}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell>{formatDate(new Date(record.date))}</TableCell>
                         <TableCell className="font-medium">{record.studentName}</TableCell>
                         <TableCell>{record.studentCode}</TableCell>
@@ -633,31 +799,44 @@ export default function AttendanceByClass() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleEditAttendance(record)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <span className="sr-only">Sửa</span>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleDeleteConfirm(record)}
-                              className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
-                            >
-                              <span className="sr-only">Xóa</span>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                            </Button>
+                            {!bulkDeleteMode ? (
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleEditAttendance(record)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <span className="sr-only">Sửa</span>
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleDeleteConfirm(record)}
+                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
+                                >
+                                  <span className="sr-only">Xóa</span>
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleAttendanceSelection(record)}
+                                className="h-8 text-xs px-2"
+                              >
+                                {selectedAttendances.some(a => a.id === record.id) ? "Bỏ chọn" : "Chọn"}
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center h-24">
+                      <TableCell colSpan={bulkDeleteMode ? 6 : 5} className="text-center h-24">
                         <div className="flex flex-col items-center justify-center">
                           <p className="text-muted-foreground">Không có dữ liệu điểm danh</p>
                         </div>
@@ -671,7 +850,11 @@ export default function AttendanceByClass() {
             <DialogFooter>
               <Button 
                 variant="outline" 
-                onClick={() => setShowDetailsDialog(false)}
+                onClick={() => {
+                  setShowDetailsDialog(false);
+                  setBulkDeleteMode(false);
+                  setSelectedAttendances([]);
+                }}
               >
                 Đóng
               </Button>
@@ -925,6 +1108,38 @@ export default function AttendanceByClass() {
           </DialogContent>
         </Dialog>
       )}
+      
+      {/* Dialog Xác nhận xóa hàng loạt */}
+      <Dialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Xác nhận xóa hàng loạt</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn xóa <span className="font-medium">{selectedAttendances.length}</span> bản ghi điểm danh đã chọn?
+              <br />
+              <span className="text-red-500">Hành động này không thể hoàn tác.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <div className="max-h-36 overflow-y-auto rounded border p-2 text-sm bg-muted/50">
+              {selectedAttendances.map(att => (
+                <div key={att.id} className="flex justify-between py-1">
+                  <span>{att.studentName}</span>
+                  <span>{formatDate(new Date(att.date))}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkDeleteConfirm(false)}>
+              Hủy
+            </Button>
+            <Button variant="destructive" onClick={confirmBulkDelete}>
+              Xóa {selectedAttendances.length} bản ghi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
