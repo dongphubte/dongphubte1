@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Loader2, Check, X, AlertTriangle, UserCheck } from "lucide-react";
@@ -56,7 +56,7 @@ export default function AttendanceForm() {
   const today = new Date();
   const formattedDate = formatDate(today);
   
-  const { data: attendanceData, isLoading: isLoadingAttendance } = useQuery<{
+  const { data: attendanceData, isLoading: isLoadingAttendance, refetch: refetchAttendance } = useQuery<{
     studentsForToday: StudentForAttendance[];
     markedAttendance: AttendanceRecord[];
   }>({
@@ -66,6 +66,11 @@ export default function AttendanceForm() {
   const { data: classes, isLoading: isLoadingClasses } = useQuery<any[]>({
     queryKey: ["/api/classes"],
   });
+  
+  // Force refetch when the component mounts
+  useEffect(() => {
+    refetchAttendance();
+  }, [refetchAttendance]);
 
   const createAttendanceMutation = useMutation({
     mutationFn: async (data: { studentId: number; date: Date; status: string }) => {
