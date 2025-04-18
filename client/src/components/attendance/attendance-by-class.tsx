@@ -173,7 +173,23 @@ export default function AttendanceByClass() {
       classStats.total++;
     });
 
-    return summary;
+    // Sắp xếp lớp học theo thứ tự số (Lớp 1, Lớp 2, Lớp 3, ...)
+    return summary.sort((a, b) => {
+      // Lấy số từ tên lớp (nếu có)
+      const numA = a.className.match(/\d+/);
+      const numB = b.className.match(/\d+/);
+      
+      if (numA && numB) {
+        return parseInt(numA[0]) - parseInt(numB[0]);
+      } else if (numA) {
+        return -1; // Lớp có số đứng trước
+      } else if (numB) {
+        return 1; // Lớp có số đứng trước
+      }
+      
+      // So sánh tên lớp thông thường nếu không có số
+      return a.className.localeCompare(b.className, 'vi');
+    });
   }, [classes, students, attendance, timeRange]);
 
   // Lấy chi tiết điểm danh cho một lớp cụ thể
