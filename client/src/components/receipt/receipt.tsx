@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Printer, Download, Check, Loader2, Search, History } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatCurrency, calculateFeeByPaymentCycle, formatPaymentCycle, formatAttendanceStatus } from "@/utils/format";
+import { formatCurrency, calculateFeeByPaymentCycle, formatPaymentCycle, formatAttendanceStatus, capitalizeFirstLetter, summarizeAttendance } from "@/utils/format";
 import { formatDate } from "@/utils/date-utils";
 import { useReactToPrint } from "react-to-print";
 import { useToast } from "@/hooks/use-toast";
@@ -418,78 +418,155 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
           
           {/* Tab biên nhận */}
           <TabsContent value="receipt">
-            <div ref={receiptRef} className="border p-4 rounded-lg bg-white">
-              <div className="text-center mb-4">
-                <p className="font-medium">HoeEdu Solution</p>
+            <div ref={receiptRef} className="border-4 border-double border-gray-300 p-6 rounded-lg bg-white">
+              {/* Header có hoa văn trang trí */}
+              <div className="text-center mb-4 pb-2 border-b-2 border-gray-200">
+                <div className="flex justify-center mb-1">
+                  <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mb-1"></div>
+                </div>
+                <p className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">HoeEdu Solution</p>
                 <p className="text-sm text-neutral-500">0985970322</p>
-                <h3 className="text-lg font-bold mt-2">BIÊN NHẬN</h3>
+                <h3 className="text-2xl font-bold mt-2 uppercase tracking-wide">Biên Nhận</h3>
+                <div className="flex justify-center mt-1">
+                  <div className="h-1 w-24 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"></div>
+                </div>
               </div>
               
-              <p className="text-sm mb-4">
-                Ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}
-              </p>
-              
-              <p className="text-sm mb-1">
-                <span className="font-medium">Đã nhận số tiền:</span> {formatCurrency(customAmount > 0 ? customAmount : getFeeAmount())} 
-              </p>
-              <p className="text-sm mb-1">
-                <span className="font-medium">Bằng chữ:</span> <span className="italic">{getAmountInWords()}</span>
-              </p>
-              <p className="text-sm mb-1">
-                <span className="font-medium">Học sinh:</span> {student?.name}
-              </p>
-              <p className="text-sm mb-1">
-                <span className="font-medium">Lớp:</span> {student?.className}
-              </p>
-              <p className="text-sm mb-1">
-                <span className="font-medium">Chu kỳ thanh toán:</span> {student?.paymentCycle === '1-thang' ? 'Theo tháng' : 
-                  student?.paymentCycle === '8-buoi' ? '8 buổi' : 
-                  student?.paymentCycle === '10-buoi' ? '10 buổi' :
-                  student?.paymentCycle === 'theo-ngay' ? 'Theo ngày' : 'Chưa xác định'}
-              </p>
-              <p className="text-sm mb-1">
-                <span className="font-medium">Học phí tính từ ngày:</span> {formatDate(paymentDate)} đến ngày {getValidUntilDate()}
-              </p>
-              {customSessions > 0 && (
-                <p className="text-sm mb-1">
-                  <span className="font-medium">Số buổi:</span> {customSessions} buổi
+              {/* Nội dung biên nhận */}
+              <div className="space-y-2 mb-4">
+                <p className="text-sm text-right italic mb-3">
+                  Ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}
                 </p>
+                
+                <div className="bg-gray-50 p-3 rounded-lg mb-3 shadow-sm">
+                  <p className="text-sm mb-1">
+                    <span className="font-medium">Đã nhận số tiền:</span> <span className="font-bold text-lg">{formatCurrency(customAmount > 0 ? customAmount : getFeeAmount())}</span>
+                  </p>
+                  <p className="text-sm mb-1">
+                    <span className="font-medium">Bằng chữ:</span> <span className="italic">{capitalizeFirstLetter(getAmountInWords())}</span>
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div className="col-span-2 sm:col-span-1">
+                    <p className="text-sm mb-1">
+                      <span className="font-medium">Học sinh:</span> <span className="font-semibold">{student?.name}</span>
+                    </p>
+                  </div>
+                  <div className="col-span-2 sm:col-span-1">
+                    <p className="text-sm mb-1">
+                      <span className="font-medium">Mã học sinh:</span> <span className="font-semibold">{student?.code}</span>
+                    </p>
+                  </div>
+                  <div className="col-span-2 sm:col-span-1">
+                    <p className="text-sm mb-1">
+                      <span className="font-medium">Lớp:</span> <span>{student?.className}</span>
+                    </p>
+                  </div>
+                  <div className="col-span-2 sm:col-span-1">
+                    <p className="text-sm mb-1">
+                      <span className="font-medium">Chu kỳ thanh toán:</span> <span>{formatPaymentCycle(student?.paymentCycle || "1-thang")}</span>
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="border border-gray-200 rounded-lg p-2 bg-blue-50">
+                  <p className="text-sm mb-1">
+                    <span className="font-medium">Học phí tính từ ngày:</span> <span className="font-semibold">{formatDate(paymentDate)}</span> đến ngày <span className="font-semibold">{getValidUntilDate()}</span>
+                  </p>
+                  {customSessions > 0 && (
+                    <p className="text-sm mb-1">
+                      <span className="font-medium">Số buổi:</span> <span className="font-semibold">{customSessions} buổi</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Thống kê điểm danh */}
+              {attendance && Array.isArray(attendance) && attendance.length > 0 && (
+                <div className="border border-gray-200 rounded-lg bg-gray-50 p-3 space-y-2 mb-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm">Thống kê điểm danh</h4>
+                    <span className="text-xs text-gray-500">(Chu kỳ hiện tại)</span>
+                  </div>
+                  
+                  {/* Hiển thị thống kê tổng hợp */}
+                  {(() => {
+                    const stats = summarizeAttendance(attendance);
+                    return (
+                      <div className="grid grid-cols-5 gap-1 text-center">
+                        <div className="bg-green-100 rounded p-1">
+                          <p className="text-xs font-medium text-green-700">Có mặt</p>
+                          <p className="text-sm font-bold">{stats.present}</p>
+                        </div>
+                        <div className="bg-red-100 rounded p-1">
+                          <p className="text-xs font-medium text-red-700">Vắng mặt</p>
+                          <p className="text-sm font-bold">{stats.absent}</p>
+                        </div>
+                        <div className="bg-yellow-100 rounded p-1">
+                          <p className="text-xs font-medium text-yellow-700">GV nghỉ</p>
+                          <p className="text-sm font-bold">{stats.teacherAbsent}</p>
+                        </div>
+                        <div className="bg-blue-100 rounded p-1">
+                          <p className="text-xs font-medium text-blue-700">Học bù</p>
+                          <p className="text-sm font-bold">{stats.makeup}</p>
+                        </div>
+                        <div className="bg-purple-100 rounded p-1">
+                          <p className="text-xs font-medium text-purple-700">Tổng</p>
+                          <p className="text-sm font-bold">{stats.total}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* Chi tiết điểm danh gần đây */}
+                  <div className="mt-2">
+                    <p className="text-xs font-medium mb-1">Chi tiết điểm danh gần đây:</p>
+                    <div className="grid grid-cols-2 gap-1 mt-1">
+                      {attendance.slice(0, 6).map((a: any, index: number) => (
+                        <p key={index} className="text-xs flex justify-between bg-white px-2 py-1 rounded">
+                          <span>{formatDate(a.date)}:</span>
+                          <span className={
+                            a.status === 'present' ? 'text-green-600' : 
+                            a.status === 'absent' ? 'text-red-600' : 
+                            a.status === 'makeup' ? 'text-blue-600' : 'text-yellow-600'
+                          }>
+                            {formatAttendanceStatus(a.status)}
+                          </span>
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               )}
               
-              {/* Hiển thị lịch sử thanh toán nếu có */}
+              {/* Lịch sử thanh toán */}
               {payments && Array.isArray(payments) && payments.length > 0 && (
-                <div className="text-sm mb-4 mt-2 border-t pt-2">
-                  <p className="font-medium">Lịch sử thanh toán:</p>
+                <div className="border border-gray-200 rounded-lg bg-gray-50 p-3 space-y-2 mb-4">
+                  <h4 className="font-semibold text-sm">Lịch sử thanh toán</h4>
                   <div className="grid grid-cols-1 gap-1 mt-1">
                     {payments.slice(0, 3).map((p: any, index: number) => (
-                      <p key={index} className="text-xs">
-                        {formatDate(p.paymentDate)}: Đã thanh toán {formatCurrency(p.amount)}
-                      </p>
+                      <div key={index} className="text-xs flex justify-between bg-white px-2 py-1 rounded">
+                        <span>{formatDate(p.paymentDate)}</span>
+                        <span className="font-medium">{formatCurrency(p.amount)}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
               
-              {/* Hiển thị thông tin điểm danh nếu có */}
-              {attendance && Array.isArray(attendance) && attendance.length > 0 && (
-                <div className="text-sm mb-4 mt-2 border-t pt-2">
-                  <p className="font-medium">Điểm danh:</p>
-                  <div className="grid grid-cols-2 gap-1 mt-1">
-                    {attendance.slice(0, 8).map((a: any, index: number) => (
-                      <p key={index} className="text-xs">
-                        {formatDate(a.date)}: {a.status === 'present' ? 'Có mặt' : 
-                                              a.status === 'absent' ? 'Vắng mặt' : 'Giáo viên nghỉ'}
-                      </p>
-                    ))}
-                  </div>
+              {/* Footer */}
+              <div className="border-t border-gray-200 pt-3 mt-4">
+                <p className="text-sm mb-2 text-center italic">Phụ huynh vui lòng kiểm tra kỹ số tiền và ngày học của con</p>
+                
+                <div className="text-right">
+                  <p className="text-sm mb-1">Chân thành cảm ơn</p>
+                  <p className="font-medium">Trần Đông Phú</p>
                 </div>
-              )}
-              
-              <p className="text-sm mb-4">Phụ huynh vui lòng kiểm tra kỹ số tiền và ngày học của con.</p>
-              
-              <div className="text-right">
-                <p className="text-sm mb-1">Chân thành cảm ơn</p>
-                <p className="font-medium">Trần Đông Phú</p>
+                
+                <div className="flex justify-center mt-3">
+                  <div className="h-1 w-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                </div>
               </div>
             </div>
           </TabsContent>
