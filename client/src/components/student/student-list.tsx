@@ -106,6 +106,9 @@ export default function StudentList() {
   const getPaymentStatus = (studentId: number): string => {
     if (!payments) return "pending";
     
+    // Kiểm tra xem payments có phải là một mảng không
+    if (!Array.isArray(payments)) return "pending";
+    
     const studentPayments = payments.filter((p: any) => p.studentId === studentId);
     
     if (studentPayments.length === 0) return "pending";
