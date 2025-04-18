@@ -136,23 +136,37 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     // Calculate validTo based on payment cycle
     if (student.paymentCycle === "1-thang") {
       validTo.setMonth(validTo.getMonth() + 1);
+      // Trừ đi 1 ngày để lấy chính xác 1 tháng (vd: 15/4 -> 14/5)
+      validTo.setDate(validTo.getDate() - 1);
     } else if (student.paymentCycle === "theo-ngay") {
       // Nếu theo ngày: không thay đổi, validTo = validFrom
+    } else if (student.paymentCycle === "8-buoi" || student.paymentCycle === "10-buoi") {
+      // Tính dựa trên số buổi
+      const numClasses = student.paymentCycle === "8-buoi" ? 8 : 10;
+      // Giả sử mỗi tuần học 2 buổi, nên chia số buổi cho 2 để ra số tuần
+      const weeksNeeded = numClasses / 2;
+      validTo.setDate(validTo.getDate() + (weeksNeeded * 7));
     } else {
-      // Assuming 8-buoi or 10-buoi corresponds to roughly a month
-      validTo.setDate(validTo.getDate() + 30);
+      // Mặc định thêm 1 tháng
+      validTo.setMonth(validTo.getMonth() + 1);
     }
+    
+    // Format ngày tháng theo định dạng YYYY-MM-DD
+    const formatDateForAPI = (date: Date) => {
+      return date.toISOString().split('T')[0];
+    };
     
     const paymentData = {
       studentId: student.id,
       amount: getFeeAmount(), // Sử dụng số tiền đã tính dựa trên chu kỳ
-      paymentDate: validFrom.toISOString().split('T')[0], // Format as YYYY-MM-DD
-      validFrom: validFrom.toISOString().split('T')[0],
-      validTo: validTo.toISOString().split('T')[0],
+      paymentDate: formatDateForAPI(validFrom),
+      validFrom: formatDateForAPI(validFrom),
+      validTo: formatDateForAPI(validTo),
       status: "paid",
       notes: `Thanh toán học phí ${student.name} - ${student.code}`
     };
     
+    console.log("Sending payment data:", paymentData);
     paymentMutation.mutate(paymentData);
   };
   
@@ -197,18 +211,29 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     const paymentCycle = student.paymentCycle;
     const today = new Date(paymentDate);
     
+    // Với chu kỳ theo tháng: cộng thêm 1 tháng
     if (paymentCycle === "1-thang") {
       const validUntil = new Date(today);
-      validUntil.setDate(validUntil.getDate() + 30);
+      validUntil.setMonth(validUntil.getMonth() + 1);
+      // Trừ đi 1 ngày để lấy chính xác 1 tháng (vd: 15/4 -> 14/5)
+      validUntil.setDate(validUntil.getDate() - 1);
       return formatDate(validUntil);
-    } else if (paymentCycle === "8-buoi" || paymentCycle === "10-buoi") {
-      // In a real implementation, this would be calculated based on attendance
-      // For now, we'll just add 30 days as a placeholder
+    } 
+    // Với chu kỳ theo buổi: học đủ số buổi mới tính hết chu kỳ
+    else if (paymentCycle === "8-buoi" || paymentCycle === "10-buoi") {
+      // Hiện tại thì cứ tạm cộng thêm 30 ngày
+      // Trong thực tế, nên tính toán dựa trên lịch học
       const validUntil = new Date(today);
-      validUntil.setDate(validUntil.getDate() + 30);
+      const numClasses = paymentCycle === "8-buoi" ? 8 : 10;
+      
+      // Giả sử mỗi tuần học 2 buổi, nên chia số buổi cho 2 để ra số tuần
+      const weeksNeeded = numClasses / 2;
+      validUntil.setDate(validUntil.getDate() + (weeksNeeded * 7));
+      
       return formatDate(validUntil);
-    } else if (paymentCycle === "theo-ngay") {
-      // Theo ngày: chỉ tính cho ngày hôm nay
+    } 
+    // Với chu kỳ theo ngày: ngày đến = ngày bắt đầu
+    else if (paymentCycle === "theo-ngay") {
       return formatDate(today);
     }
     
