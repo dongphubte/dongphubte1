@@ -334,10 +334,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/attendance", ensureAuthenticated, async (req, res) => {
     try {
-      const validatedData = extendedInsertAttendanceSchema.parse(req.body);
+      console.log("Received attendance data:", req.body);
+      
+      // Parse the date string into a Date object if it's a string
+      const data = { ...req.body };
+      if (typeof data.date === 'string') {
+        // Create date from the string in format YYYY-MM-DD
+        const [year, month, day] = data.date.split('-').map(Number);
+        data.date = new Date(year, month - 1, day);
+      }
+      
+      console.log("Transformed attendance data:", data);
+      
+      const validatedData = extendedInsertAttendanceSchema.parse(data);
+      console.log("Validated attendance data:", validatedData);
+      
       const newAttendance = await storage.createAttendance(validatedData);
       res.status(201).json(newAttendance);
     } catch (error) {
+      console.error("Error creating attendance:", error);
       if (error instanceof ZodError) {
         return res.status(400).json({ errors: formatZodError(error) });
       }
