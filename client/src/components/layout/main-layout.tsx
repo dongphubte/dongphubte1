@@ -45,6 +45,11 @@ export default function MainLayout({
       icon: <ClipboardCheck className="h-5 w-5 mr-2" />,
     },
     {
+      id: "thanh-toan",
+      name: "Thanh toán",
+      icon: <span className="h-5 w-5 mr-2 inline-flex items-center justify-center">💰</span>,
+    },
+    {
       id: "bao-cao",
       name: "Báo cáo",
       icon: <BarChart4 className="h-5 w-5 mr-2" />,

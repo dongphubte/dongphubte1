@@ -5,6 +5,7 @@ import StudentList from "@/components/student/student-list";
 import AttendanceForm from "@/components/attendance/attendance-form";
 import Dashboard from "@/components/reports/dashboard";
 import SettingsPage from "@/components/settings/settings-page";
+import PaymentHistory from "@/components/payment/payment-history";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("lop-hoc");
@@ -14,6 +15,7 @@ export default function HomePage() {
       {activeTab === "lop-hoc" && <ClassList />}
       {activeTab === "hoc-sinh" && <StudentList />}
       {activeTab === "diem-danh" && <AttendanceForm />}
+      {activeTab === "thanh-toan" && <PaymentHistory />}
       {activeTab === "bao-cao" && <Dashboard />}
       {activeTab === "cai-dat" && <SettingsPage />}
     </MainLayout>

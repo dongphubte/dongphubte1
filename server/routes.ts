@@ -252,6 +252,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Lỗi khi tạo thanh toán mới" });
     }
   });
+  
+  // Cập nhật thanh toán
+  app.put("/api/payments/:id", ensureAuthenticated, async (req, res) => {
+    try {
+      const paymentId = parseInt(req.params.id);
+      const validatedData = extendedInsertPaymentSchema.parse(req.body);
+      
+      // Kiểm tra xem thanh toán có tồn tại không
+      const existingPayment = await storage.getPayment(paymentId);
+      if (!existingPayment) {
+        return res.status(404).json({ message: "Không tìm thấy thanh toán" });
+      }
+      
+      // Cập nhật thanh toán
+      const updatedPayment = await storage.updatePayment(paymentId, validatedData);
+      
+      // Cập nhật trạng thái thanh toán cho học sinh nếu cần
+      if (validatedData.status === "paid" && existingPayment.status !== "paid") {
+        try {
+          // Lấy thông tin học sinh
+          const student = await storage.getStudent(validatedData.studentId);
+          if (student) {
+            console.log("Trạng thái thanh toán đã được cập nhật thành 'đã thanh toán'");
+          }
+        } catch (updateError) {
+          console.error("Lỗi khi cập nhật trạng thái thanh toán cho học sinh:", updateError);
+        }
+      }
+      
+      res.json(updatedPayment);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ errors: formatZodError(error) });
+      }
+      console.error("Error updating payment:", error);
+      res.status(500).json({ message: "Lỗi khi cập nhật thanh toán" });
+    }
+  });
+  
+  // Xóa thanh toán
+  app.delete("/api/payments/:id", ensureAuthenticated, async (req, res) => {
+    try {
+      const paymentId = parseInt(req.params.id);
+      
+      // Kiểm tra xem thanh toán có tồn tại không
+      const existingPayment = await storage.getPayment(paymentId);
+      if (!existingPayment) {
+        return res.status(404).json({ message: "Không tìm thấy thanh toán" });
+      }
+      
+      // Xóa thanh toán
+      const deleted = await storage.deletePayment(paymentId);
+      
+      // Cập nhật trạng thái thanh toán cho học sinh nếu cần
+      if (deleted && existingPayment.status === "paid") {
+        try {
+          // Lấy thông tin học sinh
+          const student = await storage.getStudent(existingPayment.studentId);
+          if (student) {
+            console.log("Thanh toán đã bị xóa, có thể cần cập nhật trạng thái thanh toán cho học sinh");
+          }
+        } catch (updateError) {
+          console.error("Lỗi khi cập nhật trạng thái thanh toán cho học sinh:", updateError);
+        }
+      }
+      
+      res.json({ message: "Xóa thanh toán thành công" });
+    } catch (error) {
+      console.error("Error deleting payment:", error);
+      res.status(500).json({ message: "Lỗi khi xóa thanh toán" });
+    }
+  });
 
   // Attendance API Routes
   app.get("/api/attendance", ensureAuthenticated, async (req, res) => {
