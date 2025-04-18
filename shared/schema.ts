@@ -143,6 +143,11 @@ export const extendedInsertPaymentSchema = insertPaymentSchema.extend({
 });
 
 export const extendedInsertAttendanceSchema = insertAttendanceSchema.extend({
+  // Định dạng ngày tháng để phù hợp với timestamp SQL
+  date: z.string({
+    required_error: "Ngày điểm danh là bắt buộc",
+    invalid_type_error: "Ngày điểm danh phải là chuỗi định dạng yyyy-MM-dd",
+  }),
   status: z.enum(["present", "absent", "teacher_absent"], {
     errorMap: () => ({ message: "Trạng thái điểm danh không hợp lệ" }),
   }),
