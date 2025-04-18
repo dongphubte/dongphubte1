@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -31,9 +31,10 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
   const [isPaymentComplete, setIsPaymentComplete] = useState(false);
   
   // Get class info
-  const { data: classData } = useQuery({
-    queryKey: ["/api/classes", student?.classId],
+  const { data: classData } = useQuery<any>({
+    queryKey: ["/api/classes"],
     enabled: !!student?.classId,
+    select: (data) => data?.find((c: any) => c.id === student?.classId)
   });
   
   // Get payment info
@@ -48,17 +49,54 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     enabled: !!student?.id,
   });
 
-  const handlePrint = useReactToPrint({
-    documentTitle: `Receipt-${student?.name}-${formatDate(paymentDate)}`,
-    onBeforeGetContent: () => {
-      return new Promise<void>((resolve) => {
-        resolve();
+  const handlePrint = React.useCallback(() => {
+    if (receiptRef.current) {
+      const printContent = receiptRef.current;
+      const printWindow = window.open('', '_blank');
+      
+      if (!printWindow) {
+        toast({
+          title: "Lỗi",
+          description: "Không thể mở cửa sổ in. Vui lòng kiểm tra trình duyệt của bạn.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Receipt-${student?.name}-${formatDate(paymentDate)}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              .receipt { border: 1px solid #ddd; padding: 20px; max-width: 600px; margin: 0 auto; }
+              .receipt-header { text-align: center; margin-bottom: 20px; }
+              .receipt-title { font-size: 18px; font-weight: bold; margin-top: 10px; }
+              .receipt-item { margin-bottom: 8px; }
+              .receipt-label { font-weight: bold; }
+              .receipt-footer { text-align: right; margin-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <div class="receipt">
+              ${printContent.innerHTML}
+            </div>
+            <script>
+              window.onload = function() { window.print(); window.close(); }
+            </script>
+          </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+    } else {
+      toast({
+        title: "Lỗi",
+        description: "Không tìm thấy nội dung biên nhận để in",
+        variant: "destructive",
       });
-    },
-    onPrintError: (error) => console.error('Print failed:', error),
-    // @ts-ignore
-    content: () => receiptRef.current,
-  });
+    }
+  }, [receiptRef, student, paymentDate]);
   
   // Mutation for saving payment
   const paymentMutation = useMutation({
@@ -86,7 +124,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
   
   // Handle payment confirmation
   const handlePayment = () => {
-    if (!student || !classData || !('fee' in classData)) return;
+    if (!student || !classData || !classData.fee) return;
     
     const validFrom = new Date();
     const validTo = new Date();
@@ -205,14 +243,14 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
 
   // Calculate fee amount based on payment cycle
   const getFeeAmount = () => {
-    if (!classData || !('fee' in classData)) return 0;
+    if (!classData || !classData.fee) return 0;
     
     // Ensure the base amount is a number
     let baseAmount = 0;
     if (typeof classData.fee === 'number') {
       baseAmount = classData.fee;
     } else if (typeof classData.fee === 'string') {
-      baseAmount = parseInt(classData.fee, 10);
+      baseAmount = parseInt(String(classData.fee), 10);
     }
     
     // Sử dụng hàm tiện ích để tính học phí dựa theo chu kỳ thanh toán
@@ -322,7 +360,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
             </Button>
             
             <Button 
-              onClick={() => handlePrint()} 
+              onClick={handlePrint} 
               type="button" 
               className="w-full sm:w-auto"
             >
