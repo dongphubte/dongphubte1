@@ -261,13 +261,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
       const dayOfWeek = days[today.getDay()];
       
+      console.log('Current day of week:', dayOfWeek);
+      
       // Get all students who have class today based on schedule
       const classes = await storage.getAllClasses();
       const studentsForToday = [];
       
       for (const classItem of classes) {
+        console.log(`Checking class ${classItem.name} with schedule: ${classItem.schedule}`);
+        
+        // Kiểm tra nếu lịch học của lớp chứa thứ trong tuần hiện tại
         if (classItem.schedule.includes(dayOfWeek)) {
+          console.log(`Class ${classItem.name} has class today (${dayOfWeek})`);
+          
           const students = await storage.getStudentsByClassId(classItem.id);
+          console.log(`Found ${students.length} students in class ${classItem.name}`);
           
           for (const student of students) {
             // Check if student has already been marked for attendance today
@@ -276,6 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
             
             if (!alreadyMarked) {
+              console.log(`Adding student ${student.name} to attendance list for today`);
               studentsForToday.push({
                 ...student,
                 className: classItem.name,
@@ -286,11 +295,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      console.log(`Total students for today: ${studentsForToday.length}`);
+      console.log(`Already marked attendance: ${attendanceToday.length}`);
+      
       res.json({
         markedAttendance: attendanceToday,
         studentsForToday
       });
     } catch (error) {
+      console.error('Error in /api/attendance/today:', error);
       res.status(500).json({ message: "Lỗi khi lấy dữ liệu điểm danh hôm nay" });
     }
   });

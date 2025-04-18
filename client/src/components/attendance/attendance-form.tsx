@@ -63,7 +63,7 @@ export default function AttendanceForm() {
     queryKey: ["/api/attendance/today"],
   });
   
-  const { data: classes, isLoading: isLoadingClasses } = useQuery({
+  const { data: classes, isLoading: isLoadingClasses } = useQuery<any[]>({
     queryKey: ["/api/classes"],
   });
 
@@ -138,12 +138,20 @@ export default function AttendanceForm() {
     
     // Students who have already been marked
     markedAttendance = attendanceData.markedAttendance || [];
+    
+    // Debug - log the data for troubleshooting
+    console.log('Attendance data:', attendanceData);
+    console.log('Students for today:', studentsForToday);
+    console.log('Marked attendance:', markedAttendance);
   }
 
   // Filter by selected class if not "all"
   const filteredStudents = selectedClass === "all" 
     ? studentsForToday 
     : studentsForToday.filter(student => student.className === selectedClass);
+    
+  // Debug - log the filtered students
+  console.log('Filtered students:', filteredStudents);
 
   const isLoading = isLoadingAttendance || isLoadingClasses || createAttendanceMutation.isPending;
 
