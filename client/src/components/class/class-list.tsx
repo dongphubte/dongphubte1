@@ -172,21 +172,36 @@ export default function ClassList() {
                 return acc;
               }
               
-              let pendingAmount = 0;
-              
-              // Nếu học sinh chưa có bản ghi thanh toán, tính họ chưa đóng tiền
+              // Lấy tất cả thanh toán của học sinh
               const studentPayments = payments?.filter(p => p.studentId === student.id) || [];
+              
+              // Tính tổng số tiền đã thanh toán
+              const paidAmount = studentPayments
+                .filter(p => p.status === 'paid')
+                .reduce((sum, p) => sum + p.amount, 0);
+                
+              // Tính tổng số tiền đang chờ
+              const pendingAmount = studentPayments
+                .filter(p => p.status === 'pending')
+                .reduce((sum, p) => sum + p.amount, 0);
+                
+              // Tính tổng số tiền quá hạn
+              const overdueAmount = studentPayments
+                .filter(p => p.status === 'overdue')
+                .reduce((sum, p) => sum + p.amount, 0);
+              
+              // Nếu học sinh chưa có thanh toán nào, tính là đang chờ
+              let defaultPendingAmount = 0;
               if (studentPayments.length === 0) {
                 // Tính toán học phí dựa vào chu kỳ thanh toán của học sinh
                 const paymentCycle = student.paymentCycle || classItem.paymentCycle || "1-thang";
-                // Import hàm calculateFeeByPaymentCycle từ utils/format.ts
-                pendingAmount = calculateFeeByPaymentCycle(classItem.fee, paymentCycle);
+                defaultPendingAmount = calculateFeeByPaymentCycle(classItem.fee, paymentCycle);
               }
               
               return {
-                paid: acc.paid + 0, // Chưa có thanh toán nào được ghi nhận
-                pending: acc.pending + pendingAmount,
-                overdue: acc.overdue + 0 // Chưa có thanh toán nào quá hạn
+                paid: acc.paid + paidAmount,
+                pending: acc.pending + pendingAmount + (studentPayments.length === 0 ? defaultPendingAmount : 0),
+                overdue: acc.overdue + overdueAmount
               };
             }, { paid: 0, pending: 0, overdue: 0 });
             
