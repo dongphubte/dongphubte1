@@ -316,6 +316,36 @@ export default function AttendanceByClass() {
     }
   };
 
+  // State để lưu trữ thông tin dialog học bù
+  const [showMakeupDialog, setShowMakeupDialog] = useState(false);
+  const [selectedMakeupClass, setSelectedMakeupClass] = useState<ClassAttendanceSummary | null>(null);
+  
+  // Hiển thị dialog chọn lớp cho học bù
+  const showMakeupAttendance = () => {
+    setShowMakeupDialog(true);
+  };
+  
+  // Xử lý khi chọn lớp để điểm danh học bù
+  const handleMakeupClassSelect = (classData: ClassAttendanceSummary) => {
+    if (!students) return;
+    
+    // Lọc học sinh thuộc lớp được chọn
+    const studentsInClass = students
+      .filter(student => student.classId === classData.classId && student.status === "active")
+      .map(student => ({
+        ...student,
+        isChecked: false,
+        attendanceStatus: "makeup" // Mặc định là học bù
+      }));
+    
+    setClassStudents(studentsInClass);
+    setSelectedClass(classData);
+    setSelectedAttendanceStatus("makeup");
+    setShowAttendanceDialog(true);
+    setSelectAll(false);
+    setShowMakeupDialog(false);
+  };
+
   // Status Badge Component
   const StatusBadge = ({ status }: { status: string }) => {
     let color;
@@ -370,7 +400,18 @@ export default function AttendanceByClass() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold">Điểm danh theo lớp</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold">Điểm danh theo lớp</h2>
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={showMakeupAttendance}
+            className="flex items-center"
+          >
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Học bù
+          </Button>
+        </div>
         <Tabs 
           defaultValue="all" 
           value={timeRange} 
@@ -637,6 +678,43 @@ export default function AttendanceByClass() {
           </DialogContent>
         </Dialog>
       )}
+      
+      {/* Dialog Chọn lớp học bù */}
+      <Dialog open={showMakeupDialog} onOpenChange={setShowMakeupDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chọn lớp học bù</DialogTitle>
+            <DialogDescription>
+              Chọn lớp học cần điểm danh học bù. Trạng thái điểm danh sẽ tự động đặt là "Học bù".
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+            {classAttendanceSummary.map((classData) => (
+              <div 
+                key={classData.classId}
+                onClick={() => handleMakeupClassSelect(classData)}
+                className="cursor-pointer bg-card border rounded-lg p-4 hover:bg-muted/50 transition-colors flex flex-col"
+              >
+                <div className="font-medium text-lg">{classData.className}</div>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  <div>Tổng điểm danh: {classData.total}</div>
+                  <div className="flex items-center mt-1">
+                    <RefreshCw className="h-3 w-3 mr-1 text-blue-500" />
+                    <span>Học bù: {classData.makeup}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMakeupDialog(false)}>
+              Hủy
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
