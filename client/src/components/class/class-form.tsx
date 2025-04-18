@@ -25,7 +25,9 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
   const queryClient = useQueryClient();
   const [isScheduleValid, setIsScheduleValid] = useState(true);
 
-  const formSchema = extendedInsertClassSchema;
+  const formSchema = extendedInsertClassSchema.extend({
+    paymentCycle: z.enum(["1-thang", "8-buoi", "10-buoi", "theo-ngay"]).default("1-thang"),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,12 +42,17 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
 
   useEffect(() => {
     if (classToEdit) {
+      // Ensure paymentCycle is one of the valid enum values
+      const paymentCycle = ["1-thang", "8-buoi", "10-buoi", "theo-ngay"].includes(classToEdit.paymentCycle || "")
+        ? classToEdit.paymentCycle as "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay"
+        : "1-thang";
+      
       form.reset({
         name: classToEdit.name,
         fee: classToEdit.fee,
         schedule: classToEdit.schedule,
         location: classToEdit.location,
-        paymentCycle: classToEdit.paymentCycle || "1-thang",
+        paymentCycle: paymentCycle,
       });
     } else {
       form.reset({
@@ -225,7 +232,7 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
             <Label htmlFor="paymentCycle">Chu kỳ thanh toán</Label>
             <Select
               defaultValue={form.getValues("paymentCycle") || "1-thang"}
-              onValueChange={(value) => form.setValue("paymentCycle", value)}
+              onValueChange={(value: "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay") => form.setValue("paymentCycle", value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Chọn chu kỳ thanh toán" />
