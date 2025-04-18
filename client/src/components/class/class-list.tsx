@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Class } from "@shared/schema";
@@ -39,9 +39,22 @@ export default function ClassList() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [classToDelete, setClassToDelete] = useState<Class | null>(null);
 
-  const { data: classes, isLoading, error } = useQuery<Class[]>({
+  const { data: classesRaw, isLoading, error } = useQuery<Class[]>({
     queryKey: ["/api/classes"],
   });
+  
+  // Sắp xếp lớp để Lớp 1 hiển thị đầu tiên
+  const classes = useMemo(() => {
+    if (!classesRaw) return undefined;
+    
+    return [...classesRaw].sort((a, b) => {
+      // Sắp xếp Lớp 1 lên đầu
+      if (a.name === 'Lớp 1') return -1;
+      if (b.name === 'Lớp 1') return 1;
+      // Sắp xếp các lớp còn lại theo ID
+      return a.id - b.id;
+    });
+  }, [classesRaw]);
   
   const { data: reportData } = useQuery<any>({
     queryKey: ["/api/reports/dashboard"],

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,9 +41,22 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
   const queryClient = useQueryClient();
   const [selectedClassId, setSelectedClassId] = useState<number | undefined>(undefined);
 
-  const { data: classes, isLoading: isLoadingClasses } = useQuery<Class[]>({
+  const { data: classesRaw, isLoading: isLoadingClasses } = useQuery<Class[]>({
     queryKey: ["/api/classes"],
   });
+  
+  // Sắp xếp lại danh sách lớp với Lớp 1 đứng đầu tiên
+  const classes = useMemo(() => {
+    if (!classesRaw) return undefined;
+    
+    return [...classesRaw].sort((a, b) => {
+      // Ưu tiên Lớp 1 lên đầu tiên
+      if (a.name === 'Lớp 1') return -1;
+      if (b.name === 'Lớp 1') return 1;
+      // Sắp xếp các lớp khác theo ID
+      return a.id - b.id;
+    });
+  }, [classesRaw]);
 
   const formSchema = extendedInsertStudentSchema;
 
