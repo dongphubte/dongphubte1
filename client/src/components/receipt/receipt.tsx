@@ -714,28 +714,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                       {/* Bảng thông tin chi tiết điểm danh */}
                       {attendance.length > 0 ? (
                         <>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-sm mb-1 flex justify-between">
-                                <span>Số ngày học:</span> 
-                                <span className="font-semibold text-green-600">{summarizeAttendance(attendance).present}</span>
-                              </p>
-                              <p className="text-sm mb-1 flex justify-between">
-                                <span>Số ngày vắng:</span> 
-                                <span className="font-semibold text-red-600">{summarizeAttendance(attendance).absent}</span>
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm mb-1 flex justify-between">
-                                <span>Số ngày GV vắng:</span> 
-                                <span className="font-semibold text-yellow-600">{summarizeAttendance(attendance).teacherAbsent}</span>
-                              </p>
-                              <p className="text-sm mb-1 flex justify-between">
-                                <span>Số ngày học bù:</span> 
-                                <span className="font-semibold text-blue-600">{summarizeAttendance(attendance).makeup}</span>
-                              </p>
-                            </div>
-                          </div>
+
                           
                           {/* Chi tiết điểm danh */}
                           <div className="mt-2 border-t border-gray-200 pt-2">
@@ -801,7 +780,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               
               {/* Footer */}
               <div className="mt-6">
-                <p className="text-center italic mb-4">Phụ huynh vui lòng kiểm tra kỹ số tiền và ngày học của con</p>
+                <p className="text-left italic mb-4">Phụ huynh vui lòng kiểm tra kỹ số tiền và ngày học của con</p>
                 
                 <div className="text-right">
                   <p className="mb-1">Chân thành cảm ơn</p>

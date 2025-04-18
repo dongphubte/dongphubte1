@@ -124,7 +124,7 @@ export default function StudentList() {
     }
     
     // Tìm học sinh để kiểm tra chu kỳ thanh toán
-    const student = filteredStudents.find(s => s.id === studentId);
+    const student = filteredStudents?.find(s => s.id === studentId) || students?.find(s => s.id === studentId);
     
     // Nếu học sinh thanh toán theo ngày hoặc theo buổi, không đánh dấu là quá hạn
     // vì các chu kỳ này không có khoảng thời gian cố định phải thanh toán
