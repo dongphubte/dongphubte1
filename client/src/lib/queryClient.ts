@@ -110,7 +110,7 @@ export const getQueryFn: <T>(options: {
     }
   };
 
-// Cấu hình QueryClient với bộ nhớ đệm cải tiến
+// Cấu hình QueryClient với các tùy chọn tối ưu
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -118,7 +118,6 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 60 * 1000, // 1 phút cho dữ liệu vẫn tươi mới, thay vì Infinity
-      cacheTime: 5 * 60 * 1000, // 5 phút lưu trong bộ nhớ đệm
       retry: 1, // Thử lại 1 lần khi thất bại
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
     },

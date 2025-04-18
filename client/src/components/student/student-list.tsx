@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,122 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDate } from "@/utils/date-utils";
+
+// Tối ưu hiệu suất với component riêng và memo
+interface StudentRowProps {
+  student: Student;
+  className: string;
+  paymentStatus: string;
+  onShowReceipt: (student: Student) => void;
+  onEdit: (student: Student) => void;
+  onDelete: (student: Student) => void;
+}
+
+// Sử dụng React.memo để tránh render lại khi props không thay đổi
+const StudentRow = memo(({ student, className, paymentStatus, onShowReceipt, onEdit, onDelete }: StudentRowProps) => {
+  // Tối ưu hóa các tính toán className với useMemo
+  const statusClassName = useMemo(() => 
+    `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+      student.status === 'active' 
+        ? 'bg-success bg-opacity-10 text-success' 
+        : 'bg-error bg-opacity-10 text-error'
+    }`, 
+    [student.status]
+  );
+
+  const paymentStatusClassName = useMemo(() => 
+    `ml-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+      paymentStatus === 'paid'
+        ? 'bg-success bg-opacity-10 text-success'
+        : paymentStatus === 'pending'
+        ? 'bg-warning bg-opacity-10 text-warning'
+        : 'bg-error bg-opacity-10 text-error'
+    }`,
+    [paymentStatus]
+  );
+
+  const paymentButtonClassName = useMemo(() => 
+    `mr-1 ${
+      paymentStatus === 'pending' 
+        ? 'text-warning border-warning hover:bg-warning/10' 
+        : 'text-error border-error hover:bg-error/10'
+    }`,
+    [paymentStatus]
+  );
+
+  // Tối ưu hóa các hàm xử lý với useCallback
+  const handleShowReceipt = useCallback(() => onShowReceipt(student), [onShowReceipt, student]);
+  const handleEdit = useCallback(() => onEdit(student), [onEdit, student]);
+  const handleDelete = useCallback(() => onDelete(student), [onDelete, student]);
+
+  return (
+    <tr>
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-800">{student.name}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{student.code}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{student.phone}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{className}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{formatDate(student.registrationDate)}</td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={statusClassName}>
+          {student.status === 'active' ? 'Đang học' : 'Nghỉ học'}
+        </span>
+        {student.status === 'active' && (
+          <span className={paymentStatusClassName}>
+            {paymentStatus === 'paid' 
+              ? 'Đã thanh toán' 
+              : paymentStatus === 'pending' 
+              ? 'Chưa thanh toán'
+              : 'Quá hạn thanh toán'}
+          </span>
+        )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        {/* Nút thanh toán chỉ hiển thị khi học sinh chưa thanh toán hoặc quá hạn */}
+        {paymentStatus === 'pending' || paymentStatus === 'overdue' ? (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className={paymentButtonClassName}
+            onClick={handleShowReceipt}
+          >
+            Thanh toán
+          </Button>
+        ) : null}
+        
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-primary hover:text-primary hover:bg-primary/10 mr-1"
+          onClick={handleShowReceipt}
+          title="Biên nhận"
+        >
+          <FileText className="h-4 w-4" />
+          <span className="sr-only">Biên nhận</span>
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-primary hover:text-primary hover:bg-primary/10 mr-1"
+          onClick={handleEdit}
+          title="Sửa"
+        >
+          <Pencil className="h-4 w-4" />
+          <span className="sr-only">Sửa</span>
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-red-600 hover:text-red-600 hover:bg-red-50"
+          onClick={handleDelete}
+          title="Xóa"
+        >
+          <Trash2 className="h-4 w-4" />
+          <span className="sr-only">Xóa</span>
+        </Button>
+      </td>
+    </tr>
+  );
+});
 
 interface StudentWithClass extends Omit<Student, 'paymentStatus'> {
   className?: string;
@@ -97,45 +213,64 @@ export default function StudentList() {
     setSelectedStudent(undefined);
   };
 
-  const getClassName = (classId: number): string => {
-    if (!classes) return "";
-    const foundClass = classes.find((c) => c.id === classId);
-    return foundClass ? foundClass.name : "";
-  };
+  // Tối ưu với memoized class map
+  const classMap = useMemo(() => {
+    if (!classes) return new Map<number, string>();
+    return new Map(classes.map(c => [c.id, c.name]));
+  }, [classes]);
 
-  const getPaymentStatus = (studentId: number): string => {
-    if (!payments) return "pending";
+  // Hàm này sử dụng class map đã lưu trong bộ nhớ cache để tìm kiếm nhanh hơn
+  const getClassName = useCallback((classId: number): string => {
+    return classMap.get(classId) || "";
+  }, [classMap]);
+
+  // Tạo một map cho các thanh toán theo sinh viên để tìm kiếm nhanh hơn
+  const paymentsByStudent = useMemo(() => {
+    if (!payments || !Array.isArray(payments)) return new Map<number, any[]>();
     
-    // Kiểm tra xem payments có phải là một mảng không
-    if (!Array.isArray(payments)) return "pending";
+    const result = new Map<number, any[]>();
+    payments.forEach((payment: any) => {
+      const studentId = payment.studentId;
+      if (!result.has(studentId)) {
+        result.set(studentId, []);
+      }
+      result.get(studentId)!.push(payment);
+    });
     
-    const studentPayments = payments.filter((p: any) => p.studentId === studentId);
+    // Sắp xếp các thanh toán của từng học sinh theo ngày giảm dần
+    result.forEach((studentPayments, studentId) => {
+      studentPayments.sort((a, b) => new Date(b.validTo).getTime() - new Date(a.validTo).getTime());
+    });
     
-    if (studentPayments.length === 0) return "pending";
+    return result;
+  }, [payments]);
+
+  // Tối ưu lấy trạng thái thanh toán với tìm kiếm nhanh hơn
+  const getPaymentStatus = useCallback((studentId: number): string => {
+    // Kiểm tra xem có thanh toán cho học sinh này không
+    if (!paymentsByStudent.has(studentId) || paymentsByStudent.get(studentId)!.length === 0) {
+      return "pending";
+    }
     
-    // Sort by validTo date descending to get the latest payment
-    const latestPayment = studentPayments.sort(
-      (a: any, b: any) => new Date(b.validTo).getTime() - new Date(a.validTo).getTime()
-    )[0];
+    // Lấy thanh toán gần nhất (đã sắp xếp trong map)
+    const latestPayment = paymentsByStudent.get(studentId)![0];
     
-    // Nếu thanh toán gần nhất vẫn còn hiệu lực, trả về trạng thái từ thanh toán đó
+    // Nếu thanh toán gần nhất vẫn còn hiệu lực, trả về trạng thái đó
     if (new Date(latestPayment.validTo) >= new Date()) {
       return latestPayment.status;
     }
     
     // Tìm học sinh để kiểm tra chu kỳ thanh toán
-    const student = filteredStudents?.find(s => s.id === studentId) || students?.find(s => s.id === studentId);
+    const student = students?.find(s => s.id === studentId);
     
-    // Nếu học sinh thanh toán theo ngày hoặc theo buổi, không đánh dấu là quá hạn
-    // vì các chu kỳ này không có khoảng thời gian cố định phải thanh toán
+    // Nếu học sinh thanh toán theo ngày, không đánh dấu là quá hạn
     if (student && (student.paymentCycle === "theo-ngay")) {
-      // Chỉ trả về trạng thái theo ngày từ thanh toán gần nhất, không đánh dấu là quá hạn
       return latestPayment.status === "paid" ? "paid" : "pending";
     }
     
-    // Đối với các chu kỳ khác (1-thang, 8-buoi, 10-buoi), kiểm tra nếu đã quá hạn
+    // Đối với các chu kỳ khác, đánh dấu là quá hạn
     return "overdue";
-  };
+  }, [paymentsByStudent, students]);
 
   const showReceipt = (student: Student, forPayment: boolean = false) => {
     const studentWithClass: StudentWithClass = {
@@ -152,20 +287,39 @@ export default function StudentList() {
     setReceiptStudent(null);
   };
 
-  // Filter students based on search term and only show active students by default
-  const filteredStudents = students?.filter(student => {
-    // First filter by status - only show active students in the main list
-    const matchesStatus = student.status === 'active';
+  // Tối ưu danh sách học sinh với useMemo để tránh tính toán lại mỗi khi render
+  const filteredStudents = useMemo(() => {
+    if (!students) return [];
     
-    // Then filter by search term if any
-    const matchesSearch = searchTerm ? (
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.phone.includes(searchTerm)
-    ) : true;
+    // Cache lại searchTerm đã chuyển thành lowercase để tránh chuyển đổi nhiều lần
+    const searchTermLower = searchTerm.toLowerCase();
     
-    return matchesStatus && matchesSearch;
-  });
+    return students.filter(student => {
+      // First filter by status - only show active students in the main list
+      const matchesStatus = student.status === 'active';
+      
+      // Tối ưu: Nếu không có searchTerm, không cần kiểm tra
+      if (!searchTerm) {
+        return matchesStatus;
+      }
+      
+      // Tối ưu: Kiểm tra các điều kiện từ dễ nhất (ít tốn kém nhất) đến phức tạp
+      // Dừng ngay khi tìm thấy kết quả khớp
+      if (student.phone.includes(searchTerm)) {
+        return matchesStatus;
+      }
+      
+      if (student.code.toLowerCase().includes(searchTermLower)) {
+        return matchesStatus;
+      }
+      
+      if (student.name.toLowerCase().includes(searchTermLower)) {
+        return matchesStatus;
+      }
+      
+      return false; // Không khớp với bất kỳ điều kiện nào
+    });
+  }, [students, searchTerm]);
 
   const isLoading = isLoadingStudents || isLoadingClasses || isLoadingPayments;
 
@@ -218,88 +372,15 @@ export default function StudentList() {
                   const paymentStatus = getPaymentStatus(student.id);
                   
                   return (
-                    <tr key={student.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-800">{student.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{student.code}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{student.phone}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{getClassName(student.classId)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{formatDate(student.registrationDate)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span 
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            student.status === 'active' 
-                              ? 'bg-success bg-opacity-10 text-success' 
-                              : 'bg-error bg-opacity-10 text-error'
-                          }`}
-                        >
-                          {student.status === 'active' ? 'Đang học' : 'Nghỉ học'}
-                        </span>
-                        {student.status === 'active' && (
-                          <span 
-                            className={`ml-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              paymentStatus === 'paid'
-                                ? 'bg-success bg-opacity-10 text-success'
-                                : paymentStatus === 'pending'
-                                ? 'bg-warning bg-opacity-10 text-warning'
-                                : 'bg-error bg-opacity-10 text-error'
-                            }`}
-                          >
-                            {paymentStatus === 'paid' 
-                              ? 'Đã thanh toán' 
-                              : paymentStatus === 'pending' 
-                              ? 'Chưa thanh toán'
-                              : 'Quá hạn thanh toán'}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        {/* Nút thanh toán chỉ hiển thị khi học sinh chưa thanh toán hoặc quá hạn */}
-                        {paymentStatus === 'pending' || paymentStatus === 'overdue' ? (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className={`mr-1 ${
-                              paymentStatus === 'pending' ? 'text-warning border-warning hover:bg-warning/10' : 
-                              'text-error border-error hover:bg-error/10'
-                            }`}
-                            onClick={() => showReceipt(student)}
-                          >
-                            Thanh toán
-                          </Button>
-                        ) : null}
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-primary hover:text-primary hover:bg-primary/10 mr-1"
-                          onClick={() => showReceipt(student)}
-                          title="Biên nhận"
-                        >
-                          <FileText className="h-4 w-4" />
-                          <span className="sr-only">Biên nhận</span>
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-primary hover:text-primary hover:bg-primary/10 mr-1"
-                          onClick={() => handleEditStudent(student)}
-                          title="Sửa"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          <span className="sr-only">Sửa</span>
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-600 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleDeleteStudent(student)}
-                          title="Xóa"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Xóa</span>
-                        </Button>
-                      </td>
-                    </tr>
+                    <StudentRow 
+                      key={student.id}
+                      student={student}
+                      className={getClassName(student.classId)}
+                      paymentStatus={paymentStatus}
+                      onShowReceipt={showReceipt}
+                      onEdit={handleEditStudent}
+                      onDelete={handleDeleteStudent}
+                    />
                   );
                 })}
               </tbody>
