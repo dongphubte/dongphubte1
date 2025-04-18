@@ -3,54 +3,63 @@
  */
 
 export const AppConfig = {
-  // Thông tin API
-  api: {
-    baseUrl: 'https://api.hoeedu.com',  // Cần thay đổi thành URL thực tế khi triển khai
-    timeout: 30000,
-    retryCount: 3
-  },
-  
-  // Cấu hình chung của ứng dụng
+  // Thông tin ứng dụng
   app: {
-    name: 'HoeEduMobile',
+    name: 'HoeEdu Mobile',
     version: '1.0.0',
-    theme: {
-      primaryColor: '#6366f1',
-      secondaryColor: '#f43f5e',
-      textColor: '#1f2937',
-      backgroundColor: '#ffffff'
-    }
+    build: '1',
+    description: 'Ứng dụng quản lý giáo dục HoeEdu'
   },
   
-  // Cài đặt lưu trữ
-  storage: {
-    prefix: 'hoeedu_',
-    encryptionKey: 'hoeedu_secure_storage'
+  // Cấu hình API
+  api: {
+    baseUrl: '/',
+    timeout: 30000, // 30 giây
+    retryCount: 3,
   },
   
-  // Thiết lập thông báo đẩy
+  // Cấu hình giao diện
+  ui: {
+    theme: 'system', // light, dark, system
+    primaryColor: '#6366f1',
+    fontScale: 1.0,
+    animationsEnabled: true,
+  },
+  
+  // Cấu hình thông báo
   notifications: {
     enabled: true,
-    channel: {
-      id: 'hoeedu_channel',
-      name: 'HoeEdu Notifications',
-      description: 'Notifications from HoeEdu'
-    }
+    sound: true,
+    vibration: true,
   },
   
-  // Thiết lập đồng bộ hóa
-  sync: {
-    interval: 15, // phút
-    autoSync: true,
-    syncOnStartup: true,
-    syncOnNetworkChange: true
-  },
-  
-  // Cấu hình offline mode
+  // Cấu hình offline
   offline: {
     enabled: true,
-    cacheImages: true,
-    maxCacheSize: 50, // MB
-    cacheExpiration: 7 // ngày
+    syncInterval: 60 * 5, // 5 phút
+    maxOfflineTime: 60 * 60 * 24 * 7, // 7 ngày
+  },
+  
+  // Cấu hình bảo mật
+  security: {
+    biometricEnabled: true,
+    autoLockTimeout: 60 * 5, // 5 phút
+    sessionTimeout: 60 * 60 * 24 * 7, // 7 ngày
+  },
+  
+  // Cấu hình đồng bộ
+  sync: {
+    autoSync: true,
+    syncOnStart: true,
+    syncOnConnect: true,
+    backgroundSync: true,
+  },
+  
+  // Cấu hình debug
+  debug: {
+    enabled: process.env.NODE_ENV === 'development',
+    logLevel: 'info', // debug, info, warn, error
+    crashReporting: true,
+    analyticsEnabled: process.env.NODE_ENV === 'production',
   }
 };

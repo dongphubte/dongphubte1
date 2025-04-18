@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { DeviceInfo } from "../../mobile/components/DeviceInfo";
-import { TabletLayout } from "../../mobile/components/TabletLayout";
-import { isNative, showToast } from "../../mobile/utils/capacitor-utils";
-import { getPlatformInfo } from "../../mobile/utils/platform";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDeviceInfo, useIsMobile } from "@/hooks/use-mobile";
+import { DeviceInfo } from "@/components/mobile/DeviceInfo";
+import { TabletLayout } from "@/components/mobile/TabletLayout";
 
 /**
  * Trang xem trước giao diện di động
@@ -15,7 +15,32 @@ export default function MobileView() {
   const { user, logoutMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("device");
   
-  const platformInfo = getPlatformInfo();
+  const deviceInfo = useDeviceInfo();
+  const isMobile = useIsMobile();
+  
+  // Giả lập isNative
+  const isNative = () => false;
+  
+  // Giả lập showToast
+  const showToast = (message: string) => {
+    const toast = document.createElement('div');
+    toast.innerText = message;
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.left = '50%';
+    toast.style.transform = 'translateX(-50%)';
+    toast.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    toast.style.color = 'white';
+    toast.style.padding = '10px 20px';
+    toast.style.borderRadius = '5px';
+    toast.style.zIndex = '9999';
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 2000);
+  };
   
   // Menu cho layout tablet
   const renderMenu = () => (
@@ -130,21 +155,17 @@ export default function MobileView() {
               <div className="border rounded-lg p-3">
                 <p className="text-sm font-medium text-muted-foreground">Loại thiết bị</p>
                 <p className="font-medium mt-1">
-                  {platformInfo.isMobile 
+                  {deviceInfo.isMobile 
                     ? "Điện thoại" 
-                    : platformInfo.isTablet 
+                    : deviceInfo.isTablet 
                       ? "Máy tính bảng" 
                       : "Máy tính"}
                 </p>
               </div>
               <div className="border rounded-lg p-3">
-                <p className="text-sm font-medium text-muted-foreground">Hệ điều hành</p>
+                <p className="text-sm font-medium text-muted-foreground">Kích thước màn hình</p>
                 <p className="font-medium mt-1">
-                  {platformInfo.isIOS 
-                    ? "iOS" 
-                    : platformInfo.isAndroid 
-                      ? "Android" 
-                      : "Khác"}
+                  {deviceInfo.width} x {deviceInfo.height}
                 </p>
               </div>
               <div className="border rounded-lg p-3">
@@ -152,8 +173,8 @@ export default function MobileView() {
                 <p className="font-medium mt-1">{isNative() ? "Có" : "Không"}</p>
               </div>
               <div className="border rounded-lg p-3">
-                <p className="text-sm font-medium text-muted-foreground">Màn hình cảm ứng</p>
-                <p className="font-medium mt-1">{platformInfo.isTouchDevice ? "Có" : "Không"}</p>
+                <p className="text-sm font-medium text-muted-foreground">Loại giao diện</p>
+                <p className="font-medium mt-1">{isMobile ? "Di động" : "Desktop"}</p>
               </div>
             </div>
           </div>

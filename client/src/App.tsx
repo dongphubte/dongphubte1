@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import ParentPortal from "@/pages/parent-portal";
+import MobileView from "@/pages/mobile-view";
 import { AuthProvider } from "./hooks/use-auth";
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
             <ProtectedRoute path="/" component={HomePage} />
             <Route path="/auth" component={AuthPage} />
             <Route path="/parent-portal" component={ParentPortal} />
+            <ProtectedRoute path="/mobile" component={MobileView} />
             <Route component={NotFound} />
           </Switch>
         </TooltipProvider>

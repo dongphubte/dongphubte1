@@ -1,19 +1,73 @@
-import * as React from "react"
+import { useEffect, useState } from 'react';
 
-const MOBILE_BREAKPOINT = 768
+/**
+ * Hook kiểm tra xem thiết bị hiện tại có phải là thiết bị di động không
+ * @param breakpoint Điểm ngắt để xác định thiết bị di động (mặc định là 768px)
+ * @returns boolean cho biết có phải thiết bị di động không
+ */
+export function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  useEffect(() => {
+    // Hàm kiểm tra kích thước màn hình
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < breakpoint);
+    };
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
+    // Kiểm tra lần đầu
+    checkMobile();
 
-  return !!isMobile
+    // Lắng nghe sự kiện thay đổi kích thước màn hình
+    window.addEventListener('resize', checkMobile);
+
+    // Dọn dẹp khi unmount
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
+/**
+ * Hook kiểm tra loại thiết bị và trả về thông tin về màn hình
+ * @returns Đối tượng chứa thông tin về thiết bị
+ */
+export function useDeviceInfo() {
+  const [deviceInfo, setDeviceInfo] = useState({
+    isMobile: false,
+    isTablet: false,
+    isDesktop: false,
+    width: 0,
+    height: 0,
+  });
+
+  useEffect(() => {
+    // Hàm cập nhật thông tin thiết bị
+    const updateDeviceInfo = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
+      setDeviceInfo({
+        isMobile: width < 768,
+        isTablet: width >= 768 && width < 1024,
+        isDesktop: width >= 1024,
+        width,
+        height,
+      });
+    };
+
+    // Cập nhật lần đầu
+    updateDeviceInfo();
+
+    // Lắng nghe sự kiện thay đổi kích thước màn hình
+    window.addEventListener('resize', updateDeviceInfo);
+
+    // Dọn dẹp khi unmount
+    return () => {
+      window.removeEventListener('resize', updateDeviceInfo);
+    };
+  }, []);
+
+  return deviceInfo;
 }
