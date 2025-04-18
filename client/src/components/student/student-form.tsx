@@ -271,6 +271,9 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
                 className="bg-neutral-100"
                 value={selectedClass ? selectedClass.schedule : ""}
               />
+              {selectedClass && (
+                <p className="text-xs text-neutral-500">{selectedClass.location}</p>
+              )}
             </div>
             
             <div className="space-y-2">

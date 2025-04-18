@@ -270,8 +270,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const classItem of classes) {
         console.log(`Checking class ${classItem.name} with schedule: ${classItem.schedule}`);
         
-        // Kiểm tra nếu lịch học của lớp chứa thứ trong tuần hiện tại
-        if (classItem.schedule.includes(dayOfWeek)) {
+        // Kiểm tra lịch học bằng phương pháp linh hoạt hơn để khớp với các định dạng khác nhau
+        // Ví dụ: "Thứ 2, 4, 6" hoặc "Thứ 2,4,6" hoặc "Thứ 2-4-6" đều có thể được xác định
+        let hasClassToday = false;
+        
+        // Kiểm tra thứ trong tuần (Thứ 2, Thứ 3, etc.)
+        if (dayOfWeek === 'Chủ nhật') {
+          hasClassToday = classItem.schedule.includes('CN') || classItem.schedule.includes('Chủ nhật');
+        } else {
+          // Với các ngày trong tuần, chỉ cần kiểm tra số của thứ (2, 3, 4, etc.)
+          const dayNumber = today.getDay(); // 0 = CN, 1 = T2, etc.
+          if (dayNumber > 0) { // Không phải Chủ nhật
+            hasClassToday = classItem.schedule.includes(` ${dayNumber}`) || 
+                          classItem.schedule.includes(`,${dayNumber}`) || 
+                          classItem.schedule.includes(`-${dayNumber}`) ||
+                          classItem.schedule.includes(`${dayNumber},`) ||
+                          classItem.schedule.includes(`${dayNumber}-`) ||
+                          classItem.schedule.includes(`${dayNumber} `);
+          }
+        }
+        
+        if (hasClassToday) {
           console.log(`Class ${classItem.name} has class today (${dayOfWeek})`);
           
           const students = await storage.getStudentsByClassId(classItem.id);
