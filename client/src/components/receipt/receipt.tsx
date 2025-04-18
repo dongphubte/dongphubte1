@@ -674,67 +674,100 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               </div>
               
               {/* Thống kê điểm danh */}
-              {!isLoadingAttendance && attendance && Array.isArray(attendance) && attendance.length > 0 ? (
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold">Thống kê điểm danh</h4>
-                    <span className="text-sm text-gray-500">(Chu kỳ hiện tại)</span>
-                  </div>
-                  
-                  {/* Hiển thị thống kê tổng hợp */}
-                  {(() => {
-                    const stats = summarizeAttendance(attendance);
-                    return (
-                      <div className="grid grid-cols-5 gap-1 text-center">
-                        <div className="bg-green-100 rounded p-2">
-                          <p className="text-sm font-medium text-green-700">Có mặt</p>
-                          <p className="font-bold">{stats.present}</p>
-                        </div>
-                        <div className="bg-red-100 rounded p-2">
-                          <p className="text-sm font-medium text-red-700">Vắng mặt</p>
-                          <p className="font-bold">{stats.absent}</p>
-                        </div>
-                        <div className="bg-yellow-100 rounded p-2">
-                          <p className="text-sm font-medium text-yellow-700">GV nghỉ</p>
-                          <p className="font-bold">{stats.teacherAbsent}</p>
-                        </div>
-                        <div className="bg-blue-100 rounded p-2">
-                          <p className="text-sm font-medium text-blue-700">Học bù</p>
-                          <p className="font-bold">{stats.makeup}</p>
-                        </div>
-                        <div className="bg-purple-100 rounded p-2">
-                          <p className="text-sm font-medium text-purple-700">Tổng</p>
-                          <p className="font-bold">{stats.total}</p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                  
-                  {/* Chi tiết điểm danh gần đây */}
-                  <div className="mt-2">
-                    <p className="text-sm font-medium mb-1">Chi tiết điểm danh gần đây:</p>
-                    <div className="grid grid-cols-2 gap-1">
-                      {attendance.slice(0, 6).map((a: any, index: number) => (
-                        <p key={index} className="flex justify-between bg-white px-3 py-2 rounded border border-gray-100">
-                          <span>{formatDate(new Date(a.date))}:</span>
-                          <span className={
-                            a.status === 'present' ? 'text-green-600 font-medium' : 
-                            a.status === 'absent' ? 'text-red-600 font-medium' : 
-                            a.status === 'makeup' ? 'text-blue-600 font-medium' : 'text-yellow-600 font-medium'
-                          }>
-                            {formatAttendanceStatus(a.status)}
-                          </span>
-                        </p>
-                      ))}
+              <div className="mb-4">
+                <h4 className="font-semibold mb-2">Thống kê điểm danh</h4>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  {!isLoadingAttendance && attendance && Array.isArray(attendance) ? (
+                    <>
+                      {/* Hiển thị thống kê tổng hợp */}
+                      {(() => {
+                        // Thống kê theo các loại điểm danh
+                        const stats = summarizeAttendance(attendance);
+                        return (
+                          <div className="grid grid-cols-5 gap-1 text-center mb-3">
+                            <div className="bg-green-100 rounded p-2">
+                              <p className="text-sm font-medium text-green-700">Có mặt</p>
+                              <p className="font-bold">{stats.present}</p>
+                            </div>
+                            <div className="bg-red-100 rounded p-2">
+                              <p className="text-sm font-medium text-red-700">Vắng mặt</p>
+                              <p className="font-bold">{stats.absent}</p>
+                            </div>
+                            <div className="bg-yellow-100 rounded p-2">
+                              <p className="text-sm font-medium text-yellow-700">GV nghỉ</p>
+                              <p className="font-bold">{stats.teacherAbsent}</p>
+                            </div>
+                            <div className="bg-blue-100 rounded p-2">
+                              <p className="text-sm font-medium text-blue-700">Học bù</p>
+                              <p className="font-bold">{stats.makeup}</p>
+                            </div>
+                            <div className="bg-purple-100 rounded p-2">
+                              <p className="text-sm font-medium text-purple-700">Tổng</p>
+                              <p className="font-bold">{stats.total}</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                      
+                      {/* Bảng thông tin chi tiết điểm danh */}
+                      {attendance.length > 0 ? (
+                        <>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm mb-1 flex justify-between">
+                                <span>Số ngày học:</span> 
+                                <span className="font-semibold text-green-600">{summarizeAttendance(attendance).present}</span>
+                              </p>
+                              <p className="text-sm mb-1 flex justify-between">
+                                <span>Số ngày vắng:</span> 
+                                <span className="font-semibold text-red-600">{summarizeAttendance(attendance).absent}</span>
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm mb-1 flex justify-between">
+                                <span>Số ngày GV vắng:</span> 
+                                <span className="font-semibold text-yellow-600">{summarizeAttendance(attendance).teacherAbsent}</span>
+                              </p>
+                              <p className="text-sm mb-1 flex justify-between">
+                                <span>Số ngày học bù:</span> 
+                                <span className="font-semibold text-blue-600">{summarizeAttendance(attendance).makeup}</span>
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Chi tiết điểm danh gần đây */}
+                          <div className="mt-2 border-t border-gray-200 pt-2">
+                            <p className="text-sm font-medium mb-1">Chi tiết điểm danh gần đây:</p>
+                            <div className="grid grid-cols-2 gap-1">
+                              {attendance.slice(0, 6).map((a: any, index: number) => (
+                                <p key={index} className="flex justify-between bg-white px-3 py-2 rounded border border-gray-100">
+                                  <span>{formatDate(new Date(a.date))}:</span>
+                                  <span className={
+                                    a.status === 'present' ? 'text-green-600 font-medium' : 
+                                    a.status === 'absent' ? 'text-red-600 font-medium' : 
+                                    a.status === 'makeup' ? 'text-blue-600 font-medium' : 'text-yellow-600 font-medium'
+                                  }>
+                                    {formatAttendanceStatus(a.status)}
+                                  </span>
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-center text-sm text-gray-500 py-2">Chưa có dữ liệu điểm danh</p>
+                      )}
+                    </>
+                  ) : isLoadingAttendance ? (
+                    <div className="flex justify-center items-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />
+                      <span className="text-sm text-muted-foreground">Đang tải dữ liệu điểm danh...</span>
                     </div>
-                  </div>
+                  ) : (
+                    <p className="text-center text-sm text-gray-500 py-2">Chưa có dữ liệu điểm danh</p>
+                  )}
                 </div>
-              ) : isLoadingAttendance ? (
-                <div className="flex justify-center items-center p-4">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />
-                  <span className="text-sm text-muted-foreground">Đang tải dữ liệu điểm danh...</span>
-                </div>
-              ) : null}
+              </div>
               
               {/* Lịch sử thanh toán */}
               {!isLoadingPayments && payments && Array.isArray(payments) && payments.length > 0 ? (
