@@ -657,7 +657,7 @@ export default function AttendanceByClass() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center h-24">
+                      <TableCell colSpan={5} className="text-center h-24">
                         <div className="flex flex-col items-center justify-center">
                           <p className="text-muted-foreground">Không có dữ liệu điểm danh</p>
                         </div>
@@ -836,6 +836,95 @@ export default function AttendanceByClass() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Dialog Sửa điểm danh */}
+      {selectedAttendance && (
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Sửa điểm danh</DialogTitle>
+              <DialogDescription>
+                Thay đổi trạng thái điểm danh cho {selectedAttendance.studentName} vào ngày {formatDate(new Date(selectedAttendance.date))}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <h3 className="text-sm font-medium mb-2">Trạng thái điểm danh:</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={editAttendanceStatus === "present" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditAttendanceStatus("present")}
+                  className="flex items-center"
+                >
+                  <Check className="h-4 w-4 mr-1" />
+                  Có mặt
+                </Button>
+                <Button
+                  variant={editAttendanceStatus === "absent" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditAttendanceStatus("absent")}
+                  className="flex items-center"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Vắng mặt
+                </Button>
+                <Button
+                  variant={editAttendanceStatus === "teacher_absent" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditAttendanceStatus("teacher_absent")}
+                  className="flex items-center"
+                >
+                  <AlertTriangle className="h-4 w-4 mr-1" />
+                  GV nghỉ
+                </Button>
+                <Button
+                  variant={editAttendanceStatus === "makeup" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditAttendanceStatus("makeup")}
+                  className="flex items-center"
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Học bù
+                </Button>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowEditDialog(false)}>
+                Hủy
+              </Button>
+              <Button onClick={handleUpdateAttendance}>
+                Lưu thay đổi
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+      
+      {/* Dialog Xác nhận xóa */}
+      {selectedAttendance && (
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Xác nhận xóa</DialogTitle>
+              <DialogDescription>
+                Bạn có chắc chắn muốn xóa bản ghi điểm danh của <span className="font-medium">{selectedAttendance.studentName}</span> vào ngày <span className="font-medium">{formatDate(new Date(selectedAttendance.date))}</span>?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                Hủy
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteAttendance}>
+                Xóa
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

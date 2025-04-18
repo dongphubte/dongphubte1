@@ -487,6 +487,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cập nhật điểm danh
+  app.patch("/api/attendance/:id", ensureAuthenticated, async (req, res) => {
+    try {
+      const attendanceId = parseInt(req.params.id);
+      console.log("Updating attendance:", attendanceId, "with data:", req.body);
+      
+      // Kiểm tra xem bản ghi điểm danh có tồn tại không
+      const existingAttendance = await storage.getAttendance(attendanceId);
+      if (!existingAttendance) {
+        return res.status(404).json({ message: "Không tìm thấy bản ghi điểm danh" });
+      }
+      
+      // Parse the date string into a Date object if it's a string
+      const data = { ...req.body };
+      if (typeof data.date === 'string') {
+        // Create date from the string in format YYYY-MM-DD
+        const [year, month, day] = data.date.split('-').map(Number);
+        data.date = new Date(year, month - 1, day);
+      }
+      
+      // Cập nhật điểm danh
+      const updatedAttendance = await storage.updateAttendance(attendanceId, data);
+      res.json(updatedAttendance);
+    } catch (error) {
+      console.error("Error updating attendance:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ errors: formatZodError(error) });
+      }
+      res.status(500).json({ message: "Lỗi khi cập nhật điểm danh" });
+    }
+  });
+
+  // Xóa điểm danh
+  app.delete("/api/attendance/:id", ensureAuthenticated, async (req, res) => {
+    try {
+      const attendanceId = parseInt(req.params.id);
+      console.log("Deleting attendance:", attendanceId);
+      
+      // Kiểm tra xem bản ghi điểm danh có tồn tại không
+      const existingAttendance = await storage.getAttendance(attendanceId);
+      if (!existingAttendance) {
+        return res.status(404).json({ message: "Không tìm thấy bản ghi điểm danh" });
+      }
+      
+      // Xóa điểm danh
+      const deleted = await storage.deleteAttendance(attendanceId);
+      if (deleted) {
+        res.json({ message: "Xóa điểm danh thành công" });
+      } else {
+        res.status(500).json({ message: "Không thể xóa điểm danh" });
+      }
+    } catch (error) {
+      console.error("Error deleting attendance:", error);
+      res.status(500).json({ message: "Lỗi khi xóa điểm danh" });
+    }
+  });
+
   // Reports API Routes
   app.get("/api/reports/dashboard", ensureAuthenticated, async (req, res) => {
     try {
