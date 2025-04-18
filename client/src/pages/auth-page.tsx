@@ -132,18 +132,6 @@ export default function AuthPage() {
                 ) : null}
                 Đăng nhập
               </Button>
-              
-              <div className="text-center text-sm text-gray-500 mt-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                <p className="font-medium mb-1">Thông tin đăng nhập demo:</p>
-                <div className="flex justify-between px-3">
-                  <span>Username:</span>
-                  <span className="font-semibold">dongphubte</span>
-                </div>
-                <div className="flex justify-between px-3">
-                  <span>Password:</span>
-                  <span className="font-semibold">@Bentre2013</span>
-                </div>
-              </div>
             </form>
           </Form>
           
