@@ -12,6 +12,7 @@ import MobileView from "@/pages/mobile-view";
 import AttendancePage from "@/pages/attendance-page";
 import ResetPassword from "@/pages/reset-password";
 import SettingsPage from "@/pages/settings-page";
+import StudentPage from "@/pages/parent/student";
 import { AuthProvider } from "./hooks/use-auth";
 
 function App() {
@@ -23,7 +24,8 @@ function App() {
           <Switch>
             <ProtectedRoute path="/" component={HomePage} />
             <Route path="/auth" component={AuthPage} />
-            <Route path="/parent-portal" component={ParentPortal} />
+            <Route path="/parent" component={ParentPortal} />
+            <Route path="/parent/student/:studentCode" component={StudentPage} />
             <Route path="/reset-password" component={ResetPassword} />
             <ProtectedRoute path="/mobile" component={MobileView} />
             <ProtectedRoute path="/attendance" component={AttendancePage} />
