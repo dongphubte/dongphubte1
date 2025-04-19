@@ -79,7 +79,10 @@ export const payments = pgTable("payments", {
   paymentDate: timestamp("payment_date").notNull().defaultNow(),
   validFrom: timestamp("valid_from").notNull(),
   validTo: timestamp("valid_to").notNull(),
-  status: text("status").notNull().default("paid"), // paid, pending, overdue
+  status: text("status").notNull().default("paid"), // paid, pending, overdue, partial_refund
+  plannedSessions: integer("planned_sessions"), // Số buổi dự kiến trong chu kỳ
+  actualSessions: integer("actual_sessions"), // Số buổi thực tế học sinh tham gia
+  adjustmentReason: text("adjustment_reason"), // Lý do điều chỉnh (nếu có)
 });
 
 export const insertPaymentSchema = createInsertSchema(payments).pick({
@@ -88,6 +91,9 @@ export const insertPaymentSchema = createInsertSchema(payments).pick({
   validFrom: true,
   validTo: true,
   status: true,
+  plannedSessions: true,
+  actualSessions: true,
+  adjustmentReason: true,
 });
 
 // Schema for attendance
