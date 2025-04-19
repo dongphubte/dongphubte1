@@ -487,6 +487,7 @@ export default function StudentList() {
                       onEdit={handleEditStudent}
                       onDelete={handleDeleteStudent}
                       onAdjustPayment={handleAdjustPayment}
+                      onViewDetails={handleViewStudentDetails}
                     />
                   );
                 })}
@@ -563,6 +564,16 @@ export default function StudentList() {
           student={adjustmentStudent}
           classId={adjustmentStudent.classId}
           className={getClassName(adjustmentStudent.classId)}
+        />
+      )}
+      
+      {/* Student Detail Modal */}
+      {studentDetail && (
+        <StudentDetailModal
+          isOpen={isDetailOpen}
+          onClose={closeStudentDetail}
+          student={studentDetail}
+          className={getClassName(studentDetail.classId)}
         />
       )}
     </div>
