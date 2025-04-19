@@ -204,6 +204,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Lỗi khi xóa học sinh" });
     }
   });
+  
+  // API cho học sinh tạm nghỉ
+  app.patch("/api/students/:id/suspend", ensureAuthenticated, async (req, res) => {
+    try {
+      const studentId = parseInt(req.params.id);
+      
+      // Lấy học sinh hiện tại
+      const student = await storage.getStudent(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Không tìm thấy học sinh" });
+      }
+      
+      // Kiểm tra nếu học sinh đã ở trạng thái tạm nghỉ hoặc nghỉ học
+      if (student.status !== 'active') {
+        return res.status(400).json({ 
+          message: "Chỉ có thể chuyển học sinh 'đang học' sang trạng thái tạm nghỉ" 
+        });
+      }
+      
+      // Cập nhật thông tin học sinh
+      const { suspendDate, suspendReason, lastActiveDate } = req.body;
+      
+      const updateData = {
+        ...student,
+        status: 'suspended' as 'suspended', // Type assertion để thỏa mãn kiểm tra kiểu
+        suspendDate: suspendDate ? new Date(suspendDate) : new Date(),
+        suspendReason: suspendReason || 'Không có lý do cụ thể',
+        lastActiveDate: lastActiveDate ? new Date(lastActiveDate) : new Date()
+      };
+      
+      // Loại bỏ các trường không đúng định dạng với schema
+      delete updateData.id;
+      
+      // Cập nhật học sinh
+      const updatedStudent = await storage.updateStudent(studentId, updateData);
+      
+      if (!updatedStudent) {
+        return res.status(500).json({ message: "Không thể cập nhật trạng thái học sinh" });
+      }
+      
+      res.json(updatedStudent);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái tạm nghỉ:", error);
+      res.status(500).json({ message: "Lỗi khi cập nhật trạng thái học sinh" });
+    }
+  });
+  
+  // API cho học sinh học lại
+  app.patch("/api/students/:id/restart", ensureAuthenticated, async (req, res) => {
+    try {
+      const studentId = parseInt(req.params.id);
+      
+      // Lấy học sinh hiện tại
+      const student = await storage.getStudent(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Không tìm thấy học sinh" });
+      }
+      
+      // Kiểm tra nếu học sinh đã ở trạng thái đang học
+      if (student.status === 'active') {
+        return res.status(400).json({ 
+          message: "Học sinh này đã ở trạng thái đang học" 
+        });
+      }
+      
+      // Cập nhật thông tin học sinh
+      const { restartDate } = req.body;
+      
+      const updateData = {
+        ...student,
+        status: 'active' as 'active', // Type assertion để thỏa mãn kiểm tra kiểu
+        restartDate: restartDate ? new Date(restartDate) : new Date()
+      };
+      
+      // Nếu học sinh đã tạm nghỉ, lưu lại thông tin về thời gian tạm nghỉ
+      if (student.status === 'suspended') {
+        // Giữ lại thông tin tạm nghỉ trước đó để lưu lịch sử
+        updateData.suspendHistory = student.suspendHistory || [];
+        
+        // Thêm kỳ tạm nghỉ hiện tại vào lịch sử
+        if (student.suspendDate) {
+          updateData.suspendHistory.push({
+            suspendDate: student.suspendDate,
+            restartDate: updateData.restartDate,
+            suspendReason: student.suspendReason || ''
+          });
+        }
+      }
+      
+      // Loại bỏ các trường không đúng định dạng với schema
+      delete updateData.id;
+      
+      // Cập nhật học sinh
+      const updatedStudent = await storage.updateStudent(studentId, updateData);
+      
+      if (!updatedStudent) {
+        return res.status(500).json({ message: "Không thể cập nhật trạng thái học sinh" });
+      }
+      
+      res.json(updatedStudent);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái học lại:", error);
+      res.status(500).json({ message: "Lỗi khi cập nhật trạng thái học sinh" });
+    }
+  });
 
   // Payments API Routes
   app.get("/api/payments", ensureAuthenticated, async (req, res) => {

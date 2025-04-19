@@ -65,6 +65,7 @@ export const students = pgTable("students", {
   suspendReason: text("suspend_reason"), // Lý do tạm nghỉ
   restartDate: timestamp("restart_date"), // Ngày học lại gần nhất
   lastActiveDate: timestamp("last_active_date"), // Ngày hoạt động cuối cùng trước khi tạm nghỉ
+  suspendHistory: jsonb("suspend_history"), // Lịch sử tạm nghỉ và học lại
   // Tạm thời không thêm paymentStatus vào schema vì database chưa có cột này
 });
 
