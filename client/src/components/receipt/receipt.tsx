@@ -353,6 +353,10 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     // Sử dụng số buổi tùy chỉnh nếu có
     let notes = `Thanh toán học phí ${student.name} - ${student.code}`;
     
+    // Kiểm tra xem có thanh toán trước hay không (nếu paymentDate lớn hơn ngày hiện tại)
+    const currentDate = new Date();
+    const isPrepayment = paymentDate > currentDate;
+    
     // Calculate validTo based on payment cycle
     if (student.paymentCycle === "1-thang") {
       validTo.setMonth(validTo.getMonth() + 1);
@@ -372,9 +376,9 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
       const numClasses = customSessions > 0 ? customSessions : 
                         student.paymentCycle === "8-buoi" ? 8 : 10;
       
-      // Giả sử mỗi tuần học 2 buổi, nên chia số buổi cho 2 để ra số tuần
-      const weeksNeeded = numClasses / 2;
-      validTo.setDate(validTo.getDate() + (weeksNeeded * 7));
+      // Theo yêu cầu, với 8 buổi và mỗi tuần học 7 ngày, thì đủ 8 buổi mất khoảng 2 ngày
+      // Vì mỗi ngày có thể học 1 buổi, nên tổng cộng cần numClasses ngày
+      validTo.setDate(validTo.getDate() + (numClasses - 1)); // -1 vì ngày đầu tiên cũng tính là 1 buổi
       
       // Cập nhật ghi chú
       if (customSessions > 0 && customSessions !== (student.paymentCycle === "8-buoi" ? 8 : 10)) {
@@ -383,6 +387,11 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     } else {
       // Mặc định thêm 1 tháng
       validTo.setMonth(validTo.getMonth() + 1);
+    }
+    
+    // Nếu thanh toán trước, thêm ghi chú "dự kiến"
+    if (isPrepayment) {
+      notes += " (dự kiến)";
     }
     
     // Format ngày tháng theo định dạng YYYY-MM-DD
@@ -527,13 +536,18 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
     const paymentCycle = student.paymentCycle;
     const today = new Date(paymentDate);
     
+    // Kiểm tra xem có thanh toán trước hay không (nếu paymentDate lớn hơn ngày hiện tại)
+    const currentDate = new Date();
+    const isPrepayment = paymentDate > currentDate;
+    let validUntilText = "";
+    
     // Với chu kỳ theo tháng: cộng thêm 1 tháng
     if (paymentCycle === "1-thang") {
       const validUntil = new Date(today);
       validUntil.setMonth(validUntil.getMonth() + 1);
       // Trừ đi 1 ngày để lấy chính xác 1 tháng (vd: 15/4 -> 14/5)
       validUntil.setDate(validUntil.getDate() - 1);
-      return formatDate(validUntil);
+      validUntilText = formatDate(validUntil);
     } 
     // Với chu kỳ theo buổi: học đủ số buổi mới tính hết chu kỳ
     else if (paymentCycle === "8-buoi" || paymentCycle === "10-buoi") {
@@ -543,11 +557,11 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
       const numClasses = customSessions > 0 ? customSessions : 
                          paymentCycle === "8-buoi" ? 8 : 10;
       
-      // Giả sử mỗi tuần học 2 buổi, nên chia số buổi cho 2 để ra số tuần
-      const weeksNeeded = numClasses / 2;
-      validUntil.setDate(validUntil.getDate() + (weeksNeeded * 7));
+      // Theo yêu cầu, với 8 buổi hoặc 10 buổi, mỗi ngày có thể học 1 buổi
+      // Nên tổng cộng cần numClasses ngày để hoàn thành
+      validUntil.setDate(validUntil.getDate() + (numClasses - 1)); // -1 vì ngày đầu tiên đã tính 1 buổi
       
-      return formatDate(validUntil);
+      validUntilText = formatDate(validUntil);
     } 
     // Với chu kỳ theo ngày: ngày đến = ngày bắt đầu
     else if (paymentCycle === "theo-ngay") {
@@ -556,14 +570,19 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
       // Nếu có số buổi tùy chỉnh và lớn hơn 1, tính ngày hết hạn dựa trên số buổi
       if (customSessions > 1) {
         validUntil.setDate(validUntil.getDate() + (customSessions - 1));
-        return formatDate(validUntil);
+        validUntilText = formatDate(validUntil);
+      } else {
+        // Mặc định cho chu kỳ theo ngày là cùng ngày
+        validUntilText = formatDate(today);
       }
-      
-      // Mặc định cho chu kỳ theo ngày là cùng ngày
-      return formatDate(today);
     }
     
-    return "";
+    // Nếu thanh toán trước, thêm "(dự kiến)"
+    if (isPrepayment) {
+      validUntilText += " (dự kiến)";
+    }
+    
+    return validUntilText;
   };
 
   // Convert number to Vietnamese words

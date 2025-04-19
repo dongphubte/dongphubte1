@@ -43,6 +43,9 @@ export default function ClassList() {
     queryKey: ["/api/classes"],
   });
   
+  // State để theo dõi lớp nào đang hiển thị chi tiết
+  const [classDetailsOpen, setClassDetailsOpen] = useState<number | null>(null);
+  
   // Sắp xếp lớp để Lớp 1 hiển thị đầu tiên
   const classes = useMemo(() => {
     if (!classesRaw) return undefined;
