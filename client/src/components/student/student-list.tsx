@@ -37,6 +37,8 @@ interface StudentRowProps {
   onDelete: (student: Student) => void;
   onAdjustPayment: (student: Student) => void;
   onViewDetails: (student: Student) => void;
+  onSuspend?: (student: Student) => void; // Hành động cho học sinh đang học
+  onRestart?: (student: Student) => void; // Hành động cho học sinh tạm nghỉ hoặc nghỉ học
 }
 
 // Sử dụng React.memo để tránh render lại khi props không thay đổi
@@ -49,7 +51,9 @@ const StudentRow = memo(({
   onEdit, 
   onDelete, 
   onAdjustPayment,
-  onViewDetails
+  onViewDetails,
+  onSuspend,
+  onRestart
 }: StudentRowProps) => {
   // Tối ưu hóa các tính toán className với useMemo
   const statusClassName = useMemo(() => 
@@ -88,6 +92,8 @@ const StudentRow = memo(({
   const handleDelete = useCallback(() => onDelete(student), [onDelete, student]);
   const handleAdjustPayment = useCallback(() => onAdjustPayment(student), [onAdjustPayment, student]);
   const handleViewDetails = useCallback(() => onViewDetails(student), [onViewDetails, student]);
+  const handleSuspend = useCallback(() => onSuspend && onSuspend(student), [onSuspend, student]);
+  const handleRestart = useCallback(() => onRestart && onRestart(student), [onRestart, student]);
 
   return (
     <tr>
@@ -103,7 +109,11 @@ const StudentRow = memo(({
       <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{formatDate(student.registrationDate)}</td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span className={statusClassName}>
-          {student.status === 'active' ? 'Đang học' : 'Nghỉ học'}
+          {student.status === 'active' 
+            ? 'Đang học' 
+            : student.status === 'suspended' 
+            ? 'Tạm nghỉ' 
+            : 'Nghỉ học'}
         </span>
         {student.status === 'active' && (
           <span className={paymentStatusClassName}>
@@ -121,10 +131,31 @@ const StudentRow = memo(({
             {nextPaymentInfo.isDueEstimated && <span className="text-amber-500 ml-1">(dự kiến)</span>}
           </div>
         )}
+        
+        {/* Hiển thị thông tin về thời gian nghỉ và lý do cho học sinh tạm nghỉ */}
+        {student.status === 'suspended' && student.suspendDate && (
+          <>
+            <div className="mt-1 text-xs text-neutral-600">
+              Tạm nghỉ từ: {formatDate(student.suspendDate)}
+            </div>
+            {student.suspendReason && (
+              <div className="mt-1 text-xs text-neutral-600">
+                Lý do: {student.suspendReason}
+              </div>
+            )}
+          </>
+        )}
+        
+        {/* Hiển thị thông tin về ngày học lại gần nhất */}
+        {student.restartDate && (
+          <div className="mt-1 text-xs text-neutral-600">
+            Học lại gần nhất: {formatDate(student.restartDate)}
+          </div>
+        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-        {/* Nút thanh toán chỉ hiển thị khi học sinh chưa thanh toán hoặc quá hạn */}
-        {paymentStatus === 'pending' || paymentStatus === 'overdue' ? (
+        {/* Nút thanh toán chỉ hiển thị khi học sinh đang học và chưa thanh toán/quá hạn */}
+        {student.status === 'active' && (paymentStatus === 'pending' || paymentStatus === 'overdue') && (
           <Button 
             variant="outline" 
             size="sm" 
@@ -133,7 +164,33 @@ const StudentRow = memo(({
           >
             Thanh toán
           </Button>
-        ) : null}
+        )}
+        
+        {/* Nút đánh dấu tạm nghỉ chỉ hiển thị cho học sinh đang học */}
+        {student.status === 'active' && onSuspend && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-amber-600 hover:text-amber-600 hover:bg-amber-50 mr-1"
+            onClick={handleSuspend}
+            title="Tạm nghỉ học"
+          >
+            <span className="text-xs">Tạm nghỉ</span>
+          </Button>
+        )}
+        
+        {/* Nút học lại chỉ hiển thị cho học sinh tạm nghỉ hoặc nghỉ học */}
+        {(student.status === 'suspended' || student.status === 'inactive') && onRestart && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-emerald-600 hover:text-emerald-600 hover:bg-emerald-50 mr-1"
+            onClick={handleRestart}
+            title="Học lại"
+          >
+            <span className="text-xs">Học lại</span>
+          </Button>
+        )}
         
         <Button 
           variant="ghost" 
@@ -233,6 +290,50 @@ export default function StudentList() {
         variant: "destructive",
       });
       setIsDeleteDialogOpen(false);
+    },
+  });
+  
+  // Mutation để chuyển học sinh sang trạng thái tạm nghỉ
+  const suspendStudentMutation = useMutation({
+    mutationFn: async ({ id, suspendData }: { id: number, suspendData: { suspendDate: Date, suspendReason: string, lastActiveDate: Date } }) => {
+      const res = await apiRequest("PATCH", `/api/students/${id}/suspend`, suspendData);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/students"] });
+      toast({
+        title: "Thành công",
+        description: "Đã cập nhật trạng thái tạm nghỉ cho học sinh",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể cập nhật trạng thái học sinh",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation để chuyển học sinh trở lại trạng thái đang học
+  const restartStudentMutation = useMutation({
+    mutationFn: async ({ id, restartData }: { id: number, restartData: { restartDate: Date } }) => {
+      const res = await apiRequest("PATCH", `/api/students/${id}/restart`, restartData);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/students"] });
+      toast({
+        title: "Thành công",
+        description: "Học sinh đã được chuyển về trạng thái đang học",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể cập nhật trạng thái học sinh",
+        variant: "destructive",
+      });
     },
   });
 
@@ -392,6 +493,56 @@ export default function StudentList() {
     setStudentDetail(null);
   };
 
+  // Xử lý chuyển học sinh sang trạng thái tạm nghỉ
+  const [isSuspendDialogOpen, setIsSuspendDialogOpen] = useState(false);
+  const [studentToSuspend, setStudentToSuspend] = useState<Student | null>(null);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [suspendDate, setSuspendDate] = useState<Date>(new Date());
+
+  const handleSuspendStudent = (student: Student) => {
+    setStudentToSuspend(student);
+    setSuspendDate(new Date());
+    setSuspendReason('');
+    setIsSuspendDialogOpen(true);
+  };
+
+  const confirmSuspend = () => {
+    if (studentToSuspend) {
+      suspendStudentMutation.mutate({
+        id: studentToSuspend.id,
+        suspendData: {
+          suspendDate,
+          suspendReason,
+          lastActiveDate: new Date() // Sử dụng ngày hiện tại làm ngày hoạt động cuối cùng
+        }
+      });
+      setIsSuspendDialogOpen(false);
+    }
+  };
+
+  // Xử lý chuyển học sinh về trạng thái đang học (học lại)
+  const [isRestartDialogOpen, setIsRestartDialogOpen] = useState(false);
+  const [studentToRestart, setStudentToRestart] = useState<Student | null>(null);
+  const [restartDate, setRestartDate] = useState<Date>(new Date());
+
+  const handleRestartStudent = (student: Student) => {
+    setStudentToRestart(student);
+    setRestartDate(new Date());
+    setIsRestartDialogOpen(true);
+  };
+
+  const confirmRestart = () => {
+    if (studentToRestart) {
+      restartStudentMutation.mutate({
+        id: studentToRestart.id,
+        restartData: {
+          restartDate
+        }
+      });
+      setIsRestartDialogOpen(false);
+    }
+  };
+
   // Tối ưu danh sách học sinh với useMemo để tránh tính toán lại mỗi khi render
   const filteredStudents = useMemo(() => {
     if (!students) return [];
@@ -455,6 +606,40 @@ export default function StudentList() {
           </Button>
         </div>
       </div>
+      
+      {/* Tab navigator */}
+      <div className="flex space-x-1 mb-4 bg-gray-100 p-1 rounded-lg w-fit">
+        <button
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            activeTab === 'active'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
+          }`}
+          onClick={() => setActiveTab('active')}
+        >
+          Đang học
+        </button>
+        <button
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            activeTab === 'suspended'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
+          }`}
+          onClick={() => setActiveTab('suspended')}
+        >
+          Tạm nghỉ
+        </button>
+        <button
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            activeTab === 'inactive'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
+          }`}
+          onClick={() => setActiveTab('inactive')}
+        >
+          Nghỉ học
+        </button>
+      </div>
 
       {isLoading ? (
         <div className="flex justify-center items-center py-12">
@@ -492,6 +677,8 @@ export default function StudentList() {
                       onDelete={handleDeleteStudent}
                       onAdjustPayment={handleAdjustPayment}
                       onViewDetails={handleViewStudentDetails}
+                      onSuspend={student.status === 'active' ? handleSuspendStudent : undefined}
+                      onRestart={(student.status === 'suspended' || student.status === 'inactive') ? handleRestartStudent : undefined}
                     />
                   );
                 })}
@@ -580,6 +767,99 @@ export default function StudentList() {
           className={getClassName(studentDetail.classId)}
         />
       )}
+      
+      {/* Suspend Student Dialog */}
+      <AlertDialog open={isSuspendDialogOpen} onOpenChange={setIsSuspendDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tạm nghỉ học</AlertDialogTitle>
+            <AlertDialogDescription>
+              Đánh dấu học sinh "{studentToSuspend?.name}" tạm nghỉ học. Học sinh có thể học lại sau này.
+            </AlertDialogDescription>
+            <div className="mt-4 space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="suspendDate" className="block text-sm font-medium text-gray-700">
+                  Ngày tạm nghỉ
+                </label>
+                <Input
+                  id="suspendDate"
+                  type="date"
+                  value={suspendDate ? suspendDate.toISOString().split('T')[0] : ''}
+                  onChange={(e) => setSuspendDate(new Date(e.target.value))}
+                  className="mt-1 block w-full"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="suspendReason" className="block text-sm font-medium text-gray-700">
+                  Lý do tạm nghỉ
+                </label>
+                <Input
+                  id="suspendReason"
+                  value={suspendReason}
+                  onChange={(e) => setSuspendReason(e.target.value)}
+                  placeholder="Nhập lý do tạm nghỉ học"
+                  className="mt-1 block w-full"
+                />
+              </div>
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSuspend}>
+              {suspendStudentMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                "Xác nhận tạm nghỉ"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Restart Student (Back to School) Dialog */}
+      <AlertDialog open={isRestartDialogOpen} onOpenChange={setIsRestartDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Học lại</AlertDialogTitle>
+            <AlertDialogDescription>
+              Đánh dấu học sinh "{studentToRestart?.name}" trở lại học.
+              {studentToRestart?.status === 'suspended' 
+                ? ' Học sinh sẽ được chuyển từ trạng thái tạm nghỉ sang đang học.' 
+                : ' Học sinh sẽ được chuyển từ trạng thái nghỉ học sang đang học.'}
+            </AlertDialogDescription>
+            <div className="mt-4 space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="restartDate" className="block text-sm font-medium text-gray-700">
+                  Ngày học lại
+                </label>
+                <Input
+                  id="restartDate"
+                  type="date"
+                  value={restartDate ? restartDate.toISOString().split('T')[0] : ''}
+                  onChange={(e) => setRestartDate(new Date(e.target.value))}
+                  className="mt-1 block w-full"
+                />
+              </div>
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRestart}>
+              {restartStudentMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                "Xác nhận học lại"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
