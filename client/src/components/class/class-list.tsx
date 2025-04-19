@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import ClassForm from "./class-form";
-import { formatCurrency, formatPaymentCycle, calculateFeeByPaymentCycle } from "@/utils/format";
+import { formatCurrency, formatPaymentCycle, calculateFeeByPaymentCycle, formatFeeDisplay } from "@/utils/format";
+import { useSettings, FeeCalculationMethod } from "@/hooks/use-settings";
 import { formatDate } from "@/utils/date-utils";
 import { 
   AlertDialog,
@@ -36,6 +37,7 @@ import { Progress } from "@/components/ui/progress";
 export default function ClassList() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { getFeeCalculationMethod } = useSettings();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | undefined>(undefined);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
