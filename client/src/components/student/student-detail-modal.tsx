@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -12,10 +12,11 @@ import { formatCurrency, formatPaymentCycle, formatAttendanceStatus, summarizeAt
 import { formatDate } from "@/utils/date-utils";
 import { Student } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, AlertTriangle, Check, Calendar, Wallet, History, Clock } from "lucide-react";
+import { Loader2, AlertTriangle, Check, Calendar, Wallet, History, Clock, Scan, QrCode } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import QRCode from "react-qr-code";
 
 interface StudentDetailProps {
   isOpen: boolean;
@@ -211,7 +212,7 @@ export default function StudentDetailModal({ isOpen, onClose, student, className
           </div>
           
           <Tabs defaultValue="class">
-            <TabsList className="grid grid-cols-4 mb-4">
+            <TabsList className="grid grid-cols-5 mb-4">
               <TabsTrigger value="class">
                 <Calendar className="w-4 h-4 mr-2" />
                 Lớp học
@@ -225,8 +226,12 @@ export default function StudentDetailModal({ isOpen, onClose, student, className
                 Học phí
               </TabsTrigger>
               <TabsTrigger value="history">
-                <Calendar className="w-4 h-4 mr-2" />
+                <History className="w-4 h-4 mr-2" />
                 Lịch sử
+              </TabsTrigger>
+              <TabsTrigger value="qrcode">
+                <QrCode className="w-4 h-4 mr-2" />
+                QR Code
               </TabsTrigger>
             </TabsList>
             

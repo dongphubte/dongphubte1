@@ -78,6 +78,8 @@ export default function AttendanceByClass() {
   const [selectedAttendanceStatus, setSelectedAttendanceStatus] = useState<string>("present");
   const [selectAll, setSelectAll] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   // Lấy danh sách lớp
   const { data: classes, isLoading: isLoadingClasses } = useQuery<any[]>({
@@ -346,7 +348,7 @@ export default function AttendanceByClass() {
     }
 
     // Thêm thông tin học sinh vào điểm danh
-    return filteredAttendance.map(record => {
+    const detailedAttendance = filteredAttendance.map(record => {
       const student = students.find(s => s.id === record.studentId);
       return {
         ...record,
@@ -354,6 +356,36 @@ export default function AttendanceByClass() {
         studentCode: student?.code || 'Không xác định'
       };
     });
+    
+    // Sắp xếp theo ngày mới nhất trước
+    return detailedAttendance.sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+  };
+  
+  // Lấy các ngày có điểm danh và phân nhóm theo ngày
+  const getAttendanceDays = (classId: number) => {
+    const details = getClassAttendanceDetails(classId);
+    
+    // Map để lưu trữ điểm danh theo ngày
+    const attendanceByDay = new Map<string, AttendanceDetail[]>();
+    
+    // Nhóm điểm danh theo ngày
+    details.forEach(record => {
+      const dateStr = record.date.split('T')[0]; // YYYY-MM-DD
+      
+      if (!attendanceByDay.has(dateStr)) {
+        attendanceByDay.set(dateStr, []);
+      }
+      
+      attendanceByDay.get(dateStr)?.push(record);
+    });
+    
+    // Chuyển Map thành mảng đã sắp xếp theo ngày
+    return Array.from(attendanceByDay.entries())
+      .sort(([dateA], [dateB]) => {
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      });
   };
 
   // Hiển thị dialog chi tiết điểm danh
@@ -774,7 +806,7 @@ export default function AttendanceByClass() {
                         size="sm"
                       >
                         <UserCheck className="h-4 w-4 mr-1" />
-                        Điểm danh ngay
+                        Điểm danh
                       </Button>
                     );
                   }
@@ -802,18 +834,64 @@ export default function AttendanceByClass() {
       {/* Dialog Chi tiết điểm danh */}
       {selectedClass && (
         <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Chi tiết điểm danh: {selectedClass.className}</DialogTitle>
-              <DialogDescription>
-                Thống kê: {selectedClass.present} có mặt, {selectedClass.absent} vắng mặt, 
-                {selectedClass.teacherAbsent} GV nghỉ, {selectedClass.makeup} học bù
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <span>Chi tiết điểm danh: {selectedClass.className}</span>
+                {classes && isClassScheduledToday(classes.find(c => c.id === selectedClass.classId)?.schedule || "") && (
+                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-0 text-white px-2 py-0.5 text-xs font-medium animate-pulse shadow-sm">
+                    Đang học
+                  </Badge>
+                )}
+              </DialogTitle>
+              <DialogDescription className="flex flex-wrap gap-3 mt-2">
+                <Badge variant="outline" className="bg-green-50 text-green-700 py-1 px-3 flex items-center">
+                  <Check className="h-3.5 w-3.5 mr-1 text-green-600" />
+                  Có mặt: {selectedClass.present}
+                </Badge>
+                <Badge variant="outline" className="bg-red-50 text-red-700 py-1 px-3 flex items-center">
+                  <X className="h-3.5 w-3.5 mr-1 text-red-600" />
+                  Vắng mặt: {selectedClass.absent}
+                </Badge>
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 py-1 px-3 flex items-center">
+                  <AlertTriangle className="h-3.5 w-3.5 mr-1 text-yellow-600" />
+                  GV nghỉ: {selectedClass.teacherAbsent}
+                </Badge>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 py-1 px-3 flex items-center">
+                  <RefreshCw className="h-3.5 w-3.5 mr-1 text-blue-600" />
+                  Học bù: {selectedClass.makeup}
+                </Badge>
               </DialogDescription>
             </DialogHeader>
             
-            {/* Thanh công cụ cho chế độ xóa hàng loạt */}
-            <div className="flex justify-between items-center mb-2">
-              <div className="flex items-center gap-2">
+            {/* Thanh công cụ tìm kiếm và lọc */}
+            <div className="flex flex-col sm:flex-row justify-between gap-3 mb-4">
+              <div className="relative w-full sm:w-auto flex-1">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm tên học sinh..."
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-muted-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <select 
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="present">Có mặt</option>
+                  <option value="absent">Vắng mặt</option>
+                  <option value="teacher_absent">GV nghỉ</option>
+                  <option value="makeup">Học bù</option>
+                </select>
+                
                 <Button 
                   variant={bulkDeleteMode ? "secondary" : "outline"} 
                   size="sm" 
@@ -875,99 +953,243 @@ export default function AttendanceByClass() {
               </div>
             </div>
             
-            {/* Chi tiết điểm danh */}
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {bulkDeleteMode && <TableHead className="w-[40px]"></TableHead>}
-                    <TableHead>Ngày</TableHead>
-                    <TableHead>Học sinh</TableHead>
-                    <TableHead>Mã học sinh</TableHead>
-                    <TableHead>Trạng thái</TableHead>
-                    <TableHead>Thao tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {getClassAttendanceDetails(selectedClass.classId).length > 0 ? (
-                    getClassAttendanceDetails(selectedClass.classId).map((record) => (
-                      <TableRow 
-                        key={record.id}
-                        className={bulkDeleteMode && selectedAttendances.some(a => a.id === record.id) 
-                          ? "bg-muted/40" 
-                          : ""}
-                      >
-                        {bulkDeleteMode && (
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedAttendances.some(a => a.id === record.id)}
-                              onCheckedChange={() => toggleAttendanceSelection(record)}
-                            />
-                          </TableCell>
-                        )}
-                        <TableCell>{formatDate(new Date(record.date))}</TableCell>
-                        <TableCell className="font-medium">{record.studentName}</TableCell>
-                        <TableCell>{record.studentCode}</TableCell>
-                        <TableCell>
-                          <StatusBadge status={record.status} />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {!bulkDeleteMode ? (
-                              <>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => handleEditAttendance(record)}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <span className="sr-only">Sửa</span>
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => handleDeleteConfirm(record)}
-                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
-                                >
-                                  <span className="sr-only">Xóa</span>
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                                </Button>
-                              </>
-                            ) : (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleAttendanceSelection(record)}
-                                className="h-8 text-xs px-2"
-                              >
-                                {selectedAttendances.some(a => a.id === record.id) ? "Bỏ chọn" : "Chọn"}
-                              </Button>
-                            )}
+            {/* Hiển thị điểm danh theo ngày */}
+            <div className="space-y-6">
+              {getAttendanceDays(selectedClass.classId).length > 0 ? (
+                getAttendanceDays(selectedClass.classId)
+                  .map(([date, records]) => {
+                    // Lọc bản ghi theo tìm kiếm và trạng thái
+                    const filteredRecords = records.filter(record => {
+                      const matchesSearch = searchTerm === "" || 
+                        record.studentName.toLowerCase().includes(searchTerm.toLowerCase());
+                      const matchesStatus = filterStatus === "all" || record.status === filterStatus;
+                      return matchesSearch && matchesStatus;
+                    });
+                    
+                    if (filteredRecords.length === 0) return null;
+                    
+                    // Phân loại các bản ghi theo trạng thái
+                    const presentRecords = filteredRecords.filter(r => r.status === 'present');
+                    const absentRecords = filteredRecords.filter(r => r.status === 'absent');
+                    const teacherAbsentRecords = filteredRecords.filter(r => r.status === 'teacher_absent');
+                    const makeupRecords = filteredRecords.filter(r => r.status === 'makeup');
+                    
+                    return (
+                      <div key={date} className="border rounded-lg overflow-hidden">
+                        <div className="bg-muted/30 p-3 flex justify-between items-center border-b">
+                          <h3 className="font-medium flex items-center">
+                            <CalendarCheck className="h-4 w-4 mr-2 text-primary" />
+                            <span>Ngày {formatDate(new Date(date))}</span>
+                          </h3>
+                          <div className="flex gap-2">
+                            <Badge variant="outline" className="bg-white">Tổng: {filteredRecords.length}</Badge>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={bulkDeleteMode ? 6 : 5} className="text-center h-24">
-                        <div className="flex flex-col items-center justify-center">
-                          <p className="text-muted-foreground">Không có dữ liệu điểm danh</p>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                        
+                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          {/* Card Có mặt */}
+                          <div className="border rounded-md overflow-hidden">
+                            <div className="bg-green-50 p-2 flex items-center border-b">
+                              <Check className="h-4 w-4 mr-1 text-green-600" />
+                              <span className="text-sm font-medium text-green-700">Có mặt ({presentRecords.length})</span>
+                            </div>
+                            <div className="p-3 max-h-48 overflow-y-auto">
+                              {presentRecords.length > 0 ? (
+                                <ul className="space-y-2">
+                                  {presentRecords.map(record => (
+                                    <li key={record.id} className="flex justify-between items-center text-sm">
+                                      <span className="font-medium">{record.studentName}</span>
+                                      <div className="flex items-center gap-1">
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => handleEditAttendance(record)}
+                                          className="h-6 w-6 p-0"
+                                        >
+                                          <span className="sr-only">Sửa</span>
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                        </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => handleDeleteConfirm(record)}
+                                          className="h-6 w-6 p-0 text-red-500 hover:text-red-600"
+                                        >
+                                          <span className="sr-only">Xóa</span>
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                        </Button>
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <div className="text-center text-muted-foreground text-sm py-3">
+                                  Không có học sinh
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Card Vắng mặt */}
+                          <div className="border rounded-md overflow-hidden">
+                            <div className="bg-red-50 p-2 flex items-center border-b">
+                              <X className="h-4 w-4 mr-1 text-red-600" />
+                              <span className="text-sm font-medium text-red-700">Vắng mặt ({absentRecords.length})</span>
+                            </div>
+                            <div className="p-3 max-h-48 overflow-y-auto">
+                              {absentRecords.length > 0 ? (
+                                <ul className="space-y-2">
+                                  {absentRecords.map(record => (
+                                    <li key={record.id} className="flex justify-between items-center text-sm">
+                                      <span className="font-medium">{record.studentName}</span>
+                                      <div className="flex items-center gap-1">
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => handleEditAttendance(record)}
+                                          className="h-6 w-6 p-0"
+                                        >
+                                          <span className="sr-only">Sửa</span>
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                        </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => handleDeleteConfirm(record)}
+                                          className="h-6 w-6 p-0 text-red-500 hover:text-red-600"
+                                        >
+                                          <span className="sr-only">Xóa</span>
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                        </Button>
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <div className="text-center text-muted-foreground text-sm py-3">
+                                  Không có học sinh
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Card GV nghỉ */}
+                          <div className="border rounded-md overflow-hidden">
+                            <div className="bg-yellow-50 p-2 flex items-center border-b">
+                              <AlertTriangle className="h-4 w-4 mr-1 text-yellow-600" />
+                              <span className="text-sm font-medium text-yellow-700">GV nghỉ ({teacherAbsentRecords.length})</span>
+                            </div>
+                            <div className="p-3 max-h-48 overflow-y-auto">
+                              {teacherAbsentRecords.length > 0 ? (
+                                <ul className="space-y-2">
+                                  {teacherAbsentRecords.map(record => (
+                                    <li key={record.id} className="flex justify-between items-center text-sm">
+                                      <span className="font-medium">{record.studentName}</span>
+                                      <div className="flex items-center gap-1">
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => handleEditAttendance(record)}
+                                          className="h-6 w-6 p-0"
+                                        >
+                                          <span className="sr-only">Sửa</span>
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                        </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => handleDeleteConfirm(record)}
+                                          className="h-6 w-6 p-0 text-red-500 hover:text-red-600"
+                                        >
+                                          <span className="sr-only">Xóa</span>
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                        </Button>
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <div className="text-center text-muted-foreground text-sm py-3">
+                                  Không có học sinh
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Card Học bù */}
+                          <div className="border rounded-md overflow-hidden">
+                            <div className="bg-blue-50 p-2 flex items-center border-b">
+                              <RefreshCw className="h-4 w-4 mr-1 text-blue-600" />
+                              <span className="text-sm font-medium text-blue-700">Học bù ({makeupRecords.length})</span>
+                            </div>
+                            <div className="p-3 max-h-48 overflow-y-auto">
+                              {makeupRecords.length > 0 ? (
+                                <ul className="space-y-2">
+                                  {makeupRecords.map(record => (
+                                    <li key={record.id} className="flex justify-between items-center text-sm">
+                                      <span className="font-medium">{record.studentName}</span>
+                                      <div className="flex items-center gap-1">
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => handleEditAttendance(record)}
+                                          className="h-6 w-6 p-0"
+                                        >
+                                          <span className="sr-only">Sửa</span>
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                        </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => handleDeleteConfirm(record)}
+                                          className="h-6 w-6 p-0 text-red-500 hover:text-red-600"
+                                        >
+                                          <span className="sr-only">Xóa</span>
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                        </Button>
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <div className="text-center text-muted-foreground text-sm py-3">
+                                  Không có học sinh
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }).filter(Boolean)
+              ) : (
+                <div className="text-center p-8 border rounded-md">
+                  <p className="text-muted-foreground">Không có dữ liệu điểm danh</p>
+                </div>
+              )}
+              
+              {getAttendanceDays(selectedClass.classId).length > 0 && 
+               getAttendanceDays(selectedClass.classId).filter(([_, records]) => 
+                 records.some(record => 
+                   (searchTerm === "" || record.studentName.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                   (filterStatus === "all" || record.status === filterStatus)
+                 )
+               ).length === 0 && (
+                <div className="text-center p-4 border rounded-md">
+                  <p className="text-muted-foreground">Không tìm thấy kết quả phù hợp</p>
+                </div>
+              )}
             </div>
             
-            <DialogFooter>
+            <DialogFooter className="mt-4">
               <Button 
                 variant="outline" 
                 onClick={() => {
                   setShowDetailsDialog(false);
                   setBulkDeleteMode(false);
                   setSelectedAttendances([]);
+                  setSearchTerm("");
+                  setFilterStatus("all");
                 }}
               >
                 Đóng
