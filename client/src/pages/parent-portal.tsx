@@ -393,7 +393,7 @@ export default function ParentPortal() {
                                   ) : (
                                     <AlertCircle className="h-5 w-5 text-red-600" />
                                   )}
-                                  <span className={`font-semibold ${
+                                  <span className={`font-bold text-base ${
                                     paymentStatus.status === "paid" 
                                       ? "text-green-600" 
                                       : paymentStatus.status === "unpaid" 

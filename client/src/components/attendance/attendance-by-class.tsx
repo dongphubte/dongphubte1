@@ -847,19 +847,19 @@ export default function AttendanceByClass() {
               <DialogDescription className="flex flex-wrap gap-3 mt-2">
                 <Badge variant="outline" className="bg-green-50 text-green-700 py-1 px-3 flex items-center">
                   <Check className="h-3.5 w-3.5 mr-1 text-green-600" />
-                  Có mặt: {selectedClass.present}
+                  <span className="font-medium">Có mặt:</span> <span className="ml-1 font-semibold">{selectedClass.present}</span>
                 </Badge>
                 <Badge variant="outline" className="bg-red-50 text-red-700 py-1 px-3 flex items-center">
                   <X className="h-3.5 w-3.5 mr-1 text-red-600" />
-                  Vắng mặt: {selectedClass.absent}
+                  <span className="font-medium">Vắng mặt:</span> <span className="ml-1 font-semibold">{selectedClass.absent}</span>
                 </Badge>
                 <Badge variant="outline" className="bg-yellow-50 text-yellow-700 py-1 px-3 flex items-center">
                   <AlertTriangle className="h-3.5 w-3.5 mr-1 text-yellow-600" />
-                  GV nghỉ: {selectedClass.teacherAbsent}
+                  <span className="font-medium">GV nghỉ:</span> <span className="ml-1 font-semibold">{selectedClass.teacherAbsent}</span>
                 </Badge>
                 <Badge variant="outline" className="bg-blue-50 text-blue-700 py-1 px-3 flex items-center">
                   <RefreshCw className="h-3.5 w-3.5 mr-1 text-blue-600" />
-                  Học bù: {selectedClass.makeup}
+                  <span className="font-medium">Học bù:</span> <span className="ml-1 font-semibold">{selectedClass.makeup}</span>
                 </Badge>
               </DialogDescription>
             </DialogHeader>
@@ -981,8 +981,18 @@ export default function AttendanceByClass() {
                             <CalendarCheck className="h-4 w-4 mr-2 text-primary" />
                             <span>Ngày {formatDate(new Date(date))}</span>
                           </h3>
-                          <div className="flex gap-2">
-                            <Badge variant="outline" className="bg-white">Tổng: {filteredRecords.length}</Badge>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="outline" className="bg-white flex items-center gap-1">
+                              <span className="font-medium">Tổng:</span> <span className="font-semibold">{filteredRecords.length}</span>
+                            </Badge>
+                            <Badge variant="outline" className="bg-green-50 text-green-700 flex items-center gap-1">
+                              <Check className="h-3 w-3 text-green-600" />
+                              <span className="font-medium">Có mặt:</span> <span className="font-semibold">{presentRecords.length}</span>
+                            </Badge>
+                            <Badge variant="outline" className="bg-red-50 text-red-700 flex items-center gap-1">
+                              <X className="h-3 w-3 text-red-600" />
+                              <span className="font-medium">Vắng:</span> <span className="font-semibold">{absentRecords.length}</span>
+                            </Badge>
                           </div>
                         </div>
                         
