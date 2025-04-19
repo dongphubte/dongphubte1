@@ -11,6 +11,7 @@ import { formatDate } from "@/utils/date-utils";
 import { Search, QrCode, User, Calendar, Phone, AlertCircle, CreditCard, Clock, Check, Info } from "lucide-react";
 
 export default function ParentPortal() {
+  console.log("ParentPortal component loaded");
   const [studentCode, setStudentCode] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
 

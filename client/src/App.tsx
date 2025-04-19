@@ -26,6 +26,7 @@ function App() {
             <Route path="/auth" component={AuthPage} />
             <Route path="/parent" component={ParentPortal} />
             <Route path="/parent/student/:studentCode" component={StudentPage} />
+            <Route path="/tra-cuu" component={ParentPortal} />
             <Route path="/reset-password" component={ResetPassword} />
             <ProtectedRoute path="/mobile" component={MobileView} />
             <ProtectedRoute path="/attendance" component={AttendancePage} />
