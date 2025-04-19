@@ -223,6 +223,45 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
               .h-1 { height: 0.25rem; }
               .bg-indigo-500 { background-color: #6366f1; }
               
+              /* Styles for payment period section */
+              .blue-box { 
+                background-color: #eff6ff; 
+                padding: 1rem; 
+                border-radius: 0.5rem; 
+                margin-bottom: 1rem;
+              }
+              .blue-title {
+                display: flex;
+                align-items: center;
+                margin-bottom: 0.5rem;
+                font-weight: bold;
+                color: #1e40af;
+              }
+              .blue-icon {
+                width: 2rem;
+                height: 2rem;
+                border-radius: 9999px;
+                background-color: #2563eb;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                margin-right: 0.5rem;
+              }
+              .next-payment {
+                color: #1e40af;
+                font-weight: bold;
+              }
+              .next-payment-date {
+                color: #1e40af;
+                font-weight: bold;
+              }
+              .warning-text {
+                margin-top: 0.5rem;
+                color: #d97706;
+                font-weight: 500;
+              }
+              
               /* Text styles */
               .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
               .text-2xl { font-size: 1.5rem; line-height: 2rem; }
