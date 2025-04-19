@@ -211,7 +211,7 @@ export default function StudentDetailModal({ isOpen, onClose, student, className
           </div>
           
           <Tabs defaultValue="class">
-            <TabsList className="grid grid-cols-3 mb-4">
+            <TabsList className="grid grid-cols-4 mb-4">
               <TabsTrigger value="class">
                 <Calendar className="w-4 h-4 mr-2" />
                 Lớp học
@@ -223,6 +223,10 @@ export default function StudentDetailModal({ isOpen, onClose, student, className
               <TabsTrigger value="payment">
                 <Wallet className="w-4 h-4 mr-2" />
                 Học phí
+              </TabsTrigger>
+              <TabsTrigger value="history">
+                <Calendar className="w-4 h-4 mr-2" />
+                Lịch sử
               </TabsTrigger>
             </TabsList>
             

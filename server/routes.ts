@@ -225,17 +225,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Cập nhật thông tin học sinh
       const { suspendDate, suspendReason, lastActiveDate } = req.body;
+      const newSuspendDate = suspendDate ? new Date(suspendDate) : new Date();
+      const newLastActiveDate = lastActiveDate ? new Date(lastActiveDate) : new Date();
       
-      const updateData = {
-        ...student,
-        status: 'suspended' as 'suspended', // Type assertion để thỏa mãn kiểm tra kiểu
-        suspendDate: suspendDate ? new Date(suspendDate) : new Date(),
+      // Tạo bản sao của học sinh để cập nhật
+      const updateData: any = {
+        name: student.name,
+        code: student.code,
+        phone: student.phone,
+        classId: student.classId,
+        paymentCycle: student.paymentCycle,
+        status: 'suspended',
+        suspendDate: newSuspendDate,
         suspendReason: suspendReason || 'Không có lý do cụ thể',
-        lastActiveDate: lastActiveDate ? new Date(lastActiveDate) : new Date()
+        lastActiveDate: newLastActiveDate,
+        registrationDate: student.registrationDate,
+        restartDate: student.restartDate,
+        // Khởi tạo suspendHistory nếu chưa có
+        suspendHistory: student.suspendHistory || []
       };
-      
-      // Loại bỏ các trường không đúng định dạng với schema
-      delete updateData.id;
       
       // Cập nhật học sinh
       const updatedStudent = await storage.updateStudent(studentId, updateData);
@@ -271,30 +279,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Cập nhật thông tin học sinh
       const { restartDate } = req.body;
+      const newRestartDate = restartDate ? new Date(restartDate) : new Date();
       
-      const updateData = {
-        ...student,
-        status: 'active' as 'active', // Type assertion để thỏa mãn kiểm tra kiểu
-        restartDate: restartDate ? new Date(restartDate) : new Date()
+      // Tạo bản sao của học sinh để cập nhật
+      const updateData: any = {
+        name: student.name,
+        code: student.code,
+        phone: student.phone,
+        classId: student.classId,
+        paymentCycle: student.paymentCycle,
+        status: 'active',
+        restartDate: newRestartDate,
+        // Các trường khác
+        registrationDate: student.registrationDate,
+        suspendDate: student.suspendDate,
+        suspendReason: student.suspendReason,
+        lastActiveDate: student.lastActiveDate
       };
       
-      // Nếu học sinh đã tạm nghỉ, lưu lại thông tin về thời gian tạm nghỉ
-      if (student.status === 'suspended') {
-        // Giữ lại thông tin tạm nghỉ trước đó để lưu lịch sử
-        updateData.suspendHistory = student.suspendHistory || [];
-        
-        // Thêm kỳ tạm nghỉ hiện tại vào lịch sử
-        if (student.suspendDate) {
-          updateData.suspendHistory.push({
-            suspendDate: student.suspendDate,
-            restartDate: updateData.restartDate,
-            suspendReason: student.suspendReason || ''
-          });
-        }
-      }
+      // Xử lý suspendHistory
+      const history = Array.isArray(student.suspendHistory) ? student.suspendHistory : [];
+      updateData.suspendHistory = [...history];
       
-      // Loại bỏ các trường không đúng định dạng với schema
-      delete updateData.id;
+      // Nếu học sinh đã tạm nghỉ, lưu lại thông tin về thời gian tạm nghỉ
+      if (student.status === 'suspended' && student.suspendDate) {
+        // Thêm kỳ tạm nghỉ hiện tại vào lịch sử
+        updateData.suspendHistory.push({
+          suspendDate: student.suspendDate,
+          restartDate: newRestartDate,
+          suspendReason: student.suspendReason || ''
+        });
+      }
       
       // Cập nhật học sinh
       const updatedStudent = await storage.updateStudent(studentId, updateData);

@@ -80,6 +80,7 @@ export const insertStudentSchema = createInsertSchema(students).pick({
   suspendReason: true,
   restartDate: true,
   lastActiveDate: true,
+  suspendHistory: true,
 });
 
 // Schema for payments
@@ -189,6 +190,13 @@ export const extendedInsertStudentSchema = insertStudentSchema.extend({
     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform(str => new Date(str)),
     z.null(),
   ]).optional(),
+  suspendHistory: z.array(
+    z.object({
+      suspendDate: z.union([z.date(), z.string().transform(str => new Date(str))]),
+      restartDate: z.union([z.date(), z.string().transform(str => new Date(str))]),
+      suspendReason: z.string().optional(),
+    })
+  ).optional().nullable(),
 });
 
 export const extendedInsertPaymentSchema = insertPaymentSchema.extend({
