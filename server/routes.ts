@@ -30,6 +30,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // Public Parent Portal APIs - API không yêu cầu đăng nhập dành cho cổng thông tin phụ huynh
+  app.get("/api/students/code/:code", async (req, res) => {
+    try {
+      const code = req.params.code;
+      if (!code) {
+        return res.status(400).json({ message: "Mã học sinh không hợp lệ" });
+      }
+      
+      // Lấy thông tin học sinh dựa trên mã
+      const student = await storage.getStudentByCode(code);
+      if (!student) {
+        return res.status(404).json({ message: "Không tìm thấy học sinh với mã này" });
+      }
+      
+      // Lấy thông tin lớp học nếu có
+      let classInfo = null;
+      if (student.classId) {
+        classInfo = await storage.getClass(student.classId);
+      }
+      
+      // Lấy danh sách điểm danh của học sinh
+      const attendance = await storage.getAttendanceByStudentId(student.id);
+      
+      // Lấy danh sách thanh toán của học sinh
+      const payments = await storage.getPaymentsByStudentId(student.id);
+      
+      // Trả về dữ liệu đầy đủ
+      res.json({
+        student,
+        class: classInfo,
+        attendance,
+        payments
+      });
+    } catch (error) {
+      console.error("Error getting student by code:", error);
+      res.status(500).json({ message: "Lỗi khi lấy thông tin học sinh" });
+    }
+  });
 
   // Classes API Routes
   app.get("/api/classes", ensureAuthenticated, async (req, res) => {
@@ -173,28 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/students/code/:code", async (req, res) => {
-    try {
-      const student = await storage.getStudentByCode(req.params.code);
-      if (!student) {
-        return res.status(404).json({ message: "Không tìm thấy học sinh" });
-      }
-      
-      // Get student related data
-      const classInfo = await storage.getClass(student.classId);
-      const payments = await storage.getPaymentsByStudentId(student.id);
-      const attendance = await storage.getAttendanceByStudentId(student.id);
-      
-      res.json({
-        student,
-        class: classInfo,
-        payments,
-        attendance
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Lỗi khi lấy thông tin học sinh" });
-    }
-  });
+
 
   app.post("/api/students", ensureAuthenticated, async (req, res) => {
     try {
