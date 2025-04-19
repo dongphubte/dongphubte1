@@ -289,8 +289,8 @@ export default function ClassList() {
                       <div className="text-sm font-semibold">
                         {formatFeeDisplay(
                           classItem.fee, 
-                          classItem.paymentCycle, 
-                          getFeeCalculationMethod()
+                          classItem.paymentCycle || '1-thang', 
+                          getFeeCalculationMethod() || FeeCalculationMethod.PER_SESSION
                         )}
                       </div>
                     </div>

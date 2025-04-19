@@ -6,7 +6,8 @@ import {
   extendedInsertClassSchema, 
   extendedInsertStudentSchema, 
   extendedInsertPaymentSchema,
-  extendedInsertAttendanceSchema
+  extendedInsertAttendanceSchema,
+  insertSettingsSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 
