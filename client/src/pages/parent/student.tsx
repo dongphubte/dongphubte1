@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/utils/format";
 import { formatDate } from "@/utils/date-utils";
-import { Loader2, AlertTriangle, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Loader2, AlertTriangle, Calendar, CheckCircle, XCircle, Clock, CreditCard, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -38,8 +38,11 @@ export default function StudentPage() {
   const getPaymentStatus = () => {
     if (!studentData?.payments || studentData.payments.length === 0) {
       return {
+        status: "unpaid",
         text: "Chưa thanh toán",
-        color: "bg-yellow-100 text-yellow-800"
+        color: "bg-yellow-100 text-yellow-800",
+        icon: <Clock className="w-3 h-3" />,
+        detailColor: "bg-yellow-50 border-yellow-200 text-yellow-800"
       };
     }
 
@@ -49,15 +52,76 @@ export default function StudentPage() {
 
     if (new Date(latestPayment.validTo) < new Date()) {
       return {
+        status: "overdue",
         text: "Quá hạn thanh toán",
-        color: "bg-red-100 text-red-800"
+        color: "bg-red-100 text-red-800",
+        icon: <AlertTriangle className="w-3 h-3" />,
+        detailColor: "bg-red-50 border-red-200 text-red-800"
       };
     }
 
     return {
+      status: "paid",
       text: "Đã thanh toán",
-      color: "bg-green-100 text-green-800"
+      color: "bg-green-100 text-green-800",
+      icon: <CheckCircle className="w-3 h-3" />,
+      detailColor: "bg-green-50 border-green-200 text-green-800"
     };
+  };
+  
+  // Tính toán chu kỳ thanh toán tiếp theo dựa trên chu kỳ hiện tại
+  const calculateNextPaymentCycle = () => {
+    if (!studentData?.student || !studentData?.class) return null;
+    
+    // Nếu chưa có thanh toán nào
+    if (!studentData.payments || studentData.payments.length === 0) {
+      return {
+        from: new Date(),
+        to: getEndDateForCycle(new Date(), studentData.student.paymentCycle)
+      };
+    }
+    
+    // Lấy thanh toán gần nhất
+    const latestPayment = studentData.payments.sort(
+      (a: any, b: any) => new Date(b.validTo).getTime() - new Date(a.validTo).getTime()
+    )[0];
+    
+    // Tính ngày bắt đầu và kết thúc chu kỳ mới
+    const cycleStart = new Date(latestPayment.validTo);
+    cycleStart.setDate(cycleStart.getDate() + 1); // Ngày sau ngày kết thúc chu kỳ trước
+    
+    return {
+      from: cycleStart,
+      to: getEndDateForCycle(cycleStart, studentData.student.paymentCycle)
+    };
+  };
+  
+  // Hàm tính ngày kết thúc chu kỳ dựa trên loại chu kỳ
+  const getEndDateForCycle = (startDate: Date, cycle: string) => {
+    const result = new Date(startDate);
+    
+    switch(cycle) {
+      case "1-thang":
+        result.setMonth(result.getMonth() + 1);
+        result.setDate(result.getDate() - 1);
+        break;
+      case "8-buoi":
+      case "10-buoi":
+        // Giả định 2 buổi/tuần
+        const numWeeks = cycle === "8-buoi" ? 4 : 5;
+        result.setDate(result.getDate() + (numWeeks * 7) - 1);
+        break;
+      case "theo-ngay":
+        // Mặc định 1 tuần
+        result.setDate(result.getDate() + 6);
+        break;
+      default:
+        // Mặc định là 1 tháng
+        result.setMonth(result.getMonth() + 1);
+        result.setDate(result.getDate() - 1);
+    }
+    
+    return result;
   };
 
   const getPaymentCycleText = (cycle: string) => {
@@ -272,6 +336,76 @@ export default function StudentPage() {
           </TabsContent>
           
           <TabsContent value="payment" className="p-4">
+            {/* Trạng thái thanh toán và thông tin chuyển khoản */}
+            {student.status === "active" && (
+              <div className="mb-6">
+                <h3 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-primary" />
+                  Trạng thái thanh toán
+                </h3>
+                
+                {/* Card trạng thái thanh toán */}
+                {(() => {
+                  const paymentStatus = getPaymentStatus();
+                  return (
+                    <div className={`border rounded-lg p-4 mb-4 ${paymentStatus.detailColor}`}>
+                      <div className="flex justify-between items-center">
+                        <div className="font-medium flex items-center gap-2">
+                          {paymentStatus.icon}
+                          <span>{paymentStatus.text}</span>
+                        </div>
+                        
+                        {paymentStatus.status === "paid" && payments && payments.length > 0 && (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            Đến {formatDate(payments[0].validTo)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Thông tin chuyển khoản nếu chưa thanh toán */}
+                      {(paymentStatus.status === "unpaid" || paymentStatus.status === "overdue") && (
+                        <div className="mt-4 p-3 bg-white rounded border-dashed border-2 border-gray-300">
+                          <p className="text-sm font-medium mb-2 flex items-center gap-1">
+                            <Info className="h-4 w-4 text-primary" />
+                            Thông tin thanh toán
+                          </p>
+                          <div className="space-y-2 text-sm">
+                            <p><span className="text-gray-500">Số tài khoản:</span> <span className="font-medium">9704229262085470</span></p>
+                            <p><span className="text-gray-500">Ngân hàng:</span> <span className="font-medium">MB Bank</span></p>
+                            <p><span className="text-gray-500">Chủ tài khoản:</span> <span className="font-medium">Tran Dong Phu</span></p>
+                            <p><span className="text-gray-500">Nội dung:</span> <span className="font-medium">HP {student.code} {student.name}</span></p>
+                            <p><span className="text-gray-500">Số tiền:</span> <span className="font-medium text-primary">{formatCurrency(classData.fee)}</span></p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+                
+                {/* Chu kỳ thanh toán tiếp theo */}
+                {(() => {
+                  const nextCycle = calculateNextPaymentCycle();
+                  if (nextCycle) {
+                    return (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p className="text-sm font-medium mb-2 flex items-center gap-1 text-blue-800">
+                          <Calendar className="h-4 w-4 text-blue-600" />
+                          Chu kỳ thanh toán tiếp theo (dự kiến)
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-blue-800">
+                            {formatDate(nextCycle.from)} - {formatDate(nextCycle.to)}
+                          </p>
+                          <p className="font-medium text-blue-800">{formatCurrency(classData.fee)}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            )}
+          
             <h3 className="font-medium text-gray-800 mb-4">Lịch sử thanh toán</h3>
             
             {payments && payments.length > 0 ? (
