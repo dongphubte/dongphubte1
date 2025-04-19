@@ -32,7 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { formatDate } from "@/utils/date-utils";
+import { formatDate, isClassScheduledToday } from "@/utils/date-utils";
 import { formatAttendanceStatus, summarizeAttendance } from "@/utils/format";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -252,9 +252,22 @@ export default function AttendanceByClass() {
       classStats.total++;
     });
 
-    // Sắp xếp lớp học theo thứ tự số (Lớp 1, Lớp 2, Lớp 3, ...)
+    // Tìm và đánh dấu các lớp có lịch học hôm nay
+    const classesWithSchedule = classes.reduce((map: Record<number, boolean>, classItem) => {
+      map[classItem.id] = isClassScheduledToday(classItem.schedule);
+      return map;
+    }, {});
+    
+    // Sắp xếp lớp học: ưu tiên lớp đang học hôm nay, sau đó sắp xếp theo số thứ tự
     return summary.sort((a, b) => {
-      // Lấy số từ tên lớp (nếu có)
+      // Ưu tiên các lớp có lịch học hôm nay
+      const aHasScheduleToday = classesWithSchedule[a.classId] || false;
+      const bHasScheduleToday = classesWithSchedule[b.classId] || false;
+      
+      if (aHasScheduleToday && !bHasScheduleToday) return -1;
+      if (!aHasScheduleToday && bHasScheduleToday) return 1;
+      
+      // Nếu cả hai lớp đều có lịch hoặc đều không có lịch, sắp xếp theo số
       const numA = a.className.match(/\d+/);
       const numB = b.className.match(/\d+/);
       
@@ -645,7 +658,14 @@ export default function AttendanceByClass() {
             <Card key={classData.classId} className="overflow-hidden">
               <CardHeader className="bg-white border-b pb-3">
                 <CardTitle className="flex justify-between items-center">
-                  <span className="text-lg font-semibold">{classData.className}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-semibold">{classData.className}</span>
+                    {classes && isClassScheduledToday(classes.find(c => c.id === classData.classId)?.schedule || "") && (
+                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-0 text-white px-2 py-0.5 text-xs font-medium animate-pulse shadow-sm">
+                        Đang học
+                      </Badge>
+                    )}
+                  </div>
                   <Badge variant={classData.total > 0 ? "default" : "outline"}>
                     {classData.total} điểm danh
                   </Badge>
