@@ -22,17 +22,23 @@ export default function StudentPage() {
     queryFn: async () => {
       if (!studentCode) return null;
       try {
+        console.log("Đang gọi API với mã học sinh:", studentCode);
         const res = await fetch(`/api/students/code/${studentCode}`);
         if (!res.ok) {
+          console.error("Lỗi khi gọi API:", res.status, res.statusText);
           throw new Error("Không tìm thấy học sinh với mã này");
         }
-        return res.json();
+        const data = await res.json();
+        console.log("Nhận được dữ liệu học sinh:", data);
+        return data;
       } catch (err) {
         console.error("Lỗi khi lấy dữ liệu học sinh:", err);
         throw err;
       }
     },
     enabled: !!studentCode,
+    refetchOnWindowFocus: false,
+    retry: 2,
   });
 
   const getPaymentStatus = () => {

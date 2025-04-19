@@ -33,35 +33,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/students/code/:code", async (req, res) => {
     try {
       const code = req.params.code;
+      console.log("Đang lấy thông tin học sinh với mã:", code);
+      
       if (!code) {
+        console.log("Mã học sinh không hợp lệ");
         return res.status(400).json({ message: "Mã học sinh không hợp lệ" });
       }
       
       // Lấy thông tin học sinh dựa trên mã
       const student = await storage.getStudentByCode(code);
       if (!student) {
+        console.log("Không tìm thấy học sinh với mã:", code);
         return res.status(404).json({ message: "Không tìm thấy học sinh với mã này" });
       }
+      
+      console.log("Đã tìm thấy học sinh:", student.name, "- ID:", student.id);
       
       // Lấy thông tin lớp học nếu có
       let classInfo = null;
       if (student.classId) {
         classInfo = await storage.getClass(student.classId);
+        console.log("Lớp học của học sinh:", classInfo?.name);
+      } else {
+        console.log("Học sinh không thuộc lớp học nào");
       }
       
       // Lấy danh sách điểm danh của học sinh
       const attendance = await storage.getAttendanceByStudentId(student.id);
+      console.log("Số lượng điểm danh của học sinh:", attendance?.length || 0);
       
       // Lấy danh sách thanh toán của học sinh
       const payments = await storage.getPaymentsByStudentId(student.id);
+      console.log("Số lượng thanh toán của học sinh:", payments?.length || 0);
       
       // Trả về dữ liệu đầy đủ
-      res.json({
+      const result = {
         student,
         class: classInfo,
         attendance,
         payments
-      });
+      };
+      
+      console.log("Gửi dữ liệu học sinh về client");
+      res.json(result);
     } catch (error) {
       console.error("Error getting student by code:", error);
       res.status(500).json({ message: "Lỗi khi lấy thông tin học sinh" });
