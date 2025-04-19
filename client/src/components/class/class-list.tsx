@@ -5,11 +5,13 @@ import { Class } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, Pencil, Trash2, Loader2, Users, Clock, MapPin, 
-  Calendar, CreditCard, AlertTriangle, Ban
+  Calendar, CreditCard, AlertTriangle, Ban, Eye, X, CheckCircle,
+  UserCheck, UserX, ExternalLink
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import ClassForm from "./class-form";
 import { formatCurrency, formatPaymentCycle, calculateFeeByPaymentCycle } from "@/utils/format";
+import { formatDate } from "@/utils/date-utils";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -358,6 +360,97 @@ export default function ClassList() {
                     </div>
                   )}
                 </CardContent>
+                
+                {/* Footer với nút Chi tiết */}
+                <CardFooter className="pt-0 pb-3">
+                  {classStudentInfo.count > 0 ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full text-sm"
+                      onClick={() => setClassDetailsOpen(classDetailsOpen === classItem.id ? null : classItem.id)}
+                    >
+                      {classDetailsOpen === classItem.id ? (
+                        <>
+                          <X className="h-4 w-4 mr-2" />
+                          Đóng chi tiết
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Xem chi tiết học sinh
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full text-sm opacity-50 cursor-not-allowed"
+                      disabled
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Chưa có học sinh
+                    </Button>
+                  )}
+                </CardFooter>
+                
+                {/* Panel hiển thị chi tiết học sinh đang học */}
+                {classDetailsOpen === classItem.id && studentsInClass.length > 0 && (
+                  <div className="border-t border-gray-100 p-4 bg-gray-50">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-medium text-sm">Danh sách học sinh lớp {classItem.name}</h4>
+                      <Badge variant="outline" className="bg-blue-50 border-blue-200">
+                        <span className="text-blue-600">{studentsInClass.filter(s => s.status === 'active').length} học sinh đang học</span>
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                      {studentsInClass
+                        .sort((a, b) => {
+                          // Sắp xếp học sinh đang học lên trước
+                          if (a.status === 'active' && b.status !== 'active') return -1;
+                          if (a.status !== 'active' && b.status === 'active') return 1;
+                          // Sau đó sắp xếp theo tên
+                          return a.name.localeCompare(b.name);
+                        })
+                        .map(student => {
+                          const isActive = student.status === 'active';
+                          return (
+                            <div key={student.id} className={`flex justify-between items-center p-2 rounded-md border ${isActive ? 'border-green-100 bg-green-50' : 'border-gray-100 bg-gray-100'}`}>
+                              <div className="flex items-center">
+                                {isActive ? (
+                                  <UserCheck className="h-4 w-4 text-green-500 mr-2" />
+                                ) : (
+                                  <UserX className="h-4 w-4 text-gray-400 mr-2" />
+                                )}
+                                <div>
+                                  <div className="font-medium text-sm">{student.name}</div>
+                                  <div className="text-xs text-gray-500">Mã học sinh: {student.code}</div>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Badge variant="outline" className={`text-xs ${isActive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                                  {isActive ? 'Đang học' : 'Đã nghỉ'}
+                                </Badge>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-7 w-7 p-0"
+                                  asChild
+                                >
+                                  <a href={`#student-${student.id}`}>
+                                    <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+                                    <span className="sr-only">Xem chi tiết</span>
+                                  </a>
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
               </Card>
             );
           })}
