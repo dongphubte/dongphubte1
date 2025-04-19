@@ -40,9 +40,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Edit, Trash2, Eye, DollarSign } from "lucide-react";
+import { Loader2, Edit, Trash2, Eye, DollarSign, Scroll, Calculator } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Receipt from "../receipt/receipt";
+import PaymentAdjustmentForm from "./payment-adjustment-form";
 
 interface PaymentHistoryProps {
   studentId?: number; // Optional, if we want to filter by student
@@ -58,9 +59,11 @@ export default function PaymentHistory({
   const [paymentToEdit, setPaymentToEdit] = useState<any | null>(null);
   const [paymentToDelete, setPaymentToDelete] = useState<any | null>(null);
   const [paymentToView, setPaymentToView] = useState<any | null>(null);
+  const [paymentToAdjust, setPaymentToAdjust] = useState<any | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [isAdjustmentOpen, setIsAdjustmentOpen] = useState(false);
 
   // Query to fetch all payments or payments for a specific student
   const { 
@@ -241,9 +244,17 @@ export default function PaymentHistory({
         return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Chưa đóng</Badge>;
       case 'overdue':
         return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Quá hạn</Badge>;
+      case 'partial_refund':
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Hoàn một phần</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+  
+  // Handle payment adjustment
+  const handleAdjustPayment = (payment: any) => {
+    setPaymentToAdjust(payment);
+    setIsAdjustmentOpen(true);
   };
 
   // Calculate total amount
@@ -307,6 +318,7 @@ export default function PaymentHistory({
                         size="sm" 
                         className="h-8 w-8 p-0" 
                         onClick={() => handleViewReceipt(payment)}
+                        title="Xem biên nhận"
                       >
                         <Eye className="h-4 w-4" />
                         <span className="sr-only">Xem</span>
@@ -315,7 +327,18 @@ export default function PaymentHistory({
                         variant="ghost" 
                         size="sm" 
                         className="h-8 w-8 p-0" 
+                        onClick={() => handleAdjustPayment(payment)}
+                        title="Điều chỉnh theo buổi thực tế"
+                      >
+                        <Calculator className="h-4 w-4" />
+                        <span className="sr-only">Điều chỉnh</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0" 
                         onClick={() => handleEditPayment(payment)}
+                        title="Chỉnh sửa thanh toán"
                       >
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Sửa</span>
@@ -325,6 +348,7 @@ export default function PaymentHistory({
                         size="sm" 
                         className="h-8 w-8 p-0" 
                         onClick={() => handleDeletePayment(payment)}
+                        title="Xóa thanh toán"
                       >
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Xóa</span>
@@ -499,6 +523,18 @@ export default function PaymentHistory({
             setPaymentToView(null);
           }}
           student={paymentToView}
+        />
+      )}
+      
+      {/* Payment Adjustment Dialog */}
+      {paymentToAdjust && (
+        <PaymentAdjustmentForm
+          isOpen={isAdjustmentOpen}
+          onClose={() => {
+            setIsAdjustmentOpen(false);
+            setPaymentToAdjust(null);
+          }}
+          payment={paymentToAdjust}
         />
       )}
     </div>

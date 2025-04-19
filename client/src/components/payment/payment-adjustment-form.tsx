@@ -380,7 +380,7 @@ export default function PaymentAdjustmentForm({
             </div>
             
             {hasRefund && (
-              <Alert variant="warning" className="bg-amber-50 border-amber-200">
+              <Alert className="bg-amber-50 border-amber-200">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Lưu ý</AlertTitle>
                 <AlertDescription>
