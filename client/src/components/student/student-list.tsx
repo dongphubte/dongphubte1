@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Student, Class } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Loader2, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, FileText, Calculator } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import StudentForm from "./student-form";
 import Receipt from "@/components/receipt/receipt";
+import PaymentAdjustmentHelper from "@/components/payment/payment-adjustment-helper";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -28,10 +29,11 @@ interface StudentRowProps {
   onShowReceipt: (student: Student) => void;
   onEdit: (student: Student) => void;
   onDelete: (student: Student) => void;
+  onAdjustPayment: (student: Student) => void;
 }
 
 // Sử dụng React.memo để tránh render lại khi props không thay đổi
-const StudentRow = memo(({ student, className, paymentStatus, onShowReceipt, onEdit, onDelete }: StudentRowProps) => {
+const StudentRow = memo(({ student, className, paymentStatus, onShowReceipt, onEdit, onDelete, onAdjustPayment }: StudentRowProps) => {
   // Tối ưu hóa các tính toán className với useMemo
   const statusClassName = useMemo(() => 
     `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -66,6 +68,7 @@ const StudentRow = memo(({ student, className, paymentStatus, onShowReceipt, onE
   const handleShowReceipt = useCallback(() => onShowReceipt(student), [onShowReceipt, student]);
   const handleEdit = useCallback(() => onEdit(student), [onEdit, student]);
   const handleDelete = useCallback(() => onDelete(student), [onDelete, student]);
+  const handleAdjustPayment = useCallback(() => onAdjustPayment(student), [onAdjustPayment, student]);
 
   return (
     <tr>
@@ -120,6 +123,16 @@ const StudentRow = memo(({ student, className, paymentStatus, onShowReceipt, onE
         >
           <Pencil className="h-4 w-4" />
           <span className="sr-only">Sửa</span>
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-amber-600 hover:text-amber-600 hover:bg-amber-50 mr-1"
+          onClick={handleAdjustPayment}
+          title="Điều chỉnh học phí"
+        >
+          <Calculator className="h-4 w-4" />
+          <span className="sr-only">Điều chỉnh học phí</span>
         </Button>
         <Button 
           variant="ghost" 
