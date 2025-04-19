@@ -258,13 +258,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/payments/:id", ensureAuthenticated, async (req, res) => {
     try {
       const paymentId = parseInt(req.params.id);
-      const validatedData = extendedInsertPaymentSchema.parse(req.body);
+      let dataToUpdate = req.body;
       
       // Kiểm tra xem thanh toán có tồn tại không
       const existingPayment = await storage.getPayment(paymentId);
       if (!existingPayment) {
         return res.status(404).json({ message: "Không tìm thấy thanh toán" });
       }
+      
+      // Xử lý đặc biệt cho điều chỉnh theo buổi học thực tế
+      if (dataToUpdate.actualSessions !== undefined && dataToUpdate.plannedSessions !== undefined) {
+        // Nếu số buổi thực tế ít hơn số buổi dự kiến, cập nhật trạng thái
+        if (dataToUpdate.actualSessions < dataToUpdate.plannedSessions) {
+          // Đặt trạng thái 'hoàn một phần' nếu hoàn tiền
+          dataToUpdate.status = "partial_refund";
+          
+          // Nếu có lý do điều chỉnh, thêm vào ghi chú
+          if (dataToUpdate.adjustmentReason) {
+            const adjustmentNote = `Điều chỉnh: ${dataToUpdate.actualSessions}/${dataToUpdate.plannedSessions} buổi. ${dataToUpdate.adjustmentReason}`;
+            dataToUpdate.notes = existingPayment.notes 
+              ? `${existingPayment.notes}. ${adjustmentNote}` 
+              : adjustmentNote;
+          }
+        }
+      }
+      
+      // Xác thực dữ liệu sau khi đã xử lý
+      const validatedData = extendedInsertPaymentSchema.parse(dataToUpdate);
       
       // Cập nhật thanh toán
       const updatedPayment = await storage.updatePayment(paymentId, validatedData);
