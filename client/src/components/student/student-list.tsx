@@ -574,11 +574,17 @@ export default function StudentList() {
         if (student.name.toLowerCase().includes(searchTermLower)) {
           return true;
         }
+        
+        // Tìm kiếm theo tên lớp
+        const className = getClassName(student.classId).toLowerCase();
+        if (className.includes(searchTermLower)) {
+          return true;
+        }
       }
       
       return false; // Không khớp với bất kỳ điều kiện nào
     });
-  }, [students, searchTerm, activeTab]);
+  }, [students, searchTerm, activeTab, getClassName]);
 
   const isLoading = isLoadingStudents || isLoadingClasses || isLoadingPayments;
 

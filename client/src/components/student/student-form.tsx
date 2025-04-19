@@ -93,7 +93,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
         phone: studentToEdit.phone,
         classId: studentToEdit.classId,
         paymentCycle: studentToEdit.paymentCycle as PaymentCycle,
-        status: studentToEdit.status as "active" | "inactive",
+        status: studentToEdit.status as "active" | "inactive" | "suspended",
       });
       setSelectedClassId(studentToEdit.classId);
     } else {
@@ -317,7 +317,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
               <Label htmlFor="status">Tình trạng</Label>
               <Select 
                 onValueChange={(value: any) => {
-                  const status = value as "active" | "inactive";
+                  const status = value as "active" | "inactive" | "suspended";
                   form.setValue("status", status);
                   
                   // Show toast notification when changing to inactive
@@ -325,6 +325,14 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
                     toast({
                       title: "Học sinh đã được đánh dấu là nghỉ học",
                       description: "Học sinh này sẽ không còn xuất hiện trong danh sách lớp và không bị tính phí cho kỳ thanh toán tiếp theo.",
+                    });
+                  }
+                  
+                  // Show toast notification when changing to suspended
+                  if (status === "suspended" && studentToEdit && studentToEdit.status !== "suspended") {
+                    toast({
+                      title: "Học sinh đã được đánh dấu là tạm nghỉ",
+                      description: "Học sinh này sẽ chuyển sang tab tạm nghỉ và không bị tính phí cho kỳ thanh toán trong thời gian tạm nghỉ.",
                     });
                   }
                 }}
@@ -335,6 +343,7 @@ export default function StudentForm({ isOpen, onClose, studentToEdit }: StudentF
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Đang học</SelectItem>
+                  <SelectItem value="suspended">Tạm nghỉ</SelectItem>
                   <SelectItem value="inactive">Nghỉ học</SelectItem>
                 </SelectContent>
               </Select>
