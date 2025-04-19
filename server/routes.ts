@@ -93,6 +93,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/classes/:id/close", ensureAuthenticated, async (req, res) => {
+    try {
+      const classId = parseInt(req.params.id);
+      const { closedDate, closedReason } = req.body;
+      
+      // Lấy thông tin lớp hiện tại
+      const currentClass = await storage.getClass(classId);
+      if (!currentClass) {
+        return res.status(404).json({ message: "Không tìm thấy lớp học" });
+      }
+      
+      // Cập nhật trạng thái lớp học thành "closed"
+      const updatedClass = await storage.updateClass(classId, {
+        ...currentClass,
+        status: "closed",
+        closedDate: closedDate || new Date(),
+        closedReason: closedReason || "Kết thúc khóa học"
+      });
+      
+      if (!updatedClass) {
+        return res.status(404).json({ message: "Không thể đóng lớp học" });
+      }
+      
+      res.json({
+        message: "Đã đóng lớp học thành công",
+        class: updatedClass
+      });
+    } catch (error) {
+      console.error("Error closing class:", error);
+      res.status(500).json({ message: "Lỗi khi đóng lớp học" });
+    }
+  });
+
   app.delete("/api/classes/:id", ensureAuthenticated, async (req, res) => {
     try {
       const classId = parseInt(req.params.id);

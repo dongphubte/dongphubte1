@@ -153,10 +153,28 @@ export default function ClassList() {
     setClassToDelete(classItem);
     setIsDeleteDialogOpen(true);
   };
+  
+  const handleCloseClass = (classItem: Class) => {
+    setClassToClose(classItem);
+    setCloseReason(""); // Reset reason when opening dialog
+    setIsCloseDialogOpen(true);
+  };
 
   const confirmDelete = () => {
     if (classToDelete) {
       deleteMutation.mutate(classToDelete.id);
+    }
+  };
+  
+  const confirmCloseClass = () => {
+    if (classToClose) {
+      closeClassMutation.mutate({
+        id: classToClose.id,
+        closeData: {
+          closedDate: new Date(),
+          closedReason: closeReason
+        }
+      });
     }
   };
 
@@ -283,6 +301,18 @@ export default function ClassList() {
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Sửa</span>
                     </Button>
+                    {classItem.status === 'active' && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 text-amber-500"
+                        onClick={() => handleCloseClass(classItem)}
+                        title="Đóng lớp"
+                      >
+                        <Ban className="h-4 w-4" />
+                        <span className="sr-only">Đóng lớp</span>
+                      </Button>
+                    )}
                     <Button 
                       variant="ghost" 
                       size="sm" 
