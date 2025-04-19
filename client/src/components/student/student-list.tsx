@@ -60,6 +60,8 @@ const StudentRow = memo(({
     `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
       student.status === 'active' 
         ? 'bg-success bg-opacity-10 text-success' 
+        : student.status === 'suspended'
+        ? 'bg-amber-100 text-amber-700'
         : 'bg-error bg-opacity-10 text-error'
     }`, 
     [student.status]
