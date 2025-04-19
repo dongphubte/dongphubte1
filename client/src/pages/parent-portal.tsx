@@ -10,6 +10,16 @@ import { formatCurrency } from "@/utils/format";
 import { formatDate } from "@/utils/date-utils";
 import { Search, QrCode, User, Calendar, Phone, AlertCircle, CreditCard, Clock, Check, Info } from "lucide-react";
 
+// Hàm loại bỏ dấu tiếng Việt
+function removeVietnameseAccents(str: string): string {
+  if (!str) return '';
+  
+  return str
+    .normalize('NFD') // Chuyển đổi về dạng tách các ký tự và dấu
+    .replace(/[\u0300-\u036f]/g, '') // Loại bỏ các dấu
+    .replace(/[đĐ]/g, (m) => m === 'đ' ? 'd' : 'D'); // Chuyển đổi đ và Đ
+};
+
 export default function ParentPortal() {
   console.log("ParentPortal component loaded");
   const [studentCode, setStudentCode] = useState("");
@@ -424,7 +434,7 @@ export default function ParentPortal() {
                                     <p><span className="text-gray-500">Số tài khoản:</span> <span className="font-medium">9704229262085470</span></p>
                                     <p><span className="text-gray-500">Ngân hàng:</span> <span className="font-medium">MB Bank</span></p>
                                     <p><span className="text-gray-500">Chủ tài khoản:</span> <span className="font-medium">Tran Dong Phu</span></p>
-                                    <p><span className="text-gray-500">Nội dung:</span> <span className="font-medium">HP {studentData.student.code} {studentData.student.name}</span></p>
+                                    <p><span className="text-gray-500">Nội dung:</span> <span className="font-medium">HP {studentData.student.code} {removeVietnameseAccents(studentData.student.name)}</span></p>
                                     <p><span className="text-gray-500">Số tiền:</span> <span className="font-medium text-primary">{formatCurrency(studentData.class.fee)}</span></p>
                                   </div>
                                 </div>

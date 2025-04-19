@@ -292,16 +292,29 @@ export default function AttendanceByClass() {
       return map;
     }, {});
     
-    // Sắp xếp lớp học: ưu tiên lớp đang học hôm nay, sau đó sắp xếp theo số thứ tự
+    // Map để lưu trữ trạng thái điểm danh hôm nay của mỗi lớp
+    const classAttendedMap = classes.reduce((map: Record<number, boolean>, classItem) => {
+      map[classItem.id] = isClassAttendedToday(classItem.id);
+      return map;
+    }, {});
+    
+    // Sắp xếp lớp học: ưu tiên lớp có lịch học hôm nay nhưng chưa điểm danh, sau đó đến lớp đang học đã điểm danh, cuối cùng là các lớp khác
     return summary.sort((a, b) => {
-      // Ưu tiên các lớp có lịch học hôm nay
       const aHasScheduleToday = classesWithSchedule[a.classId] || false;
       const bHasScheduleToday = classesWithSchedule[b.classId] || false;
       
-      if (aHasScheduleToday && !bHasScheduleToday) return -1;
-      if (!aHasScheduleToday && bHasScheduleToday) return 1;
+      const aIsAttendedToday = classAttendedMap[a.classId] || false;
+      const bIsAttendedToday = classAttendedMap[b.classId] || false;
       
-      // Nếu cả hai lớp đều có lịch hoặc đều không có lịch, sắp xếp theo số
+      // Ưu tiên lớp có lịch học hôm nay nhưng chưa điểm danh
+      if (aHasScheduleToday && !aIsAttendedToday && !(bHasScheduleToday && !bIsAttendedToday)) return -1;
+      if (bHasScheduleToday && !bIsAttendedToday && !(aHasScheduleToday && !aIsAttendedToday)) return 1;
+      
+      // Ưu tiên lớp có lịch học hôm nay đã điểm danh
+      if (aHasScheduleToday && aIsAttendedToday && !(bHasScheduleToday && bIsAttendedToday)) return -1;
+      if (bHasScheduleToday && bIsAttendedToday && !(aHasScheduleToday && aIsAttendedToday)) return 1;
+      
+      // Nếu cả hai lớp đều có cùng trạng thái điểm danh, sắp xếp theo số thứ tự
       const numA = a.className.match(/\d+/);
       const numB = b.className.match(/\d+/);
       
