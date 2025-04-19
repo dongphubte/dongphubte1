@@ -31,7 +31,10 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isScheduleValid, setIsScheduleValid] = useState(true);
-  const { getFeeCalculationMethod, isLoadingSettings } = useSettings();
+  const { getFeeCalculationMethod, setFeeCalculationMethod, isLoadingSettings } = useSettings();
+  const [feeMethod, setFeeMethod] = useState<FeeCalculationMethod>(
+    getFeeCalculationMethod() || FeeCalculationMethod.PER_SESSION
+  );
 
   const formSchema = z.object({
     name: z.string().min(1, "Tên lớp là bắt buộc"),
@@ -52,6 +55,12 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
     },
   });
 
+  useEffect(() => {
+    if (!isLoadingSettings) {
+      setFeeMethod(getFeeCalculationMethod() || FeeCalculationMethod.PER_SESSION);
+    }
+  }, [isLoadingSettings, getFeeCalculationMethod]);
+  
   useEffect(() => {
     if (classToEdit) {
       // Ensure paymentCycle is one of the valid enum values
@@ -316,29 +325,70 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
             )}
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="paymentCycle">Chu kỳ thanh toán</Label>
-            <Select
-              value={form.getValues("paymentCycle") || "1-thang"}
-              onValueChange={(value: "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay") => {
-                console.log("Setting payment cycle to:", value);
-                form.setValue("paymentCycle", value, {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                  shouldTouch: true
-                });
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn chu kỳ thanh toán" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1-thang">1 tháng</SelectItem>
-                <SelectItem value="8-buoi">8 buổi</SelectItem>
-                <SelectItem value="10-buoi">10 buổi</SelectItem>
-                <SelectItem value="theo-ngay">Theo ngày</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="paymentCycle">Chu kỳ thanh toán</Label>
+              <Select
+                value={form.getValues("paymentCycle") || "1-thang"}
+                onValueChange={(value: "1-thang" | "8-buoi" | "10-buoi" | "theo-ngay") => {
+                  console.log("Setting payment cycle to:", value);
+                  form.setValue("paymentCycle", value, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                    shouldTouch: true
+                  });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn chu kỳ thanh toán" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-thang">1 tháng</SelectItem>
+                  <SelectItem value="8-buoi">8 buổi</SelectItem>
+                  <SelectItem value="10-buoi">10 buổi</SelectItem>
+                  <SelectItem value="theo-ngay">Theo ngày</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Phương pháp tính học phí</Label>
+              <div className="grid gap-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="fee-per-session"
+                    name="feeMethod"
+                    className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
+                    checked={feeMethod === FeeCalculationMethod.PER_SESSION}
+                    onChange={() => {
+                      setFeeMethod(FeeCalculationMethod.PER_SESSION);
+                      setFeeCalculationMethod(FeeCalculationMethod.PER_SESSION);
+                    }}
+                  />
+                  <Label htmlFor="fee-per-session" className="cursor-pointer text-sm">
+                    Tính theo buổi học <span className="text-gray-500">(Tổng học phí = Giá × Số buổi)</span>
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="fee-per-cycle"
+                    name="feeMethod"
+                    className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
+                    checked={feeMethod === FeeCalculationMethod.PER_CYCLE}
+                    onChange={() => {
+                      setFeeMethod(FeeCalculationMethod.PER_CYCLE);
+                      setFeeCalculationMethod(FeeCalculationMethod.PER_CYCLE);
+                    }}
+                  />
+                  <Label htmlFor="fee-per-cycle" className="cursor-pointer text-sm">
+                    Tính theo chu kỳ <span className="text-gray-500">(Giá là tổng chi phí cả chu kỳ)</span>
+                  </Label>
+                </div>
+              </div>
+            </div>
           </div>
           
           <DialogFooter className="sm:justify-end">
