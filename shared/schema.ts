@@ -40,6 +40,9 @@ export const classes = pgTable("classes", {
   schedule: text("schedule").notNull(), // store as comma separated values
   location: text("location").notNull(),
   paymentCycle: text("payment_cycle"), // 1-thang, 8-buoi, 10-buoi, theo-ngay
+  status: text("status").notNull().default("active"), // active, closed
+  closedDate: timestamp("closed_date"), // Ngày đóng lớp
+  closedReason: text("closed_reason"), // Lý do đóng lớp
 });
 
 export const insertClassSchema = createInsertSchema(classes).pick({
@@ -48,6 +51,9 @@ export const insertClassSchema = createInsertSchema(classes).pick({
   schedule: true,
   location: true,
   paymentCycle: true,
+  status: true,
+  closedDate: true,
+  closedReason: true,
 });
 
 // Schema for students
@@ -165,6 +171,15 @@ export const extendedInsertClassSchema = insertClassSchema.extend({
   paymentCycle: z.enum(["1-thang", "8-buoi", "10-buoi", "theo-ngay"], {
     errorMap: () => ({ message: "Chu kỳ thanh toán không hợp lệ" }),
   }),
+  status: z.enum(["active", "closed"], {
+    errorMap: () => ({ message: "Trạng thái lớp học không hợp lệ" }),
+  }).optional(),
+  closedDate: z.union([
+    z.date(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform(str => new Date(str)),
+    z.null(),
+  ]).optional(),
+  closedReason: z.string().optional(),
 });
 
 export const extendedInsertStudentSchema = insertStudentSchema.extend({

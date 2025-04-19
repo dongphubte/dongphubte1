@@ -43,6 +43,9 @@ export default function ClassList() {
   const [selectedClass, setSelectedClass] = useState<Class | undefined>(undefined);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [classToDelete, setClassToDelete] = useState<Class | null>(null);
+  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
+  const [classToClose, setClassToClose] = useState<Class | null>(null);
+  const [closeReason, setCloseReason] = useState("");
 
   const { data: classesRaw, isLoading, error } = useQuery<Class[]>({
     queryKey: ["/api/classes"],
@@ -108,6 +111,31 @@ export default function ClassList() {
         });
       }
       setIsDeleteDialogOpen(false);
+    },
+  });
+  
+  // Mutation để đóng lớp học
+  const closeClassMutation = useMutation({
+    mutationFn: async ({ id, closeData }: { id: number, closeData: { closedDate: Date, closedReason: string } }) => {
+      const res = await apiRequest("PATCH", `/api/classes/${id}/close`, closeData);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/classes"] });
+      toast({
+        title: "Thành công",
+        description: "Đã đóng lớp học. Lớp học này sẽ không tính học phí mới.",
+      });
+      setIsCloseDialogOpen(false);
+      setCloseReason("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể đóng lớp học",
+        variant: "destructive",
+      });
+      setIsCloseDialogOpen(false);
     },
   });
 
