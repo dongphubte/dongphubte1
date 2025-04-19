@@ -193,6 +193,38 @@ export default function AttendanceByClass() {
     },
   });
 
+  // Kiểm tra xem lớp đã được điểm danh ngày hôm nay chưa
+  const isClassAttendedToday = React.useCallback((classId: number): boolean => {
+    if (!students || !attendance) return false;
+    
+    // Lấy ngày hôm nay ở dạng chuỗi YYYY-MM-DD
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    // Lấy danh sách học sinh đang học (active) trong lớp
+    const studentsInClass = students.filter(s => s.classId === classId && s.status === 'active');
+    
+    // Nếu không có học sinh nào đang học, coi như đã điểm danh đủ
+    if (studentsInClass.length === 0) return true;
+    
+    // Lấy ID của tất cả học sinh đang học trong lớp
+    const studentIds = studentsInClass.map(s => s.id);
+    
+    // Đếm số học sinh đã được điểm danh hôm nay (dù với bất kỳ trạng thái nào)
+    const attendedStudents = new Set();
+    
+    attendance.forEach(a => {
+      // Chỉ xét điểm danh hôm nay
+      const attendanceDate = a.date.split('T')[0]; // Chỉ lấy phần ngày YYYY-MM-DD
+      if (attendanceDate === todayStr && studentIds.includes(a.studentId)) {
+        attendedStudents.add(a.studentId);
+      }
+    });
+    
+    // Nếu tất cả học sinh đã được điểm danh, coi như lớp đã điểm danh đủ
+    return attendedStudents.size >= studentIds.length;
+  }, [students, attendance]);
+
   // Tạo thống kê điểm danh theo lớp
   const classAttendanceSummary = React.useMemo(() => {
     if (!classes || !students || !attendance) return [];
@@ -666,9 +698,6 @@ export default function AttendanceByClass() {
                       </Badge>
                     )}
                   </div>
-                  <Badge variant={classData.total > 0 ? "default" : "outline"}>
-                    {classData.total} điểm danh
-                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
@@ -713,15 +742,57 @@ export default function AttendanceByClass() {
                   <BarChart className="h-4 w-4 mr-1" />
                   Chi tiết
                 </Button>
-                <Button 
-                  variant="default"
-                  onClick={() => showAttendance(classData)}
-                  className="flex items-center"
-                  size="sm"
-                >
-                  <UserCheck className="h-4 w-4 mr-1" />
-                  Điểm danh
-                </Button>
+                {/* Button điểm danh với style tùy thuộc vào trạng thái */}
+                {(() => {
+                  // Kiểm tra xem lớp có lịch học hôm nay không
+                  const hasScheduleToday = classes && isClassScheduledToday(classes.find(c => c.id === classData.classId)?.schedule || "");
+                  // Kiểm tra xem đã điểm danh hết học sinh chưa
+                  const isAttended = isClassAttendedToday(classData.classId);
+
+                  // Lớp đã điểm danh đủ
+                  if (isAttended) {
+                    return (
+                      <Button 
+                        variant="outline"
+                        disabled
+                        className="flex items-center bg-green-50 text-green-700 hover:bg-green-50"
+                        size="sm"
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        Đã điểm danh
+                      </Button>
+                    );
+                  }
+                  
+                  // Lớp có lịch học hôm nay nhưng chưa điểm danh đủ
+                  if (hasScheduleToday) {
+                    return (
+                      <Button 
+                        variant="default"
+                        onClick={() => showAttendance(classData)}
+                        className="flex items-center bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white animate-pulse border-0"
+                        size="sm"
+                      >
+                        <UserCheck className="h-4 w-4 mr-1" />
+                        Điểm danh ngay
+                      </Button>
+                    );
+                  }
+                  
+                  // Lớp không có lịch học hôm nay
+                  return (
+                    <Button 
+                      variant="default"
+                      onClick={() => showAttendance(classData)}
+                      className="flex items-center"
+                      size="sm"
+                    >
+                      <UserCheck className="h-4 w-4 mr-1" />
+                      Điểm danh
+                    </Button>
+                  );
+                })()}
+                
               </CardFooter>
             </Card>
           ))}
