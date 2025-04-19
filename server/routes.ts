@@ -29,6 +29,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
 
+  // Public Parent Portal APIs - API không yêu cầu đăng nhập dành cho cổng thông tin phụ huynh
+
   // Classes API Routes
   app.get("/api/classes", ensureAuthenticated, async (req, res) => {
     try {
