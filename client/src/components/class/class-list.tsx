@@ -14,6 +14,7 @@ import ClassStudentsModal from "./class-students-modal";
 import { formatCurrency, formatPaymentCycle, calculateFeeByPaymentCycle, formatFeeDisplay } from "@/utils/format";
 import { useSettings, FeeCalculationMethod } from "@/hooks/use-settings";
 import { formatDate, isClassScheduledToday } from "@/utils/date-utils";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -82,6 +83,33 @@ export default function ClassList() {
   // Lấy số học sinh trong mỗi lớp từ dashboard report
   const studentsPerClass = reportData?.studentsPerClass || [];
 
+  // Mutation để đóng lớp học
+  const closeClassMutation = useMutation({
+    mutationFn: async ({ id, closeData }: { id: number, closeData: { closedDate: Date, closedReason: string } }) => {
+      const res = await apiRequest("PATCH", `/api/classes/${id}/close`, closeData);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/classes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reports/dashboard"] });
+      toast({
+        title: "Thành công",
+        description: "Đã đóng lớp học. Lớp học này sẽ không tính học phí mới.",
+      });
+      setIsCloseDialogOpen(false);
+      setClassToClose(null);
+      setCloseReason("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể đóng lớp học",
+        variant: "destructive",
+      });
+      setIsCloseDialogOpen(false);
+    },
+  });
+  
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await apiRequest("DELETE", `/api/classes/${id}`);
@@ -111,31 +139,6 @@ export default function ClassList() {
         });
       }
       setIsDeleteDialogOpen(false);
-    },
-  });
-  
-  // Mutation để đóng lớp học
-  const closeClassMutation = useMutation({
-    mutationFn: async ({ id, closeData }: { id: number, closeData: { closedDate: Date, closedReason: string } }) => {
-      const res = await apiRequest("PATCH", `/api/classes/${id}/close`, closeData);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/classes"] });
-      toast({
-        title: "Thành công",
-        description: "Đã đóng lớp học. Lớp học này sẽ không tính học phí mới.",
-      });
-      setIsCloseDialogOpen(false);
-      setCloseReason("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Lỗi",
-        description: error.message || "Không thể đóng lớp học",
-        variant: "destructive",
-      });
-      setIsCloseDialogOpen(false);
     },
   });
 
@@ -513,6 +516,51 @@ export default function ClassList() {
                 </>
               ) : (
                 "Xóa lớp học"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Close Class Dialog */}
+      <AlertDialog open={isCloseDialogOpen} onOpenChange={setIsCloseDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Đóng lớp học</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn đang đóng lớp học "{classToClose?.name}". Sau khi đóng:
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Lớp học sẽ không tính học phí mới</li>
+                <li>Học sinh vẫn có thể xem lịch sử điểm danh và học phí</li>
+                <li>Dữ liệu về lớp học vẫn được lưu trữ, nhưng sẽ không hiển thị trong danh sách lớp học đang hoạt động</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-3">
+            <div className="grid gap-2">
+              <Label htmlFor="closeReason">Lý do đóng lớp</Label>
+              <Textarea 
+                id="closeReason"
+                placeholder="Ví dụ: Kết thúc khóa học, hợp nhất lớp,..."
+                value={closeReason}
+                onChange={(e) => setCloseReason(e.target.value)}
+                className="min-h-24"
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmCloseClass}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {closeClassMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Đang đóng lớp...
+                </>
+              ) : (
+                "Đóng lớp học"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
