@@ -15,6 +15,7 @@ import { formatCurrency, formatPaymentCycle, calculateFeeByPaymentCycle, formatF
 import { useSettings, FeeCalculationMethod } from "@/hooks/use-settings";
 import { formatDate, isClassScheduledToday } from "@/utils/date-utils";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -543,7 +544,7 @@ export default function ClassList() {
                 id="closeReason"
                 placeholder="Ví dụ: Kết thúc khóa học, hợp nhất lớp,..."
                 value={closeReason}
-                onChange={(e) => setCloseReason(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCloseReason(e.target.value)}
                 className="min-h-24"
               />
             </div>
