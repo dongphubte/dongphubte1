@@ -199,6 +199,7 @@ export default function StudentList() {
   const [adjustmentStudent, setAdjustmentStudent] = useState<Student | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [studentDetail, setStudentDetail] = useState<Student | null>(null);
+  const [activeTab, setActiveTab] = useState<"active" | "suspended" | "inactive">("active");
 
   const { data: students, isLoading: isLoadingStudents } = useQuery<Student[]>({
     queryKey: ["/api/students"],
@@ -399,31 +400,34 @@ export default function StudentList() {
     const searchTermLower = searchTerm.toLowerCase();
     
     return students.filter(student => {
-      // First filter by status - only show active students in the main list
-      const matchesStatus = student.status === 'active';
+      // Lọc theo tab đang chọn
+      const matchesStatus = student.status === activeTab;
       
-      // Tối ưu: Nếu không có searchTerm, không cần kiểm tra
+      // Tối ưu: Nếu không có searchTerm, chỉ lọc theo trạng thái
       if (!searchTerm) {
         return matchesStatus;
       }
       
-      // Tối ưu: Kiểm tra các điều kiện từ dễ nhất (ít tốn kém nhất) đến phức tạp
-      // Dừng ngay khi tìm thấy kết quả khớp
-      if (student.phone.includes(searchTerm)) {
-        return matchesStatus;
-      }
-      
-      if (student.code.toLowerCase().includes(searchTermLower)) {
-        return matchesStatus;
-      }
-      
-      if (student.name.toLowerCase().includes(searchTermLower)) {
-        return matchesStatus;
+      // Nếu khớp với trạng thái và có searchTerm, tiếp tục kiểm tra các điều kiện
+      if (matchesStatus) {
+        // Tối ưu: Kiểm tra các điều kiện từ dễ nhất (ít tốn kém nhất) đến phức tạp
+        // Dừng ngay khi tìm thấy kết quả khớp
+        if (student.phone.includes(searchTerm)) {
+          return true;
+        }
+        
+        if (student.code.toLowerCase().includes(searchTermLower)) {
+          return true;
+        }
+        
+        if (student.name.toLowerCase().includes(searchTermLower)) {
+          return true;
+        }
       }
       
       return false; // Không khớp với bất kỳ điều kiện nào
     });
-  }, [students, searchTerm]);
+  }, [students, searchTerm, activeTab]);
 
   const isLoading = isLoadingStudents || isLoadingClasses || isLoadingPayments;
 

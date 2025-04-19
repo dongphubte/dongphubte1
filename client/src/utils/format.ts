@@ -65,8 +65,28 @@ export function formatStudentStatus(status: string): string {
       return 'Đang học';
     case 'inactive':
       return 'Nghỉ học';
+    case 'suspended':
+      return 'Tạm nghỉ';
     default:
       return status;
+  }
+}
+
+/**
+ * Get the CSS class for student status badge
+ * @param status - Student status code
+ * @returns CSS class for the badge
+ */
+export function getStudentStatusClass(status: string): string {
+  switch (status) {
+    case 'active':
+      return 'bg-green-100 text-green-800 hover:bg-green-200';
+    case 'inactive':
+      return 'bg-red-100 text-red-800 hover:bg-red-200';
+    case 'suspended':
+      return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
+    default:
+      return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
   }
 }
 

@@ -13,6 +13,7 @@ export const PaymentCycleEnum = {
 export const StudentStatusEnum = {
   ACTIVE: "active",
   INACTIVE: "inactive",
+  SUSPENDED: "suspended", // Trạng thái tạm nghỉ học
 } as const;
 
 // User schema for authentication
@@ -58,7 +59,12 @@ export const students = pgTable("students", {
   classId: integer("class_id").notNull(),
   registrationDate: timestamp("registration_date").notNull().defaultNow(),
   paymentCycle: text("payment_cycle").notNull(),
-  status: text("status").notNull().default("active"), // active or inactive
+  status: text("status").notNull().default("active"), // active, inactive, suspended
+  // Trường thông tin cho tính năng tạm nghỉ/học lại
+  suspendDate: timestamp("suspend_date"), // Ngày tạm nghỉ
+  suspendReason: text("suspend_reason"), // Lý do tạm nghỉ
+  restartDate: timestamp("restart_date"), // Ngày học lại gần nhất
+  lastActiveDate: timestamp("last_active_date"), // Ngày hoạt động cuối cùng trước khi tạm nghỉ
   // Tạm thời không thêm paymentStatus vào schema vì database chưa có cột này
 });
 
@@ -69,6 +75,10 @@ export const insertStudentSchema = createInsertSchema(students).pick({
   classId: true,
   paymentCycle: true,
   status: true,
+  suspendDate: true,
+  suspendReason: true,
+  restartDate: true,
+  lastActiveDate: true,
 });
 
 // Schema for payments
@@ -160,9 +170,24 @@ export const extendedInsertStudentSchema = insertStudentSchema.extend({
   paymentCycle: z.enum(["1-thang", "8-buoi", "10-buoi", "theo-ngay"], {
     errorMap: () => ({ message: "Chu kỳ thanh toán không hợp lệ" }),
   }),
-  status: z.enum(["active", "inactive"], {
+  status: z.enum(["active", "inactive", "suspended"], {
     errorMap: () => ({ message: "Trạng thái không hợp lệ" }),
   }),
+  suspendDate: z.union([
+    z.date(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform(str => new Date(str)),
+    z.null(),
+  ]).optional(),
+  restartDate: z.union([
+    z.date(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform(str => new Date(str)),
+    z.null(),
+  ]).optional(),
+  lastActiveDate: z.union([
+    z.date(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform(str => new Date(str)),
+    z.null(),
+  ]).optional(),
 });
 
 export const extendedInsertPaymentSchema = insertPaymentSchema.extend({
