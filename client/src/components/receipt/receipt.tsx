@@ -785,11 +785,7 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                 </div>
                 
                 <p className="mb-2">
-                  Học phí tính từ ngày: <span className="font-semibold">{formatDate(paymentDate)}</span>
-                </p>
-                
-                <p className="mb-2">
-                  <span className="font-bold text-blue-700">Chu kỳ thanh toán tiếp theo:</span> <span className="font-semibold text-blue-800">{getValidUntilDate()}</span>
+                  Học phí tính từ ngày: <span className="font-semibold">{formatDate(paymentDate)}</span> đến ngày <span className="font-semibold">{getValidUntilDate()}</span>
                 </p>
                 
                 {customSessions > 0 && (
