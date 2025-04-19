@@ -123,3 +123,34 @@ export function isToday(date: Date | string): boolean {
     dateObj.getFullYear() === today.getFullYear()
   );
 }
+
+/**
+ * Kiểm tra xem một lớp học có lịch học vào ngày hôm nay không
+ * @param schedule - Chuỗi lịch học (ví dụ: "2, 4, 6 (18:00 - 20:00)")
+ * @returns True nếu lớp học có lịch học hôm nay
+ */
+export function isClassScheduledToday(schedule: string): boolean {
+  try {
+    if (!schedule) return false;
+    
+    // Lấy ngày hiện tại trong tuần (0 = Chủ nhật, 1 = Thứ 2, ...)
+    const today = new Date().getDay();
+    
+    // Chuyển đổi ngày trong tuần sang định dạng tiếng Việt để tìm kiếm
+    const vietnameseDays = [
+      "chủ nhật", "thứ 2", "thứ 3", "thứ 4", "thứ 5", "thứ 6", "thứ 7"
+    ];
+    
+    const currentDay = vietnameseDays[today];
+    const scheduleLower = schedule.toLowerCase();
+    
+    // Tìm kiếm ngày hiện tại trong chuỗi lịch học
+    return scheduleLower.includes(currentDay) ||
+           // Kiểm tra theo số ngày trong tuần (2, 3, 4, 5, 6, 7, CN)
+           (today === 0 && (scheduleLower.includes("cn") || scheduleLower.includes("chủ nhật"))) ||
+           (today > 0 && (scheduleLower.includes(`${today + 1}`) || scheduleLower.includes(`${today + 1},`)));
+  } catch (error) {
+    console.error("Error checking class schedule:", error);
+    return false;
+  }
+}
