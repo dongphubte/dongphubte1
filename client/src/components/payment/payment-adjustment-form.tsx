@@ -77,8 +77,10 @@ export default function PaymentAdjustmentForm({
   const { getFeeCalculationMethod } = useSettings();
   const [originalAmount, setOriginalAmount] = useState(payment.amount);
   const [newAmount, setNewAmount] = useState(payment.amount);
-  const [plannedSessions, setPlannedSessions] = useState<number | undefined>(payment.plannedSessions || getDefaultPlannedSessions());
-  const [maxSessions, setMaxSessions] = useState<number>(payment.plannedSessions || getDefaultPlannedSessions());
+  // Sử dụng giá trị mặc định đơn giản khi khởi tạo
+  const defaultSessions = payment.plannedSessions || 4; // Mặc định là 4 buổi cho chu kỳ 1 tháng
+  const [plannedSessions, setPlannedSessions] = useState<number>(defaultSessions);
+  const [maxSessions, setMaxSessions] = useState<number>(defaultSessions);
   
   // Lấy thông tin học sinh
   const { data: student } = useQuery<Student>({
@@ -101,7 +103,7 @@ export default function PaymentAdjustmentForm({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      actualSessions: payment.actualSessions || payment.plannedSessions || getDefaultPlannedSessions(),
+      actualSessions: payment.actualSessions || payment.plannedSessions || defaultSessions,
       adjustmentReason: payment.adjustmentReason || "",
     },
   });
@@ -139,7 +141,7 @@ export default function PaymentAdjustmentForm({
     // Tính toán số tiền điều chỉnh dựa trên số buổi thực tế
     const adjustedAmount = calculateAdjustedAmount(
       originalAmount,
-      plannedSessions || getDefaultPlannedSessions(),
+      plannedSessions,
       actualSessions
     );
     
@@ -161,11 +163,14 @@ export default function PaymentAdjustmentForm({
     if (payment && isOpen) {
       setOriginalAmount(payment.amount);
       setNewAmount(payment.amount);
-      setPlannedSessions(payment.plannedSessions || getDefaultPlannedSessions());
-      setMaxSessions(payment.plannedSessions || getDefaultPlannedSessions());
+      
+      // Sử dụng giá trị mặc định 4 (1 tháng = 4 buổi)
+      const defaultValue = payment.plannedSessions || 4;
+      setPlannedSessions(defaultValue);
+      setMaxSessions(defaultValue);
       
       form.reset({
-        actualSessions: payment.actualSessions || payment.plannedSessions || getDefaultPlannedSessions(),
+        actualSessions: payment.actualSessions || defaultValue,
         adjustmentReason: payment.adjustmentReason || "",
       });
     }
