@@ -28,6 +28,8 @@ export default function Dashboard() {
       pendingAmount: number;
       overdueAmount: number;
       totalAmount: number;
+      unpaidFeesAmount: number;      // Tổng số tiền chưa thu
+      totalExpectedFees: number;     // Tổng học phí dự kiến
     };
     attendance: {
       present: number;
@@ -149,6 +151,38 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Financial Overview */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-neutral-800">Tổng quan học phí</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-lg p-6">
+              <h4 className="text-lg font-medium text-neutral-700 mb-2">Tổng học phí dự kiến</h4>
+              <div className="text-2xl font-bold text-primary">{formatCurrency(finances.totalExpectedFees)}</div>
+              <p className="text-sm text-neutral-500 mt-1">Tổng học phí từ học sinh đang học</p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-100 rounded-lg p-6">
+              <h4 className="text-lg font-medium text-neutral-700 mb-2">Tổng tiền chưa thu</h4>
+              <div className="text-2xl font-bold text-purple-600">{formatCurrency(finances.unpaidFeesAmount)}</div>
+              <p className="text-sm text-neutral-500 mt-1">Tổng học phí chưa thu từ học sinh</p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-teal-50 to-white border border-teal-100 rounded-lg p-6">
+              <h4 className="text-lg font-medium text-neutral-700 mb-2">Tỷ lệ thu học phí</h4>
+              <div className="text-2xl font-bold text-teal-600">
+                {finances.totalExpectedFees > 0 
+                  ? `${Math.round((finances.paidAmount / finances.totalExpectedFees) * 100)}%` 
+                  : '0%'}
+              </div>
+              <p className="text-sm text-neutral-500 mt-1">Phần trăm học phí đã thu</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

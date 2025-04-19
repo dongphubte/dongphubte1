@@ -738,6 +738,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .filter(p => p.status === 'overdue')
         .reduce((sum, p) => sum + p.amount, 0);
       
+      // Tính tổng số tiền nợ từ học sinh đang học
+      const activeStudentIds = students
+        .filter(s => s.status === 'active')
+        .map(s => s.id);
+      
+      // Tạo map lưu trữ tất cả học sinh đang học và lớp học tương ứng
+      const classMap = new Map();
+      classes.forEach(c => classMap.set(c.id, c));
+      
+      // Tổng học phí dự kiến từ tất cả học sinh đang học
+      let totalExpectedFees = 0;
+      
+      // Tính toán học phí cho mỗi học sinh đang học dựa trên lớp học và chu kỳ thanh toán
+      activeStudentIds.forEach(studentId => {
+        const student = students.find(s => s.id === studentId);
+        if (student) {
+          const studentClass = classMap.get(student.classId);
+          if (studentClass) {
+            let feeAmount = 0;
+            const baseFee = Number(studentClass.fee);
+            
+            // Tính học phí dựa trên chu kỳ thanh toán
+            switch(student.paymentCycle) {
+              case 'thang':
+                feeAmount = baseFee;
+                break;
+              case '2-thang':
+                feeAmount = baseFee * 2;
+                break;
+              case '3-thang':
+                feeAmount = baseFee * 3;
+                break;
+              case '6-thang':
+                feeAmount = baseFee * 6;
+                break;
+              case '8-buoi':
+                // Tính theo số buổi
+                feeAmount = (baseFee / 1) * 8; // Giả sử baseFee là cho 1 buổi
+                break;
+              case '12-buoi':
+                feeAmount = (baseFee / 1) * 12; // Giả sử baseFee là cho 1 buổi
+                break;
+              case '16-buoi':
+                feeAmount = (baseFee / 1) * 16; // Giả sử baseFee là cho 1 buổi
+                break;
+              case 'theo-ngay':
+                // Không tính cho học sinh thanh toán theo ngày
+                feeAmount = 0;
+                break;
+              default:
+                feeAmount = baseFee;
+            }
+            totalExpectedFees += feeAmount;
+          }
+        }
+      });
+      
+      // Tính tổng số tiền chưa thu
+      const unpaidFeesAmount = totalExpectedFees - paidAmount;
+      
       // Calculate attendance data
       const presentCount = attendance.filter(a => a.status === 'present').length;
       const absentCount = attendance.filter(a => a.status === 'absent').length;
@@ -782,6 +842,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paidAmount,
           pendingAmount,
           overdueAmount,
+          unpaidFeesAmount,         // Thêm tổng số tiền chưa thu
+          totalExpectedFees,        // Thêm tổng học phí dự kiến
           totalAmount: paidAmount + pendingAmount + overdueAmount
         },
         attendance: {

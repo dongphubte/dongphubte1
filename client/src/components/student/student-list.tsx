@@ -66,6 +66,7 @@ const StudentRow = memo(({ student, className, paymentStatus, onShowReceipt, onE
 
   // Tối ưu hóa các hàm xử lý với useCallback
   const handleShowReceipt = useCallback(() => onShowReceipt(student), [onShowReceipt, student]);
+  const handleViewReceipt = useCallback(() => onShowReceipt(student), [onShowReceipt, student]);
   const handleEdit = useCallback(() => onEdit(student), [onEdit, student]);
   const handleDelete = useCallback(() => onDelete(student), [onDelete, student]);
   const handleAdjustPayment = useCallback(() => onAdjustPayment(student), [onAdjustPayment, student]);
@@ -108,7 +109,7 @@ const StudentRow = memo(({ student, className, paymentStatus, onShowReceipt, onE
           variant="ghost" 
           size="sm" 
           className="text-primary hover:text-primary hover:bg-primary/10 mr-1"
-          onClick={handleShowReceipt}
+          onClick={handleViewReceipt}
           title="Biên nhận"
         >
           <FileText className="h-4 w-4" />
