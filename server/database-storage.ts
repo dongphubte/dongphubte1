@@ -1,10 +1,10 @@
 import { 
   User, InsertUser, Class, InsertClass, Student, InsertStudent,
-  Payment, InsertPayment, Attendance, InsertAttendance
+  Payment, InsertPayment, Attendance, InsertAttendance, Setting, InsertSetting
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { users, classes, students, payments, attendance } from "@shared/schema";
+import { users, classes, students, payments, attendance, settings } from "@shared/schema";
 import connectPg from "connect-pg-simple";
 import session from "express-session";
 import { pool } from "./db";
@@ -55,6 +55,13 @@ export interface IStorage {
   createAttendance(attendance: InsertAttendance): Promise<Attendance>;
   updateAttendance(id: number, attendance: InsertAttendance): Promise<Attendance | undefined>;
   deleteAttendance(id: number): Promise<boolean>;
+  
+  // Settings methods
+  getSetting(key: string): Promise<Setting | undefined>;
+  getAllSettings(): Promise<Setting[]>;
+  createSetting(setting: InsertSetting): Promise<Setting>;
+  updateSetting(key: string, value: string): Promise<Setting | undefined>;
+  deleteSetting(key: string): Promise<boolean>;
   
   // Session store
   sessionStore: any;
@@ -316,6 +323,44 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(attendance)
       .where(eq(attendance.id, id))
+      .returning();
+    return result.length > 0;
+  }
+  
+  // Settings methods
+  async getSetting(key: string): Promise<Setting | undefined> {
+    const [setting] = await db.select().from(settings).where(eq(settings.key, key));
+    return setting;
+  }
+  
+  async getAllSettings(): Promise<Setting[]> {
+    return db.select().from(settings);
+  }
+  
+  async createSetting(setting: InsertSetting): Promise<Setting> {
+    const [newSetting] = await db
+      .insert(settings)
+      .values(setting)
+      .returning();
+    return newSetting;
+  }
+  
+  async updateSetting(key: string, value: string): Promise<Setting | undefined> {
+    const [updatedSetting] = await db
+      .update(settings)
+      .set({ 
+        value, 
+        updatedAt: new Date() 
+      })
+      .where(eq(settings.key, key))
+      .returning();
+    return updatedSetting;
+  }
+  
+  async deleteSetting(key: string): Promise<boolean> {
+    const result = await db
+      .delete(settings)
+      .where(eq(settings.key, key))
       .returning();
     return result.length > 0;
   }
