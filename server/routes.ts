@@ -738,6 +738,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Settings API Routes
+  app.get("/api/settings", ensureAuthenticated, async (req, res) => {
+    try {
+      const settings = await storage.getAllSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi lấy cài đặt hệ thống" });
+    }
+  });
+
+  app.get("/api/settings/:key", ensureAuthenticated, async (req, res) => {
+    try {
+      const setting = await storage.getSetting(req.params.key);
+      if (!setting) {
+        return res.status(404).json({ message: "Không tìm thấy cài đặt" });
+      }
+      res.json(setting);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi lấy cài đặt hệ thống" });
+    }
+  });
+
+  app.post("/api/settings", ensureAuthenticated, async (req, res) => {
+    try {
+      const { key, value, description } = req.body;
+      
+      if (!key || !value) {
+        return res.status(400).json({ message: "Thiếu thông tin cài đặt" });
+      }
+      
+      // Kiểm tra xem cài đặt đã tồn tại chưa
+      const existingSetting = await storage.getSetting(key);
+      if (existingSetting) {
+        return res.status(400).json({ message: "Cài đặt đã tồn tại" });
+      }
+      
+      const newSetting = await storage.createSetting({
+        key,
+        value,
+        description
+      });
+      
+      res.status(201).json(newSetting);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi tạo cài đặt hệ thống" });
+    }
+  });
+
+  app.put("/api/settings/:key", ensureAuthenticated, async (req, res) => {
+    try {
+      const { value } = req.body;
+      const { key } = req.params;
+      
+      if (!value) {
+        return res.status(400).json({ message: "Giá trị cài đặt không được để trống" });
+      }
+      
+      // Kiểm tra xem cài đặt có tồn tại không
+      const existingSetting = await storage.getSetting(key);
+      if (!existingSetting) {
+        return res.status(404).json({ message: "Không tìm thấy cài đặt" });
+      }
+      
+      const updatedSetting = await storage.updateSetting(key, value);
+      
+      res.json(updatedSetting);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi cập nhật cài đặt hệ thống" });
+    }
+  });
+
+  app.delete("/api/settings/:key", ensureAuthenticated, async (req, res) => {
+    try {
+      const { key } = req.params;
+      
+      // Kiểm tra xem cài đặt có tồn tại không
+      const existingSetting = await storage.getSetting(key);
+      if (!existingSetting) {
+        return res.status(404).json({ message: "Không tìm thấy cài đặt" });
+      }
+      
+      const deleted = await storage.deleteSetting(key);
+      
+      if (deleted) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Không thể xóa cài đặt" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi xóa cài đặt hệ thống" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
