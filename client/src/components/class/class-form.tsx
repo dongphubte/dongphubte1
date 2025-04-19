@@ -11,8 +11,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Class, extendedInsertClassSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency, formatFeeDisplay } from "@/utils/format";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSettings, FeeCalculationMethod } from "@/hooks/use-settings";
+import { Info } from "lucide-react";
+import { 
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface ClassFormProps {
   isOpen: boolean;
@@ -24,6 +31,7 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isScheduleValid, setIsScheduleValid] = useState(true);
+  const { getFeeCalculationMethod, isLoadingSettings } = useSettings();
 
   const formSchema = z.object({
     name: z.string().min(1, "Tên lớp là bắt buộc"),
@@ -209,7 +217,55 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="fee">Giá tiền (VND)</Label>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="fee">Giá tiền (VND)</Label>
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </HoverCardTrigger>
+                <HoverCardContent className="w-80">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold">Thông tin học phí</h4>
+                    {isLoadingSettings ? (
+                      <p className="text-sm text-muted-foreground">Đang tải cài đặt...</p>
+                    ) : (
+                      <div className="text-sm">
+                        <p>
+                          {getFeeCalculationMethod() === FeeCalculationMethod.PER_SESSION ? (
+                            <>
+                              <span className="font-medium">Phương pháp tính: Theo buổi học</span>
+                              <br />
+                              Giá tiền là học phí cho một buổi học.
+                              {form.getValues("paymentCycle") !== "theo-ngay" && (
+                                <>
+                                  <br />
+                                  Tổng học phí sẽ được tính dựa trên số buổi trong chu kỳ.
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-medium">Phương pháp tính: Theo chu kỳ</span>
+                              <br />
+                              Giá tiền là tổng học phí cho toàn bộ chu kỳ.
+                            </>
+                          )}
+                        </p>
+                        <p className="mt-2 font-medium">
+                          Hiển thị cho học sinh:
+                          {' '}
+                          {formatFeeDisplay(
+                            form.getValues("fee") || 0, 
+                            form.getValues("paymentCycle") || "1-thang",
+                            getFeeCalculationMethod()
+                          )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </HoverCardContent>
+              </HoverCard>
+            </div>
             <Input 
               id="fee"
               placeholder="Nhập giá tiền"
@@ -218,6 +274,14 @@ export default function ClassForm({ isOpen, onClose, classToEdit }: ClassFormPro
             />
             {form.formState.errors.fee && (
               <p className="text-sm text-red-500">{form.formState.errors.fee.message}</p>
+            )}
+            {!isLoadingSettings && (
+              <p className="text-xs text-muted-foreground">
+                {getFeeCalculationMethod() === FeeCalculationMethod.PER_SESSION
+                  ? `Hiển thị: ${formatFeeDisplay(form.getValues("fee") || 0, form.getValues("paymentCycle") || "1-thang", getFeeCalculationMethod())}`
+                  : `Hiển thị: ${formatFeeDisplay(form.getValues("fee") || 0, form.getValues("paymentCycle") || "1-thang", getFeeCalculationMethod())}`
+                }
+              </p>
             )}
           </div>
           

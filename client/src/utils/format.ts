@@ -108,31 +108,96 @@ export function formatPaymentStatus(status: string): string {
   }
 }
 
+import { FeeCalculationMethod } from "@/hooks/use-settings";
+
 /**
- * Tính toán học phí dựa trên chu kỳ thanh toán
- * @param baseFee - Học phí cơ bản (Nếu chu kỳ 1-thang, đây là học phí cả tháng)
- *                 (Nếu chu kỳ 8-buoi hoặc 10-buoi, đây là học phí 1 buổi)
+ * Tính toán học phí dựa trên chu kỳ thanh toán và phương pháp tính học phí 
+ * @param baseFee - Học phí cơ bản từ cơ sở dữ liệu
  * @param paymentCycle - Chu kỳ thanh toán (1-thang, 8-buoi, 10-buoi, theo-ngay)
- * @returns Học phí đã tính dựa trên chu kỳ
+ * @param feeMethod - Phương pháp tính học phí (PER_SESSION hoặc PER_CYCLE)
+ * @returns Học phí đã tính dựa trên chu kỳ và phương pháp
  */
-export function calculateFeeByPaymentCycle(baseFee: number, paymentCycle: string): number {
+export function calculateFeeByPaymentCycle(
+  baseFee: number, 
+  paymentCycle: string, 
+  feeMethod: FeeCalculationMethod = FeeCalculationMethod.PER_SESSION
+): number {
   // Đảm bảo baseFee là số
   let fee = typeof baseFee === 'number' ? baseFee : parseInt(String(baseFee), 10) || 0;
   
-  // Tính toán học phí theo chu kỳ
-  switch (paymentCycle) {
-    case '8-buoi':
-      // Nếu là 8 buổi và baseFee là học phí 1 buổi, nhân với 8
-      return fee * 8;
-    case '10-buoi':
-      // Nếu là 10 buổi và baseFee là học phí 1 buổi, nhân với 10
-      return fee * 10;
-    case 'theo-ngay':
-      // Nếu là theo ngày: sử dụng học phí 1 ngày
-      return fee;
-    default:
-      // Nếu là 1 tháng: giữ nguyên vì baseFee đã là học phí cả tháng
-      return fee;
+  // Nếu phương pháp là tính theo buổi học (PER_SESSION)
+  if (feeMethod === FeeCalculationMethod.PER_SESSION) {
+    // Giá trong cơ sở dữ liệu là giá mỗi buổi, tính toán theo chu kỳ
+    switch (paymentCycle) {
+      case '8-buoi':
+        return fee * 8;
+      case '10-buoi':
+        return fee * 10;
+      case 'theo-ngay':
+        return fee;
+      default: // 1-thang
+        return fee * 4; // Giả sử 1 tháng có 4 buổi học
+    }
+  } 
+  // Nếu phương pháp là tính theo chu kỳ (PER_CYCLE)
+  else {
+    // Giá trong cơ sở dữ liệu là tổng chi phí cho chu kỳ, không cần tính toán thêm
+    return fee;
+  }
+}
+
+/**
+ * Format hiển thị học phí dựa trên phương pháp tính
+ * @param fee - Học phí cơ bản 
+ * @param paymentCycle - Chu kỳ thanh toán
+ * @param feeMethod - Phương pháp tính học phí
+ * @returns Chuỗi hiển thị học phí với định dạng phù hợp
+ */
+export function formatFeeDisplay(
+  fee: number, 
+  paymentCycle: string, 
+  feeMethod: FeeCalculationMethod = FeeCalculationMethod.PER_SESSION
+): string {
+  // Đảm bảo fee là số
+  const baseFee = typeof fee === 'number' ? fee : parseInt(String(fee), 10) || 0;
+  
+  // Tính toán học phí dựa trên phương pháp và chu kỳ
+  if (feeMethod === FeeCalculationMethod.PER_SESSION) {
+    // Hiển thị giá mỗi buổi và tổng chi phí
+    const totalFee = calculateFeeByPaymentCycle(baseFee, paymentCycle, feeMethod);
+    
+    // Xác định số buổi dựa trên chu kỳ
+    let sessions = 1;
+    switch (paymentCycle) {
+      case '8-buoi': sessions = 8; break;
+      case '10-buoi': sessions = 10; break;
+      case '1-thang': sessions = 4; break; // Giả sử 1 tháng có 4 buổi học
+      default: sessions = 1;
+    }
+    
+    // Trường hợp theo ngày, chỉ hiển thị giá mỗi ngày
+    if (paymentCycle === 'theo-ngay') {
+      return formatCurrency(baseFee) + ' / ngày';
+    }
+    
+    // Các trường hợp khác, hiển thị cả giá mỗi buổi và tổng
+    return formatCurrency(baseFee) + ' / buổi' + 
+           (sessions > 1 ? ` (Tổng: ${formatCurrency(totalFee)})` : '');
+  } 
+  else {
+    // Hiển thị tổng chi phí cho chu kỳ
+    switch (paymentCycle) {
+      case '8-buoi':
+        return formatCurrency(baseFee) + ' / 8 buổi';
+      case '10-buoi':
+        return formatCurrency(baseFee) + ' / 10 buổi';
+      case '1-thang':
+        return formatCurrency(baseFee) + ' / tháng';
+      case 'theo-ngay':
+        return formatCurrency(baseFee) + ' / ngày';
+      default:
+        return formatCurrency(baseFee);
+    }
   }
 }
 

@@ -285,12 +285,10 @@ export default function ClassList() {
                     <div className="flex justify-between items-center mb-1">
                       <div className="text-sm font-medium">Học phí</div>
                       <div className="text-sm font-semibold">
-                        {classItem.paymentCycle === '8-buoi' || classItem.paymentCycle === '10-buoi' ? (
-                          // Nếu là chu kỳ theo buổi, hiển thị phí 1 buổi
-                          <>{formatCurrency(classItem.fee)} / buổi</>
-                        ) : (
-                          // Nếu là chu kỳ theo tháng, hiển thị phí 1 tháng
-                          formatCurrency(classItem.fee)
+                        {formatFeeDisplay(
+                          classItem.fee, 
+                          classItem.paymentCycle, 
+                          getFeeCalculationMethod()
                         )}
                       </div>
                     </div>
