@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Student, Class } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Loader2, FileText, Calculator } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, FileText, Calculator, Info } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import StudentForm from "./student-form";
 import Receipt from "@/components/receipt/receipt";
 import PaymentAdjustmentHelper from "@/components/payment/payment-adjustment-helper";
+import StudentDetailModal from "./student-detail-modal";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -35,10 +36,21 @@ interface StudentRowProps {
   onEdit: (student: Student) => void;
   onDelete: (student: Student) => void;
   onAdjustPayment: (student: Student) => void;
+  onViewDetails: (student: Student) => void;
 }
 
 // Sử dụng React.memo để tránh render lại khi props không thay đổi
-const StudentRow = memo(({ student, className, paymentStatus, nextPaymentInfo, onShowReceipt, onEdit, onDelete, onAdjustPayment }: StudentRowProps) => {
+const StudentRow = memo(({ 
+  student, 
+  className, 
+  paymentStatus, 
+  nextPaymentInfo, 
+  onShowReceipt, 
+  onEdit, 
+  onDelete, 
+  onAdjustPayment,
+  onViewDetails
+}: StudentRowProps) => {
   // Tối ưu hóa các tính toán className với useMemo
   const statusClassName = useMemo(() => 
     `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -75,10 +87,16 @@ const StudentRow = memo(({ student, className, paymentStatus, nextPaymentInfo, o
   const handleEdit = useCallback(() => onEdit(student), [onEdit, student]);
   const handleDelete = useCallback(() => onDelete(student), [onDelete, student]);
   const handleAdjustPayment = useCallback(() => onAdjustPayment(student), [onAdjustPayment, student]);
+  const handleViewDetails = useCallback(() => onViewDetails(student), [onViewDetails, student]);
 
   return (
     <tr>
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-800">{student.name}</td>
+      <td 
+        className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-800 cursor-pointer hover:text-primary hover:underline"
+        onClick={handleViewDetails}
+      >
+        {student.name}
+      </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{student.code}</td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{student.phone}</td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{className}</td>
@@ -179,6 +197,8 @@ export default function StudentList() {
   const [receiptStudent, setReceiptStudent] = useState<StudentWithClass | null>(null);
   const [isAdjustmentOpen, setIsAdjustmentOpen] = useState(false);
   const [adjustmentStudent, setAdjustmentStudent] = useState<Student | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [studentDetail, setStudentDetail] = useState<Student | null>(null);
 
   const { data: students, isLoading: isLoadingStudents } = useQuery<Student[]>({
     queryKey: ["/api/students"],
@@ -357,6 +377,18 @@ export default function StudentList() {
   const closeAdjustment = () => {
     setIsAdjustmentOpen(false);
     setAdjustmentStudent(null);
+  };
+  
+  // Hiển thị modal thông tin chi tiết học sinh
+  const handleViewStudentDetails = (student: Student) => {
+    setStudentDetail(student);
+    setIsDetailOpen(true);
+  };
+  
+  // Đóng modal thông tin chi tiết học sinh
+  const closeStudentDetail = () => {
+    setIsDetailOpen(false);
+    setStudentDetail(null);
   };
 
   // Tối ưu danh sách học sinh với useMemo để tránh tính toán lại mỗi khi render
