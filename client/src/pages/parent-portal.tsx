@@ -73,8 +73,10 @@ export default function ParentPortal() {
       return {
         status: "unpaid",
         text: "Chưa thanh toán",
-        color: "bg-yellow-50 border-yellow-200",
-        textColor: "text-yellow-800"
+        color: "bg-orange-50 border-orange-200",
+        textColor: "text-orange-700",
+        badgeColor: "bg-orange-100 text-orange-800",
+        icon: <Clock className="h-5 w-5 text-orange-500" />
       };
     }
 
@@ -87,7 +89,9 @@ export default function ParentPortal() {
         status: "overdue",
         text: "Quá hạn thanh toán",
         color: "bg-red-50 border-red-200",
-        textColor: "text-red-800"
+        textColor: "text-red-700",
+        badgeColor: "bg-red-100 text-red-800",
+        icon: <AlertCircle className="h-5 w-5 text-red-500" />
       };
     }
 
@@ -95,7 +99,9 @@ export default function ParentPortal() {
       status: "paid",
       text: "Đã thanh toán",
       color: "bg-green-50 border-green-200",
-      textColor: "text-green-800"
+      textColor: "text-green-700",
+      badgeColor: "bg-green-100 text-green-800",
+      icon: <Check className="h-5 w-5 text-green-500" />
     };
   };
   
@@ -383,11 +389,19 @@ export default function ParentPortal() {
                                   {paymentStatus.status === "paid" ? (
                                     <Check className="h-5 w-5 text-green-600" />
                                   ) : paymentStatus.status === "unpaid" ? (
-                                    <Clock className="h-5 w-5 text-yellow-600" />
+                                    <Clock className="h-5 w-5 text-orange-500" />
                                   ) : (
                                     <AlertCircle className="h-5 w-5 text-red-600" />
                                   )}
-                                  <span className={paymentStatus.textColor}>{paymentStatus.text}</span>
+                                  <span className={`font-semibold ${
+                                    paymentStatus.status === "paid" 
+                                      ? "text-green-600" 
+                                      : paymentStatus.status === "unpaid" 
+                                        ? "text-orange-600" 
+                                        : "text-red-600"
+                                  }`}>
+                                    {paymentStatus.text}
+                                  </span>
                                 </div>
                                 
                                 {paymentStatus.status === "paid" && (
