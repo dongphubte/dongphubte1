@@ -743,6 +743,13 @@ export default function Receipt({ isOpen, onClose, student }: ReceiptProps) {
                     Số buổi: <span className="font-semibold">{customSessions} buổi</span>
                   </p>
                 )}
+                
+                {/* Thông tin chu kỳ thanh toán tiếp theo */}
+                {student?.paymentCycle && student.paymentCycle.includes("buoi") && (
+                  <p className="mt-2 text-amber-600 font-medium">
+                    Lưu ý: Ngày đến hạn dự kiến (có thể thay đổi tùy theo lịch học thực tế)
+                  </p>
+                )}
               </div>
               
               {/* Thống kê điểm danh */}
