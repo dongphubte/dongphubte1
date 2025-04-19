@@ -83,6 +83,7 @@ export const payments = pgTable("payments", {
   plannedSessions: integer("planned_sessions"), // Số buổi dự kiến trong chu kỳ
   actualSessions: integer("actual_sessions"), // Số buổi thực tế học sinh tham gia
   adjustmentReason: text("adjustment_reason"), // Lý do điều chỉnh (nếu có)
+  notes: text("notes"), // Ghi chú bổ sung
 });
 
 export const insertPaymentSchema = createInsertSchema(payments).pick({
@@ -94,6 +95,7 @@ export const insertPaymentSchema = createInsertSchema(payments).pick({
   plannedSessions: true,
   actualSessions: true,
   adjustmentReason: true,
+  notes: true,
 });
 
 // Schema for attendance
