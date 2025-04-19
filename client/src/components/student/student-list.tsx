@@ -26,6 +26,11 @@ interface StudentRowProps {
   student: Student;
   className: string;
   paymentStatus: string;
+  nextPaymentInfo?: {
+    date: Date | null;
+    cycle: string;
+    isDueEstimated: boolean;
+  };
   onShowReceipt: (student: Student) => void;
   onEdit: (student: Student) => void;
   onDelete: (student: Student) => void;
@@ -33,7 +38,7 @@ interface StudentRowProps {
 }
 
 // Sử dụng React.memo để tránh render lại khi props không thay đổi
-const StudentRow = memo(({ student, className, paymentStatus, onShowReceipt, onEdit, onDelete, onAdjustPayment }: StudentRowProps) => {
+const StudentRow = memo(({ student, className, paymentStatus, nextPaymentInfo, onShowReceipt, onEdit, onDelete, onAdjustPayment }: StudentRowProps) => {
   // Tối ưu hóa các tính toán className với useMemo
   const statusClassName = useMemo(() => 
     `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -90,6 +95,13 @@ const StudentRow = memo(({ student, className, paymentStatus, onShowReceipt, onE
               ? 'Chưa thanh toán'
               : 'Quá hạn thanh toán'}
           </span>
+        )}
+        {/* Hiển thị thông tin chu kỳ thanh toán tiếp theo nếu đã thanh toán */}
+        {paymentStatus === 'paid' && nextPaymentInfo?.date && (
+          <div className="mt-1 text-xs text-blue-600">
+            Đến hạn: {formatDate(nextPaymentInfo.date)}
+            {nextPaymentInfo.isDueEstimated && <span className="text-amber-500 ml-1">(dự kiến)</span>}
+          </div>
         )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -287,6 +299,38 @@ export default function StudentList() {
     // Đối với các chu kỳ khác, đánh dấu là quá hạn
     return "overdue";
   }, [paymentsByStudent, students]);
+  
+  // Lấy thông tin về ngày thanh toán tiếp theo
+  const getNextPaymentInfo = useCallback((studentId: number): { date: Date | null, cycle: string, isDueEstimated: boolean } => {
+    // Giá trị mặc định
+    const defaultResult = { date: null, cycle: "", isDueEstimated: false };
+    
+    // Kiểm tra xem có thanh toán cho học sinh này không
+    if (!paymentsByStudent.has(studentId) || paymentsByStudent.get(studentId)!.length === 0) {
+      return defaultResult;
+    }
+    
+    // Lấy học sinh và thanh toán gần nhất
+    const student = students?.find(s => s.id === studentId);
+    if (!student) return defaultResult;
+    
+    const latestPayment = paymentsByStudent.get(studentId)![0];
+    const validTo = new Date(latestPayment.validTo);
+    
+    // Kiểm tra nếu thanh toán còn hiệu lực
+    if (validTo >= new Date()) {
+      // Xác định nếu chu kỳ thanh toán là ước tính (theo buổi)
+      const isDueEstimated = student.paymentCycle.includes("buoi");
+      
+      return {
+        date: validTo,
+        cycle: student.paymentCycle,
+        isDueEstimated
+      };
+    }
+    
+    return defaultResult;
+  }, [paymentsByStudent, students]);
 
   const showReceipt = (student: Student, forPayment: boolean = false) => {
     const studentWithClass: StudentWithClass = {
@@ -398,6 +442,7 @@ export default function StudentList() {
               <tbody className="bg-white divide-y divide-neutral-200">
                 {filteredStudents.map((student) => {
                   const paymentStatus = getPaymentStatus(student.id);
+                  const nextPaymentInfo = getNextPaymentInfo(student.id);
                   
                   return (
                     <StudentRow 
@@ -405,6 +450,7 @@ export default function StudentList() {
                       student={student}
                       className={getClassName(student.classId)}
                       paymentStatus={paymentStatus}
+                      nextPaymentInfo={nextPaymentInfo}
                       onShowReceipt={showReceipt}
                       onEdit={handleEditStudent}
                       onDelete={handleDeleteStudent}
