@@ -232,11 +232,17 @@ export default function ClassList() {
                 className="overflow-hidden transition-all duration-200 hover:shadow-lg"
               >
                 <CardHeader className="pb-2 flex justify-between">
-                  <div>
-                    <CardTitle className="text-xl font-bold text-primary">{classItem.name}</CardTitle>
-                    <CardDescription className="text-sm text-gray-500 mt-1">
-                      {classItem.location}
-                    </CardDescription>
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <CardTitle className="text-xl font-bold text-primary">
+                        {classItem.name}
+                      </CardTitle>
+                    </div>
+                    {isClassScheduledToday(classItem.schedule) && (
+                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-0 text-white px-2 py-0.5 text-xs font-medium animate-pulse shadow-sm">
+                        Đang học
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex space-x-1">
                     <Button 
@@ -402,61 +408,14 @@ export default function ClassList() {
                   )}
                 </CardFooter>
                 
-                {/* Panel hiển thị chi tiết học sinh đang học */}
-                {classDetailsOpen === classItem.id && studentsInClass.length > 0 && (
-                  <div className="border-t border-gray-100 p-4 bg-gray-50">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="font-medium text-sm">Danh sách học sinh lớp {classItem.name}</h4>
-                      <Badge variant="outline" className="bg-blue-50 border-blue-200">
-                        <span className="text-blue-600">{studentsInClass.filter(s => s.status === 'active').length} học sinh đang học</span>
-                      </Badge>
-                    </div>
-                    
-                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                      {studentsInClass
-                        .sort((a, b) => {
-                          // Sắp xếp học sinh đang học lên trước
-                          if (a.status === 'active' && b.status !== 'active') return -1;
-                          if (a.status !== 'active' && b.status === 'active') return 1;
-                          // Sau đó sắp xếp theo tên
-                          return a.name.localeCompare(b.name);
-                        })
-                        .map(student => {
-                          const isActive = student.status === 'active';
-                          return (
-                            <div key={student.id} className={`flex justify-between items-center p-2 rounded-md border ${isActive ? 'border-green-100 bg-green-50' : 'border-gray-100 bg-gray-100'}`}>
-                              <div className="flex items-center">
-                                {isActive ? (
-                                  <UserCheck className="h-4 w-4 text-green-500 mr-2" />
-                                ) : (
-                                  <UserX className="h-4 w-4 text-gray-400 mr-2" />
-                                )}
-                                <div>
-                                  <div className="font-medium text-sm">{student.name}</div>
-                                  <div className="text-xs text-gray-500">Mã học sinh: {student.code}</div>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Badge variant="outline" className={`text-xs ${isActive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
-                                  {isActive ? 'Đang học' : 'Đã nghỉ'}
-                                </Badge>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-7 w-7 p-0"
-                                  asChild
-                                >
-                                  <a href={`#student-${student.id}`}>
-                                    <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
-                                    <span className="sr-only">Xem chi tiết</span>
-                                  </a>
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  </div>
+                {/* Chi tiết học sinh trong lớp học */}
+                {classDetailsOpen === classItem.id && (
+                  <ClassStudentsModal 
+                    classId={classItem.id}
+                    className={classItem.name}
+                    isOpen={true}
+                    onClose={() => setClassDetailsOpen(null)}
+                  />
                 )}
               </Card>
             );

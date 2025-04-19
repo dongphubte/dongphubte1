@@ -372,6 +372,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Lỗi khi lấy dữ liệu điểm danh" });
     }
   });
+  
+  // Lấy danh sách học sinh theo lớp học
+  app.get("/api/students/class/:classId", ensureAuthenticated, async (req, res) => {
+    try {
+      const classId = parseInt(req.params.classId);
+      const students = await storage.getStudentsByClassId(classId);
+      res.json(students);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi lấy danh sách học sinh theo lớp" });
+    }
+  });
+  
+  // Lấy danh sách điểm danh theo lớp học
+  app.get("/api/attendance/class/:classId", ensureAuthenticated, async (req, res) => {
+    try {
+      const classId = parseInt(req.params.classId);
+      
+      // Lấy danh sách học sinh trong lớp
+      const students = await storage.getStudentsByClassId(classId);
+      
+      if (!students || students.length === 0) {
+        return res.json([]);
+      }
+      
+      // Lấy tất cả điểm danh của các học sinh trong lớp
+      const studentIds = students.map(student => student.id);
+      const attendances = [];
+      
+      for (const studentId of studentIds) {
+        const studentAttendance = await storage.getAttendanceByStudentId(studentId);
+        attendances.push(...studentAttendance);
+      }
+      
+      res.json(attendances);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi lấy dữ liệu điểm danh theo lớp" });
+    }
+  });
 
   app.get("/api/attendance/today", ensureAuthenticated, async (req, res) => {
     try {
