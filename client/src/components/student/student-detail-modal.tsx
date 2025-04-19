@@ -12,7 +12,7 @@ import { formatCurrency, formatPaymentCycle, formatAttendanceStatus, summarizeAt
 import { formatDate } from "@/utils/date-utils";
 import { Student } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, AlertTriangle, Check, Calendar, Wallet } from "lucide-react";
+import { Loader2, AlertTriangle, Check, Calendar, Wallet, History, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -401,6 +401,68 @@ export default function StudentDetailModal({ isOpen, onClose, student, className
                     </div>
                   </div>
                 )}
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="history">
+              <Card className="p-4">
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <Clock className="h-5 w-5 mr-2 text-primary" />
+                    <h3 className="font-medium">Lịch sử tạm nghỉ học và học lại</h3>
+                  </div>
+                  
+                  {student.status === 'suspended' && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4">
+                      <p className="font-medium text-amber-700">Đang tạm nghỉ</p>
+                      <div className="mt-1 text-sm">
+                        <p>Nghỉ từ: <span className="font-medium">{formatDate(student.suspendDate)}</span></p>
+                        {student.suspendReason && (
+                          <p className="mt-1">Lý do: <span className="italic">{student.suspendReason}</span></p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {student.suspendHistory && Array.isArray(student.suspendHistory) && student.suspendHistory.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="relative pl-8 space-y-4 before:absolute before:inset-0 before:w-[1px] before:left-3 before:ml-[1px] before:h-full before:bg-primary/20">
+                        {student.suspendHistory.map((record: any, index: number) => (
+                          <div key={index} className="relative pl-6 pb-4">
+                            <div className="absolute top-0 left-0 bg-primary rounded-full h-6 w-6 flex items-center justify-center">
+                              <Clock className="h-3 w-3 text-white" />
+                            </div>
+                            <div className="bg-white border rounded-md p-3">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-medium">Tạm nghỉ học</p>
+                                  <p className="text-sm text-gray-500">
+                                    {formatDate(record.suspendDate)} - {formatDate(record.restartDate)}
+                                  </p>
+                                </div>
+                                <Badge className="bg-green-100 text-green-800">
+                                  Đã học lại
+                                </Badge>
+                              </div>
+                              {record.suspendReason && (
+                                <p className="text-sm mt-2 italic">"{record.suspendReason}"</p>
+                              )}
+                              <div className="text-xs text-gray-500 mt-2">
+                                <p>Thời gian tạm nghỉ: {Math.ceil((new Date(record.restartDate).getTime() - new Date(record.suspendDate).getTime()) / (1000 * 60 * 60 * 24))} ngày</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : student.status !== 'suspended' ? (
+                    <div className="flex flex-col items-center justify-center py-6 text-center">
+                      <AlertTriangle className="h-10 w-10 text-blue-500 mb-2" />
+                      <h3 className="font-medium text-gray-900">Không có lịch sử tạm nghỉ</h3>
+                      <p className="text-gray-500 text-sm mt-1">Học sinh này chưa từng tạm nghỉ học.</p>
+                    </div>
+                  ) : null}
+                </div>
               </Card>
             </TabsContent>
           </Tabs>
