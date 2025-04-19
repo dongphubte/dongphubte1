@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import ClassForm from "./class-form";
+import ClassStudentsModal from "./class-students-modal";
 import { formatCurrency, formatPaymentCycle, calculateFeeByPaymentCycle, formatFeeDisplay } from "@/utils/format";
 import { useSettings, FeeCalculationMethod } from "@/hooks/use-settings";
 import { formatDate, isClassScheduledToday } from "@/utils/date-utils";
@@ -277,17 +278,10 @@ export default function ClassList() {
                   
                   <div className="flex items-center mb-3">
                     <Calendar className="h-5 w-5 text-indigo-500 mr-2" />
-                    <div className="text-sm">
-                      <span className="text-gray-600">
-                        {classItem.schedule.split(',')
-                          .map(item => item.split('(')[0].trim())
-                          .join(', ')}
-                      </span>
-                      {isClassScheduledToday(classItem.schedule) && (
-                        <Badge variant="outline" className="ml-2 px-2 py-0 h-5 text-xs whitespace-nowrap border-green-200 bg-green-50 text-green-700">
-                          Đang học
-                        </Badge>
-                      )}
+                    <div className="text-sm text-gray-600">
+                      {classItem.schedule.split(',')
+                        .map(item => item.split('(')[0].trim())
+                        .join(', ')}
                     </div>
                   </div>
                   
