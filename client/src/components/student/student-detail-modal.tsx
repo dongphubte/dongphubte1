@@ -18,6 +18,12 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import QRCode from "react-qr-code";
 
+// Hàm tiện ích để xử lý ngày có thể null
+const safeFormatDate = (date: Date | null | undefined): string => {
+  if (!date) return "Không xác định";
+  return formatDate(date);
+};
+
 interface StudentDetailProps {
   isOpen: boolean;
   onClose: () => void;
@@ -421,7 +427,7 @@ export default function StudentDetailModal({ isOpen, onClose, student, className
                     <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4">
                       <p className="font-medium text-amber-700">Đang tạm nghỉ</p>
                       <div className="mt-1 text-sm">
-                        <p>Nghỉ từ: <span className="font-medium">{formatDate(student.suspendDate)}</span></p>
+                        <p>Nghỉ từ: <span className="font-medium">{safeFormatDate(student.suspendDate)}</span></p>
                         {student.suspendReason && (
                           <p className="mt-1">Lý do: <span className="italic">{student.suspendReason}</span></p>
                         )}
@@ -467,6 +473,53 @@ export default function StudentDetailModal({ isOpen, onClose, student, className
                       <p className="text-gray-500 text-sm mt-1">Học sinh này chưa từng tạm nghỉ học.</p>
                     </div>
                   ) : null}
+                </div>
+              </Card>
+            </TabsContent>
+            <TabsContent value="qrcode">
+              <Card className="p-6">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <QrCode className="h-5 w-5 text-primary" />
+                    <h3 className="font-medium text-lg">Mã QR code truy cập thông tin</h3>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg shadow-sm border">
+                    <QRCode 
+                      value={`${window.location.origin}/parent/student/${student.code}`}
+                      size={220}
+                      level="H"
+                      className="mx-auto"
+                    />
+                  </div>
+                  
+                  <div className="text-center mt-4 space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Quét mã QR này để truy cập thông tin học sinh
+                    </p>
+                    <p className="text-sm font-medium">
+                      Mã học sinh: <span className="text-primary">{student.code}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-4">
+                      Phụ huynh có thể sử dụng mã QR này hoặc nhập mã học sinh để xem thông tin điểm danh, học phí và lịch học.
+                    </p>
+                  </div>
+                  
+                  <div className="w-full pt-4 border-t mt-4">
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button variant="outline" className="flex items-center" onClick={() => {
+                        // Sao chép link vào clipboard
+                        navigator.clipboard.writeText(`${window.location.origin}/parent/student/${student.code}`);
+                        // Hiển thị thông báo
+                        window.alert("Đã sao chép đường dẫn vào clipboard!");
+                      }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Sao chép link
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </Card>
             </TabsContent>
