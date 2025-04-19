@@ -164,6 +164,8 @@ export default function StudentList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [receiptStudent, setReceiptStudent] = useState<StudentWithClass | null>(null);
+  const [isAdjustmentOpen, setIsAdjustmentOpen] = useState(false);
+  const [adjustmentStudent, setAdjustmentStudent] = useState<Student | null>(null);
 
   const { data: students, isLoading: isLoadingStudents } = useQuery<Student[]>({
     queryKey: ["/api/students"],
@@ -299,6 +301,18 @@ export default function StudentList() {
     setIsReceiptOpen(false);
     setReceiptStudent(null);
   };
+  
+  // Xử lý mở dialog điều chỉnh học phí
+  const handleAdjustPayment = (student: Student) => {
+    setAdjustmentStudent(student);
+    setIsAdjustmentOpen(true);
+  };
+  
+  // Đóng dialog điều chỉnh học phí
+  const closeAdjustment = () => {
+    setIsAdjustmentOpen(false);
+    setAdjustmentStudent(null);
+  };
 
   // Tối ưu danh sách học sinh với useMemo để tránh tính toán lại mỗi khi render
   const filteredStudents = useMemo(() => {
@@ -393,6 +407,7 @@ export default function StudentList() {
                       onShowReceipt={showReceipt}
                       onEdit={handleEditStudent}
                       onDelete={handleDeleteStudent}
+                      onAdjustPayment={handleAdjustPayment}
                     />
                   );
                 })}
@@ -458,6 +473,17 @@ export default function StudentList() {
           isOpen={isReceiptOpen} 
           onClose={closeReceipt} 
           student={receiptStudent}
+        />
+      )}
+      
+      {/* Payment Adjustment Dialog */}
+      {adjustmentStudent && (
+        <PaymentAdjustmentHelper
+          isOpen={isAdjustmentOpen}
+          onClose={closeAdjustment}
+          student={adjustmentStudent}
+          classId={adjustmentStudent.classId}
+          className={getClassName(adjustmentStudent.classId)}
         />
       )}
     </div>
