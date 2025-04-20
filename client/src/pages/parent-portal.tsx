@@ -8,7 +8,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/utils/format";
 import { formatDate } from "@/utils/date-utils";
-import { Search, QrCode, User, Calendar, Phone, AlertCircle, CreditCard, Clock, Check, X, Info } from "lucide-react";
+import { Search, QrCode, User, Calendar, Phone, AlertCircle, CreditCard, Clock, Check, X, Info, RefreshCw } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 // Hàm loại bỏ dấu tiếng Việt
@@ -21,10 +21,27 @@ function removeVietnameseAccents(str: string): string {
     .replace(/[đĐ]/g, (m) => m === 'đ' ? 'd' : 'D'); // Chuyển đổi đ và Đ
 }
 
-// Hàm tạo nội dung QR code cho thanh toán
+// Hàm tạo nội dung QR code cho thanh toán theo chuẩn VietQR
 function generateTransferContent(bankAccount: string, bankName: string, accountName: string, amount: number, description: string): string {
   // Format theo chuẩn để ứng dụng ngân hàng có thể đọc
   return `${bankName}|${bankAccount}|${accountName}|${amount}|${description}`;
+}
+
+// Hàm tạo URL của VietQR để hiển thị mã QR chuyển khoản ngân hàng
+// Dựa theo hướng dẫn: https://www.vietqr.io/danh-sach-api/link-tao-ma-nhanh/
+function generateVietQRUrl(
+  bankBin: string,   // Mã ngân hàng (VD: 970422 cho MB Bank)
+  accountNo: string, // Số tài khoản
+  accountName: string = "", // Tên tài khoản (có thể để trống)
+  amount: number = 0, // Số tiền (có thể để trống)
+  description: string = "" // Nội dung chuyển khoản (có thể để trống)
+): string {
+  // Biến đổi các thông số để phù hợp với URL
+  const encodedAccountName = encodeURIComponent(accountName);
+  const encodedDescription = encodeURIComponent(description);
+  
+  // Tạo URL theo mẫu của VietQR.io
+  return `https://img.vietqr.io/image/${bankBin}-${accountNo}-compact.png?amount=${amount}&addInfo=${encodedDescription}&accountName=${encodedAccountName}`;
 }
 
 export default function ParentPortal() {
