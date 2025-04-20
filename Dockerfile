@@ -5,17 +5,27 @@ WORKDIR /app
 # Sao chép package.json và package-lock.json
 COPY package*.json ./
 
+# Sao chép script sửa package.json
+COPY fix-package.sh ./
+RUN chmod +x fix-package.sh
+
+# Sửa package.json trước khi cài đặt
+RUN ./fix-package.sh
+
 # Cài đặt tất cả dependencies (bao gồm devDependencies)
 RUN npm install --include=dev
 
 # Sao chép toàn bộ code
 COPY . .
 
-# Thiết lập quyền thực thi cho các file script
-RUN chmod +x build.sh start.sh
+# Hiển thị scripts trong package.json
+RUN cat package.json | grep "\"script"
 
 # Build ứng dụng
-RUN ./build.sh
+RUN npm run build
+
+# Hiển thị cấu trúc thư mục sau khi build
+RUN ls -la dist/
 
 # Thiết lập biến môi trường
 ENV NODE_ENV=production
@@ -25,4 +35,4 @@ ENV PORT=5000
 EXPOSE 5000
 
 # Khởi chạy ứng dụng
-CMD ["./start.sh"]
+CMD ["npm", "start"]

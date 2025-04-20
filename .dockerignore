@@ -1,11 +1,21 @@
+# Git
 .git
+.gitignore
+
+# Node.js
 node_modules
-Dockerfile
-.dockerignore
 npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build
 dist
-.DS_Store
-.env.local
-.env.development
-.git*
-.vscode
+
+# Logs
+logs
+*.log
+
+# Mobile
+/android
+/ios
+/mobile
