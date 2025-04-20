@@ -8,7 +8,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/utils/format";
 import { formatDate } from "@/utils/date-utils";
-import { Search, QrCode, User, Calendar, Phone, AlertCircle, CreditCard, Clock, Check, X, Info, RefreshCw } from "lucide-react";
+import { Search, QrCode, User, Calendar, Phone, AlertCircle, CreditCard, Clock, Check, X, Info, RefreshCw, Download } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 // Hàm loại bỏ dấu tiếng Việt
@@ -505,8 +505,22 @@ export default function ParentPortal() {
                                     </div>
                                     
                                     <div className="flex flex-col items-center justify-center bg-white rounded-lg p-3">
-                                      <p className="text-xs text-gray-500 mb-2">Quét mã QR để thanh toán</p>
-                                      <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                                      <p className="font-medium text-gray-700 mb-2">Quét mã QR để thanh toán</p>
+                                      <div 
+                                        className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm cursor-pointer relative group"
+                                        onClick={() => {
+                                          // Tạo URL cho mã QR
+                                          const qrUrl = generateVietQRUrl(
+                                            "970422", // MB Bank bin code
+                                            "9704229262085470", // Số tài khoản
+                                            "Tran Dong Phu", // Tên người nhận
+                                            studentData.class.fee, // Số tiền
+                                            `HP ${studentData.student.code} ${removeVietnameseAccents(studentData.student.name)}` // Nội dung
+                                          );
+                                          // Mở trong cửa sổ mới
+                                          window.open(qrUrl, "_blank");
+                                        }}
+                                      >
                                         <img 
                                           src={generateVietQRUrl(
                                             "970422", // MB Bank bin code
@@ -516,11 +530,34 @@ export default function ParentPortal() {
                                             `HP ${studentData.student.code} ${removeVietnameseAccents(studentData.student.name)}` // Nội dung
                                           )}
                                           alt="QR Code thanh toán"
-                                          className="w-36 h-36 object-contain"
+                                          className="w-48 h-48 object-contain transition-transform group-hover:scale-105"
                                           loading="lazy"
                                         />
+                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 flex items-center justify-center transition-opacity opacity-0 group-hover:opacity-100 rounded-lg">
+                                          <span className="bg-white text-primary font-medium px-2 py-1 rounded-md text-sm shadow-sm">Nhấn để phóng to</span>
+                                        </div>
                                       </div>
-                                      <p className="text-xs text-gray-500 mt-2 text-center">Quét mã để chuyển khoản tự động</p>
+                                      
+                                      <div className="mt-3 flex items-center justify-center space-x-2">
+                                        <a 
+                                          href={generateVietQRUrl(
+                                            "970422", 
+                                            "9704229262085470",
+                                            "Tran Dong Phu",
+
+                                            studentData.class.fee,
+                                            `HP ${studentData.student.code} ${removeVietnameseAccents(studentData.student.name)}`
+                                          )}
+                                          download={`qr-thanh-toan-${studentData.student.code}.png`}
+                                          className="text-sm flex items-center gap-1 bg-primary text-white px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
+                                          target="_blank"
+                                        >
+                                          <Download className="h-4 w-4" />
+                                          Tải xuống
+                                        </a>
+                                      </div>
+                                      
+                                      <p className="text-xs text-gray-500 mt-2 text-center">Quét mã QR hoặc nhấn để phóng to</p>
                                       <p className="text-xs font-medium text-blue-600 mt-1">Powered by VietQR.io</p>
                                     </div>
                                   </div>
