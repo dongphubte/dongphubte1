@@ -630,18 +630,47 @@ export default function AttendanceByClass() {
     }
   };
   
-  // Xử lý khi chọn lớp để điểm danh học bù
-  const handleMakeupClassSelect = (classData: ClassAttendanceSummary) => {
-    if (!students) return;
+  // Kiểm tra xem học sinh đã được điểm danh vào ngày cụ thể chưa
+  const checkStudentAttendanceOnDate = (studentId: number, date: Date): boolean => {
+    if (!attendance) return false;
     
-    // Lọc học sinh thuộc lớp được chọn
+    // Chuyển đổi ngày thành chuỗi YYYY-MM-DD để so sánh
+    const dateStr = date.toISOString().split('T')[0];
+    
+    // Kiểm tra xem đã có bản ghi điểm danh cho học sinh này vào ngày đã chọn chưa
+    return attendance.some(record => {
+      const recordDate = new Date(record.date).toISOString().split('T')[0];
+      return record.studentId === studentId && recordDate === dateStr;
+    });
+  };
+
+  // Xử lý khi chọn lớp để điểm danh bù
+  const handleMakeupClassSelect = (classData: ClassAttendanceSummary) => {
+    if (!students || !makeupDate) return;
+    
+    // Lọc học sinh thuộc lớp được chọn và có trạng thái active
     const studentsInClass = students
-      .filter(student => student.classId === classData.classId && student.status === "active")
+      .filter(student => {
+        // Chỉ lấy học sinh thuộc lớp, có trạng thái active, và chưa được điểm danh vào ngày đã chọn
+        return student.classId === classData.classId && 
+               student.status === "active" && 
+               !checkStudentAttendanceOnDate(student.id, makeupDate);
+      })
       .map(student => ({
         ...student,
         isChecked: false,
         attendanceStatus: "makeup" // Mặc định là học bù
       }));
+    
+    // Nếu không có học sinh nào cần điểm danh bù
+    if (studentsInClass.length === 0) {
+      toast({
+        title: "Thông báo",
+        description: "Tất cả học sinh đã được điểm danh vào ngày này hoặc lớp không có học sinh active.",
+        variant: "default",
+      });
+      return;
+    }
     
     setClassStudents(studentsInClass);
     setSelectedClass(classData);
@@ -649,9 +678,6 @@ export default function AttendanceByClass() {
     setShowAttendanceDialog(true);
     setSelectAll(false);
     setShowMakeupDialog(false);
-    
-    // Lưu lại ngày đã chọn để sử dụng khi submit điểm danh
-    // Sẽ được sử dụng trong hàm handleSubmitAttendance
   };
 
   // Status Badge Component tối ưu với React.memo

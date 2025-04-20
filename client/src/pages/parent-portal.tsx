@@ -354,31 +354,66 @@ export default function ParentPortal() {
               <Separator />
               
               <div className="p-6">
-                <h3 className="font-medium text-gray-700 mb-4">Lịch sử điểm danh gần đây</h3>
+                <h3 className="font-medium text-gray-700 mb-4">Lịch sử điểm danh</h3>
                 
                 {studentData.attendance && studentData.attendance.length > 0 ? (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                    {studentData.attendance
-                      .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                      .slice(0, 10)
-                      .map((record: any) => (
-                        <div key={record.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md border">
-                          <div className="font-medium text-sm">{formatDate(record.date)}</div>
-                          <span className={`flex items-center px-2 py-1 text-xs font-medium rounded-full ${
-                            record.status === "present" 
-                              ? 'bg-green-100 text-green-800' 
-                              : record.status === "absent" 
-                                ? 'bg-red-100 text-red-800' 
-                                : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {record.status === "present" && <Check className="h-3 w-3 mr-1" />}
-                            {record.status === "absent" && <X className="h-3 w-3 mr-1" />}
-                            {record.status === "teacher_absent" && <AlertCircle className="h-3 w-3 mr-1" />}
-                            {getStatusText(record.status)}
-                          </span>
+                  <div className="max-h-[350px] overflow-y-auto pr-2">
+                    {(() => {
+                      // Nhóm điểm danh theo ngày
+                      const sortedAttendance = [...studentData.attendance].sort(
+                        (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()
+                      );
+                      
+                      // Tạo map để lưu trữ bản ghi cho mỗi ngày
+                      const attendanceByDate: Record<string, any> = {};
+                      
+                      sortedAttendance.forEach((record: any) => {
+                        const date = new Date(record.date);
+                        const dateKey = date.toISOString().split('T')[0];
+                        
+                        attendanceByDate[dateKey] = record;
+                      });
+                      
+                      // Hiển thị theo ngày, mỗi ngày là một ô
+                      return (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                          {Object.entries(attendanceByDate).map(([dateStr, record]) => {
+                            const date = new Date(dateStr);
+                            return (
+                              <div 
+                                key={dateStr} 
+                                className={`p-3 rounded-lg flex flex-col items-center justify-center border ${
+                                  record.status === "present" 
+                                    ? 'bg-green-50 border-green-200' 
+                                    : record.status === "absent" 
+                                      ? 'bg-red-50 border-red-200' 
+                                      : record.status === "teacher_absent"
+                                        ? 'bg-yellow-50 border-yellow-200'
+                                        : 'bg-blue-50 border-blue-200'
+                                }`}
+                              >
+                                <div className="font-medium mb-2">{formatDate(date)}</div>
+                                <span className={`flex items-center px-3 py-1.5 text-sm font-medium rounded-full ${
+                                  record.status === "present" 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : record.status === "absent" 
+                                      ? 'bg-red-100 text-red-800' 
+                                      : record.status === "teacher_absent"
+                                        ? 'bg-yellow-100 text-yellow-800'
+                                        : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {record.status === "present" && <Check className="h-4 w-4 mr-1.5" />}
+                                  {record.status === "absent" && <X className="h-4 w-4 mr-1.5" />}
+                                  {record.status === "teacher_absent" && <AlertCircle className="h-4 w-4 mr-1.5" />}
+                                  {record.status === "makeup" && <RefreshCw className="h-4 w-4 mr-1.5" />}
+                                  {getStatusText(record.status)}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
-                      ))
-                    }
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div className="text-center py-10 border rounded-md bg-gray-50">
