@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Table, 
   TableBody, 
@@ -19,9 +21,11 @@ import {
   RefreshCw, 
   Info, 
   BarChart, 
+  Calendar,
   CalendarCheck, 
   UserCheck,
   Users,
+  Users2,
   Trash,
   Trash2,
   Square,
@@ -505,9 +509,15 @@ export default function AttendanceByClass() {
       }
       
       // Xây dựng các bản ghi điểm danh
-      const today = new Date();
+      let dateToUse = new Date();
+      
+      // Nếu đang điểm danh bù và có ngày được chọn, sử dụng ngày đó
+      if (selectedAttendanceStatus === 'makeup' && makeupDate) {
+        dateToUse = makeupDate;
+      }
+      
       // Định dạng ngày theo YYYY-MM-DD
-      const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const formattedDate = `${dateToUse.getFullYear()}-${String(dateToUse.getMonth() + 1).padStart(2, '0')}-${String(dateToUse.getDate()).padStart(2, '0')}`;
       
       const attendanceRecords = selectedStudents.map(student => ({
         studentId: student.id,
@@ -639,6 +649,9 @@ export default function AttendanceByClass() {
     setShowAttendanceDialog(true);
     setSelectAll(false);
     setShowMakeupDialog(false);
+    
+    // Lưu lại ngày đã chọn để sử dụng khi submit điểm danh
+    // Sẽ được sử dụng trong hàm handleSubmitAttendance
   };
 
   // Status Badge Component tối ưu với React.memo
@@ -1347,13 +1360,44 @@ export default function AttendanceByClass() {
       <Dialog open={showMakeupDialog} onOpenChange={setShowMakeupDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Chọn lớp học bù</DialogTitle>
+            <DialogTitle>Điểm danh học bù</DialogTitle>
             <DialogDescription>
-              Chọn lớp học cần điểm danh học bù. Trạng thái điểm danh sẽ tự động đặt là "Học bù".
+              Chọn ngày và lớp học cần điểm danh học bù. Trạng thái điểm danh sẽ tự động đặt là "Học bù".
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+          <div className="mb-4 border rounded-lg p-4 bg-blue-50 border-blue-100">
+            <h4 className="text-sm font-medium mb-2 text-blue-700 flex items-center">
+              <Calendar className="h-4 w-4 mr-2" />
+              Chọn ngày điểm danh bù
+            </h4>
+            <div className="grid gap-2">
+              <Label htmlFor="makeup-date">Ngày điểm danh</Label>
+              <Input
+                id="makeup-date"
+                type="date"
+                value={makeupDate ? makeupDate.toISOString().split('T')[0] : ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setMakeupDate(new Date(e.target.value));
+                  }
+                }}
+                className="bg-white"
+              />
+              <p className="text-xs text-blue-600">
+                Ngày điểm danh bù sẽ được ghi nhận chính xác theo ngày bạn chọn.
+              </p>
+            </div>
+          </div>
+          
+          <div className="border-t pt-4 mb-2">
+            <h4 className="text-sm font-medium mb-3 flex items-center">
+              <Users2 className="h-4 w-4 mr-2" />
+              Chọn lớp học để điểm danh bù
+            </h4>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2 max-h-[300px] overflow-y-auto">
             {classAttendanceSummary.map((classData) => (
               <div 
                 key={classData.classId}
