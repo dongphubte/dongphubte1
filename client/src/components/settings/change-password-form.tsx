@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
 const changePasswordSchema = z
   .object({
@@ -91,22 +91,22 @@ export default function ChangePasswordForm() {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-      <h3 className="text-lg font-semibold mb-4">Thay đổi mật khẩu</h3>
-      
+    <div className="max-w-md">
       {submitSuccess && (
-        <Alert className="mb-6 bg-green-50 border-green-200 text-green-700">
-          <CheckCircle2 className="h-5 w-5 text-green-600" />
-          <AlertDescription>
+        <Alert className="mb-6 bg-green-50 border-green-200">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-600">
             Mật khẩu đã được thay đổi thành công.
           </AlertDescription>
         </Alert>
       )}
       
       {submitError && (
-        <Alert className="mb-6 bg-red-50 border-red-200 text-red-700">
-          <AlertCircle className="h-5 w-5 text-red-600" />
-          <AlertDescription>{submitError}</AlertDescription>
+        <Alert className="mb-6 bg-destructive/10 border-destructive/20">
+          <AlertCircle className="h-4 w-4 text-destructive" />
+          <AlertDescription className="text-destructive">
+            {submitError}
+          </AlertDescription>
         </Alert>
       )}
       
@@ -171,7 +171,14 @@ export default function ChangePasswordForm() {
             className="w-full mt-6" 
             disabled={changePasswordMutation.isPending}
           >
-            {changePasswordMutation.isPending ? "Đang xử lý..." : "Thay đổi mật khẩu"}
+            {changePasswordMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang xử lý...
+              </>
+            ) : (
+              "Thay đổi mật khẩu"
+            )}
           </Button>
         </form>
       </Form>

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import { 
   extendedInsertClassSchema, 
   extendedInsertStudentSchema, 
@@ -28,6 +28,46 @@ function ensureAuthenticated(req: any, res: any, next: any) {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
+  
+  // API đổi mật khẩu
+  app.post("/api/change-password", ensureAuthenticated, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Vui lòng cung cấp mật khẩu hiện tại và mật khẩu mới" });
+      }
+      
+      // Lấy thông tin user
+      const user = await storage.getUser(req.user?.id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Không tìm thấy thông tin người dùng" });
+      }
+      
+      // Kiểm tra mật khẩu hiện tại
+      const isPasswordValid = await comparePasswords(currentPassword, user.password);
+      
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "Mật khẩu hiện tại không chính xác" });
+      }
+      
+      // Mã hóa mật khẩu mới
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Cập nhật mật khẩu mới
+      const success = await storage.updateUserPassword(user.id, hashedPassword);
+      
+      if (success) {
+        return res.status(200).json({ message: "Đổi mật khẩu thành công" });
+      } else {
+        return res.status(500).json({ message: "Không thể cập nhật mật khẩu" });
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Lỗi khi thay đổi mật khẩu" });
+    }
+  });
 
   // Public Parent Portal APIs - API không yêu cầu đăng nhập dành cho cổng thông tin phụ huynh
   app.get("/api/students/code/:code", async (req, res) => {
