@@ -507,20 +507,21 @@ export default function ParentPortal() {
                                     <div className="flex flex-col items-center justify-center bg-white rounded-lg p-3">
                                       <p className="text-xs text-gray-500 mb-2">Quét mã QR để thanh toán</p>
                                       <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
-                                        <QRCodeSVG 
-                                          value={generateTransferContent(
-                                            "9704229262085470", 
-                                            "MB Bank", 
-                                            "Tran Dong Phu", 
-                                            studentData.class.fee,
-                                            `HP ${studentData.student.code} ${removeVietnameseAccents(studentData.student.name)}`
+                                        <img 
+                                          src={generateVietQRUrl(
+                                            "970422", // MB Bank bin code
+                                            "9704229262085470", // Số tài khoản
+                                            "Tran Dong Phu", // Tên người nhận
+                                            studentData.class.fee, // Số tiền
+                                            `HP ${studentData.student.code} ${removeVietnameseAccents(studentData.student.name)}` // Nội dung
                                           )}
-                                          size={150}
-                                          level="H"
-                                          includeMargin={true}
+                                          alt="QR Code thanh toán"
+                                          className="w-36 h-36 object-contain"
+                                          loading="lazy"
                                         />
                                       </div>
-                                      <p className="text-xs text-gray-500 mt-2 text-center">QR code này chứa thông tin thanh toán</p>
+                                      <p className="text-xs text-gray-500 mt-2 text-center">Quét mã để chuyển khoản tự động</p>
+                                      <p className="text-xs font-medium text-blue-600 mt-1">Powered by VietQR.io</p>
                                     </div>
                                   </div>
                                 </div>
