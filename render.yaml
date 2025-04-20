@@ -1,10 +1,8 @@
 services:
-  # Dịch vụ Web Service cho ứng dụng Node.js
+  # Dịch vụ Web Service cho ứng dụng Node.js sử dụng Docker
   - type: web
     name: hoedu-solution
-    env: node
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    env: docker
     envVars:
       - key: NODE_ENV
         value: production
