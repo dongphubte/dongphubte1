@@ -548,6 +548,7 @@ export default function AttendanceByClass() {
   // State để lưu trữ thông tin dialog học bù
   const [showMakeupDialog, setShowMakeupDialog] = useState(false);
   const [selectedMakeupClass, setSelectedMakeupClass] = useState<ClassAttendanceSummary | null>(null);
+  const [makeupDate, setMakeupDate] = useState<Date | undefined>(new Date());
   
   // States cho việc sửa điểm danh
   const [showEditDialog, setShowEditDialog] = useState(false);
