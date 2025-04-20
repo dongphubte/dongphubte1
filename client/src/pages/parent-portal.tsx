@@ -8,7 +8,8 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/utils/format";
 import { formatDate } from "@/utils/date-utils";
-import { Search, QrCode, User, Calendar, Phone, AlertCircle, CreditCard, Clock, Check, Info } from "lucide-react";
+import { Search, QrCode, User, Calendar, Phone, AlertCircle, CreditCard, Clock, Check, X, Info } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 // Hàm loại bỏ dấu tiếng Việt
 function removeVietnameseAccents(str: string): string {
@@ -18,7 +19,13 @@ function removeVietnameseAccents(str: string): string {
     .normalize('NFD') // Chuyển đổi về dạng tách các ký tự và dấu
     .replace(/[\u0300-\u036f]/g, '') // Loại bỏ các dấu
     .replace(/[đĐ]/g, (m) => m === 'đ' ? 'd' : 'D'); // Chuyển đổi đ và Đ
-};
+}
+
+// Hàm tạo nội dung QR code cho thanh toán
+function generateTransferContent(bankAccount: string, bankName: string, accountName: string, amount: number, description: string): string {
+  // Format theo chuẩn để ứng dụng ngân hàng có thể đọc
+  return `${bankName}|${bankAccount}|${accountName}|${amount}|${description}`;
+}
 
 export default function ParentPortal() {
   console.log("ParentPortal component loaded");
@@ -57,6 +64,8 @@ export default function ParentPortal() {
         return "Vắng mặt";
       case "teacher_absent":
         return "GV nghỉ";
+      case "makeup":
+        return "Học bù";
       default:
         return status;
     }
@@ -355,13 +364,16 @@ export default function ParentPortal() {
                       .map((record: any) => (
                         <div key={record.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md border">
                           <div className="font-medium text-sm">{formatDate(record.date)}</div>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          <span className={`flex items-center px-2 py-1 text-xs font-medium rounded-full ${
                             record.status === "present" 
                               ? 'bg-green-100 text-green-800' 
                               : record.status === "absent" 
                                 ? 'bg-red-100 text-red-800' 
                                 : 'bg-yellow-100 text-yellow-800'
                           }`}>
+                            {record.status === "present" && <Check className="h-3 w-3 mr-1" />}
+                            {record.status === "absent" && <X className="h-3 w-3 mr-1" />}
+                            {record.status === "teacher_absent" && <AlertCircle className="h-3 w-3 mr-1" />}
                             {getStatusText(record.status)}
                           </span>
                         </div>
@@ -426,16 +438,38 @@ export default function ParentPortal() {
                               {/* Thông tin chuyển khoản nếu chưa thanh toán */}
                               {(paymentStatus.status === "unpaid" || paymentStatus.status === "overdue") && (
                                 <div className="mt-4 p-3 bg-white rounded border-dashed border-2 border-gray-300">
-                                  <p className="text-sm font-medium mb-2 flex items-center gap-1">
-                                    <Info className="h-4 w-4 text-primary" />
+                                  <p className="text-sm font-medium mb-3 flex items-center gap-1 text-primary">
+                                    <Info className="h-4 w-4" />
                                     Thông tin thanh toán
                                   </p>
-                                  <div className="space-y-2 text-sm">
-                                    <p><span className="text-gray-500">Số tài khoản:</span> <span className="font-medium">9704229262085470</span></p>
-                                    <p><span className="text-gray-500">Ngân hàng:</span> <span className="font-medium">MB Bank</span></p>
-                                    <p><span className="text-gray-500">Chủ tài khoản:</span> <span className="font-medium">Tran Dong Phu</span></p>
-                                    <p><span className="text-gray-500">Nội dung:</span> <span className="font-medium">HP {studentData.student.code} {removeVietnameseAccents(studentData.student.name)}</span></p>
-                                    <p><span className="text-gray-500">Số tiền:</span> <span className="font-medium text-primary">{formatCurrency(studentData.class.fee)}</span></p>
+                                  
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="space-y-2 text-sm">
+                                      <p><span className="text-gray-500">Số tài khoản:</span> <span className="font-medium">9704229262085470</span></p>
+                                      <p><span className="text-gray-500">Ngân hàng:</span> <span className="font-medium">MB Bank</span></p>
+                                      <p><span className="text-gray-500">Chủ tài khoản:</span> <span className="font-medium">Tran Dong Phu</span></p>
+                                      <p><span className="text-gray-500">Nội dung:</span> <span className="font-medium">HP {studentData.student.code} {removeVietnameseAccents(studentData.student.name)}</span></p>
+                                      <p><span className="text-gray-500">Số tiền:</span> <span className="font-medium text-primary">{formatCurrency(studentData.class.fee)}</span></p>
+                                    </div>
+                                    
+                                    <div className="flex flex-col items-center justify-center bg-white rounded-lg p-3">
+                                      <p className="text-xs text-gray-500 mb-2">Quét mã QR để thanh toán</p>
+                                      <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                                        <QRCodeSVG 
+                                          value={generateTransferContent(
+                                            "9704229262085470", 
+                                            "MB Bank", 
+                                            "Tran Dong Phu", 
+                                            studentData.class.fee,
+                                            `HP ${studentData.student.code} ${removeVietnameseAccents(studentData.student.name)}`
+                                          )}
+                                          size={150}
+                                          level="H"
+                                          includeMargin={true}
+                                        />
+                                      </div>
+                                      <p className="text-xs text-gray-500 mt-2 text-center">QR code này chứa thông tin thanh toán</p>
+                                    </div>
                                   </div>
                                 </div>
                               )}
