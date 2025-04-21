@@ -1,5 +1,8 @@
 FROM node:20-slim
 
+# Cài đặt jq để xử lý JSON
+RUN apt-get update && apt-get install -y jq
+
 WORKDIR /app
 
 # Sao chép package.json và package-lock.json

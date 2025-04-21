@@ -1,8 +1,22 @@
 #!/bin/bash
 
+# Đảm bảo jq đã được cài đặt
+if ! command -v jq &> /dev/null; then
+  echo "jq không được cài đặt, đang cài đặt..."
+  apt-get update && apt-get install -y jq
+fi
+
 # Sửa package.json để đảm bảo đường dẫn đúng
-sed -i 's/"build": "vite build && esbuild server\/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"/"build": "vite build && esbuild server\/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist\/server"/' package.json
-sed -i 's/"start": "NODE_ENV=production node dist\/index.js"/"start": "NODE_ENV=production node dist\/server\/index.js"/' package.json
+echo "Backup package.json trước khi sửa đổi"
+cp package.json package.json.bak
+
+# Sửa đường dẫn build trong package.json
+echo "Sửa đường dẫn build và start trong package.json"
+cat package.json | jq '.scripts.build = "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist/server"' > package.json.tmp
+mv package.json.tmp package.json
+
+cat package.json | jq '.scripts.start = "NODE_ENV=production node dist/server/index.js"' > package.json.tmp
+mv package.json.tmp package.json
 
 # Hiển thị kết quả
 echo "Đã sửa package.json:"
